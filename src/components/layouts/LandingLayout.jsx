@@ -4,9 +4,9 @@ import Navbar from './Navbar';
 const LandingLayout = ({ children }) => {
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <main className="min-h-screen">{children}</main>
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 };
