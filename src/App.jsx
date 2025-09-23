@@ -1,8 +1,9 @@
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router-dom';
+import AntdProvider from './components/layouts/AntdProvider';
 import { useFirebaseMessaging } from './hooks/useFirebaseMessaging';
 import router from './routes';
-import AntdProvider from './components/layouts/AntdProvider';
 
 const queryClient = new QueryClient();
 
@@ -23,7 +24,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AntdProvider>
-        <RouterProvider router={router} />
+        <GoogleOAuthProvider clientId={import.meta.env.VITE_CLIENT_ID}>
+          <RouterProvider router={router} />
+        </GoogleOAuthProvider>
       </AntdProvider>
     </QueryClientProvider>
   );
