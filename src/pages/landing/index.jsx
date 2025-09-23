@@ -1,11 +1,18 @@
+import { useMutation } from '@tanstack/react-query';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 import { useEffect, useState } from 'react';
-import Login from '../../components/login';
+import { useNavigate } from 'react-router-dom';
+import { PATH_NAME } from '../../constants';
+import { loginGoogle } from '../../services/auth';
+import { notify } from '../../utils/index';
 
 const SEALLandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
     AOS.init({
@@ -21,6 +28,37 @@ const SEALLandingPage = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const navigate = useNavigate();
+
+  const { mutate: mutateLoginGoogle } = useMutation({
+    mutationFn: loginGoogle,
+    onSuccess: (res) => {
+      notify('success', { description: 'Đăng nhập thành công' });
+
+      const accessToken = res?.data?.accessToken;
+      const refreshToken = res?.data?.refreshToken;
+
+      if (accessToken && refreshToken) {
+        Cookies.set('accessToken', accessToken);
+        Cookies.set('refreshToken', refreshToken);
+        const decoded = jwtDecode(accessToken);
+        const role = decoded['role'];
+        if (role === 'ADMIN') {
+          navigate(PATH_NAME.ADMIN);
+        } else {
+          navigate(PATH_NAME.HOME);
+        }
+      }
+    },
+    onError: (err) => {
+      if (err && err.status === 401) {
+        notify('error', { description: 'Thông tin đăng nhập không hợp lệ' });
+        return;
+      }
+      notify('error', { description: 'Lỗi hệ thống' });
+    },
+  });
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
@@ -513,8 +551,20 @@ const SEALLandingPage = () => {
               </div>
 
               <div className="space-y-6">
-                <div className="relative">
-                  <Login />
+                <div className="space-y-4">
+                  <input
+                    onChange={(e) => setEmail(e.target.value)}
+                    type="email"
+                    placeholder="Email"
+                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+
+                  <button
+                    onClick={() => mutateLoginGoogle(email)}
+                    className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-all hover:scale-[1.02]"
+                  >
+                    Đăng nhập
+                  </button>
                 </div>
 
                 <p className="text-xs text-gray-500 text-center">
@@ -525,7 +575,7 @@ const SEALLandingPage = () => {
                   và{' '}
                   <a href="#" className="text-green-500 hover:underline">
                     Chính sách bảo mật
-                  </a>
+                  </a>{' '}
                   của chúng tôi
                 </p>
               </div>
