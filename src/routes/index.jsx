@@ -3,10 +3,8 @@ import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet } from 'react-router-dom';
 import LandingLayout from '../components/layouts/LandingLayout';
 import { PATH_NAME } from '../constants';
-import AuthPage from '../pages/auth';
 import NotFound from '../pages/notfound';
 import AdminRoutes from './AdminRoutes';
-import GuestRoute from './GuestRoute';
 import MemberRoutes from './MemberRoutes';
 
 const LandingPage = lazy(() => import('../pages/landing'));
@@ -49,16 +47,6 @@ const router = createBrowserRouter([
       },
     ],
   },
-  {
-    element: <GuestRoute />,
-    children: [
-      {
-        path: PATH_NAME.AUTH,
-        element: <AuthPage />,
-      },
-    ],
-  },
-
   {
     element: <AdminRoutes />,
     children: [

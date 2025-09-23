@@ -1,10 +1,15 @@
 import axiosClient from '../configs/axiosClient';
 
-const login = (payload) => {
-  return axiosClient.post(`/login`);
-};
-const register = (payload) => {
-  return axiosClient.post(`/register`);
+const loginGoogle = (payload) => {
+  return axiosClient.post(`/Auth/google-login`, payload);
 };
 
-export { login, register };
+const logout = () => {
+  return axiosClient.post(`/Auth/logout`);
+};
+
+const refreshToken = (payload) => {
+  return axiosClient.post(`/Auth/refresh-token`, payload);
+};
+
+export { loginGoogle, logout, refreshToken };

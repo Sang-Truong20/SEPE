@@ -1,9 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PATH_NAME } from '../../constants';
+import { loginGoogle } from '../../services/auth';
+import { notify } from '../../utils/index';
 
 const SEALLandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
     AOS.init({
@@ -20,45 +29,39 @@ const SEALLandingPage = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const navigate = useNavigate();
+
+  const { mutate: mutateLoginGoogle } = useMutation({
+    mutationFn: loginGoogle,
+    onSuccess: (res) => {
+      notify('success', { description: 'Đăng nhập thành công' });
+
+      const accessToken = res?.data?.accessToken;
+      const refreshToken = res?.data?.refreshToken;
+
+      if (accessToken && refreshToken) {
+        Cookies.set('accessToken', accessToken);
+        Cookies.set('refreshToken', refreshToken);
+        const decoded = jwtDecode(accessToken);
+        const role = decoded['role'];
+        if (role === 'ADMIN') {
+          navigate(PATH_NAME.ADMIN);
+        } else {
+          navigate(PATH_NAME.HOME);
+        }
+      }
+    },
+    onError: (err) => {
+      if (err && err.status === 401) {
+        notify('error', { description: 'Thông tin đăng nhập không hợp lệ' });
+        return;
+      }
+      notify('error', { description: 'Lỗi hệ thống' });
+    },
+  });
+
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
-      <style jsx>{`
-        .text-gradient {
-          background: linear-gradient(135deg, #01bd30 0%, #66cc99 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-        .card-gradient {
-          background: linear-gradient(
-            135deg,
-            rgba(1, 189, 48, 0.1) 0%,
-            rgba(102, 204, 153, 0.1) 100%
-          );
-        }
-        .hover-glow:hover {
-          box-shadow: 0 0 30px rgba(1, 189, 48, 0.3);
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-20px);
-          }
-        }
-        .grid-pattern {
-          background-image:
-            linear-gradient(rgba(1, 189, 48, 0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(1, 189, 48, 0.1) 1px, transparent 1px);
-          background-size: 50px 50px;
-        }
-      `}</style>
-
       <nav
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${
           isScrolled
@@ -77,31 +80,34 @@ const SEALLandingPage = () => {
 
             <div className="hidden lg:flex items-center space-x-8">
               <a href="#home" className="hover:text-primary transition-colors">
-                Home
+                Trang chủ
               </a>
               <a
                 href="#features"
                 className="hover:text-primary transition-colors"
               >
-                Features
+                Tính năng
               </a>
               <a
                 href="#hackathons"
                 className="hover:text-primary transition-colors"
               >
-                Hackathons
+                Hackathon
               </a>
               <a
                 href="#timeline"
                 className="hover:text-primary transition-colors"
               >
-                Timeline
+                Dòng thời gian
               </a>
               <a href="#faq" className="hover:text-primary transition-colors">
                 FAQ
               </a>
-              <button className="bg-primary text-black px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all hover:scale-105">
-                Register Now
+              <button
+                onClick={() => setShowLoginModal(true)}
+                className="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all hover:scale-105"
+              >
+                Đăng ký ngay
               </button>
             </div>
 
@@ -142,7 +148,7 @@ const SEALLandingPage = () => {
           <div className="text-center max-w-5xl mx-auto">
             <div data-aos="fade-down" className="mb-6">
               <span className="bg-primary/20 text-primary px-4 py-2 rounded-full text-sm font-semibold">
-                🚀 FPT University HCMC
+                🚀 Đại học FPT HCM
               </span>
             </div>
 
@@ -152,7 +158,7 @@ const SEALLandingPage = () => {
             >
               SEAL <span className="text-gradient">Hackathon</span>
               <br />
-              Management System
+              Hệ thống quản lý
             </h1>
 
             <p
@@ -160,8 +166,8 @@ const SEALLandingPage = () => {
               data-aos-delay="100"
               className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto"
             >
-              Revolutionizing academic hackathon management with fairness,
-              transparency, and automation
+              Đổi mới quản lý hackathon học thuật với sự công bằng, minh bạch và
+              tự động hóa
             </p>
 
             <div
@@ -169,11 +175,11 @@ const SEALLandingPage = () => {
               data-aos-delay="200"
               className="flex flex-wrap gap-6 justify-center"
             >
-              <button className="bg-primary text-black px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform hover-glow">
-                Get Started →
+              <button className="bg-primary text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform hover-glow">
+                Bắt đầu →
               </button>
               <button className="border border-white/20 px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/10 transition-all">
-                Watch Demo
+                Xem demo
               </button>
             </div>
 
@@ -184,15 +190,15 @@ const SEALLandingPage = () => {
             >
               <div className="text-center">
                 <div className="text-4xl font-bold text-primary">3</div>
-                <div className="text-gray-400">Annual Events</div>
+                <div className="text-gray-400">Sự kiện thường niên</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-primary">500+</div>
-                <div className="text-gray-400">Participants</div>
+                <div className="text-gray-400">Người tham gia</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-primary">100+</div>
-                <div className="text-gray-400">Teams</div>
+                <div className="text-gray-400">Đội thi</div>
               </div>
             </div>
           </div>
@@ -217,101 +223,45 @@ const SEALLandingPage = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 relative">
+      <section id="features" className="py-32 relative">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16" data-aos="fade-up">
-            <h2 className="text-5xl font-bold mb-4">
-              Powerful <span className="text-gradient">Features</span>
+          <div className="text-center mb-20" data-aos="fade-up">
+            <h2 className="text-4xl md:text-6xl font-bold mb-6">
+              <span className="text-gradient">Tính năng nổi bật</span>
             </h2>
-            <p className="text-xl text-gray-400">
-              End-to-end competition management platform
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Nền tảng quản lý hackathon toàn diện – công bằng, minh bạch, và dễ
+              sử dụng
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-12">
             {[
               {
-                icon: '🏆',
-                title: 'Chapter Management',
-                desc: 'Seamlessly organize Spring, Summer, and Fall hackathons',
-                features: [
-                  'Event scheduling',
-                  'Resource allocation',
-                  'Timeline tracking',
-                ],
+                title: 'Quản lý từ A-Z',
+                desc: 'Hệ thống quản lý toàn bộ quy trình hackathon: đăng ký, chia đội, chấm điểm và trao giải.',
+                icon: '⚡',
               },
               {
-                icon: '👥',
-                title: 'Team Registration',
-                desc: 'Smart team formation and member management',
-                features: [
-                  'Auto-matching',
-                  'Skill assessment',
-                  'Team dashboard',
-                ],
+                title: 'Tự động & Minh bạch',
+                desc: 'Tự động hóa quy trình, minh bạch trong chấm điểm và quản lý dữ liệu.',
+                icon: '🔒',
               },
               {
-                icon: '👨‍🏫',
-                title: 'Mentor Assignment',
-                desc: 'Intelligent mentor-team pairing system',
-                features: [
-                  'Expertise matching',
-                  'Availability tracking',
-                  'Communication hub',
-                ],
+                title: 'Trải nghiệm hiện đại',
+                desc: 'Giao diện tối ưu, dễ dùng cho cả ban tổ chức, mentor và thí sinh.',
+                icon: '🎯',
               },
-              {
-                icon: '📤',
-                title: 'Submission Handling',
-                desc: 'Secure project submission and version control',
-                features: [
-                  'Multi-format support',
-                  'Deadline enforcement',
-                  'Backup system',
-                ],
-              },
-              {
-                icon: '⚖️',
-                title: 'Judge Evaluation',
-                desc: 'Fair and transparent scoring mechanisms',
-                features: [
-                  'Blind review',
-                  'Multi-criteria scoring',
-                  'Real-time feedback',
-                ],
-              },
-              {
-                icon: '🎁',
-                title: 'Prize Distribution',
-                desc: 'Automated prize allocation and tracking',
-                features: [
-                  'Smart distribution',
-                  'Certificate generation',
-                  'Winner showcase',
-                ],
-              },
-            ].map((feature, index) => (
+            ].map((feature, i) => (
               <div
-                key={index}
+                key={i}
                 data-aos="fade-up"
-                data-aos-delay={index * 100}
-                className="card-gradient border border-white/10 rounded-2xl p-8 hover:border-primary/50 transition-all hover-glow group"
+                data-aos-delay={i * 100}
+                className="card-gradient p-8 rounded-2xl hover-glow transition-all hover:scale-105"
               >
-                <div className="text-5xl mb-4">{feature.icon}</div>
-                <h3 className="text-2xl font-bold mb-3 group-hover:text-primary transition-colors">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-400 mb-4">{feature.desc}</p>
-                <ul className="space-y-2">
-                  {feature.features.map((item, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center text-sm text-gray-500"
-                    >
-                      <span className="text-primary mr-2">✓</span> {item}
-                    </li>
-                  ))}
-                </ul>
+                <div className="text-4xl mb-6">{feature.icon}</div>
+                <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
+                <p className="text-gray-400">{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -319,103 +269,51 @@ const SEALLandingPage = () => {
       </section>
 
       {/* Hackathons Section */}
-      <section id="hackathons" className="py-24 bg-white/5">
+      <section
+        id="hackathons"
+        className="py-32 bg-gradient-to-b from-black to-gray-900"
+      >
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16" data-aos="fade-up">
-            <h2 className="text-5xl font-bold mb-4">
-              Three Epic <span className="text-gradient">Hackathons</span>
+          <div className="text-center mb-20" data-aos="fade-up">
+            <h2 className="text-4xl md:text-6xl font-bold mb-6">
+              <span className="text-gradient">Ba mùa Hackathon</span>
             </h2>
-            <p className="text-xl text-gray-400">
-              Each season brings unique challenges and opportunities
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Mỗi mùa mang đến chủ đề, thử thách và cơ hội riêng biệt
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-12">
             {[
               {
-                season: 'Spring',
-                theme: 'SDLC Mastery',
-                color: '#01bd30',
-                date: 'March - April',
-                topics: [
-                  'Agile Development',
-                  'CI/CD Pipeline',
-                  'Code Quality',
-                  'Testing Strategies',
-                ],
+                season: 'Mùa 1',
+                title: 'Khởi động',
+                desc: 'Khám phá ý tưởng và thử sức với các đề tài công nghệ mới.',
               },
               {
-                season: 'Summer',
-                theme: 'Emerging Tech',
-                color: '#00994D',
-                date: 'June - July',
-                topics: [
-                  'AI/ML Integration',
-                  'Blockchain',
-                  'IoT Solutions',
-                  'Cloud Native',
-                ],
+                season: 'Mùa 2',
+                title: 'Bứt phá',
+                desc: 'Phát triển sản phẩm thực tế, ứng dụng vào đời sống.',
               },
               {
-                season: 'Fall',
-                theme: 'Product & UX',
-                color: '#66CC99',
-                date: 'September - October',
-                topics: [
-                  'User Research',
-                  'Design Systems',
-                  'Prototyping',
-                  'User Testing',
-                ],
+                season: 'Mùa 3',
+                title: 'Đỉnh cao',
+                desc: 'Tranh tài cùng các đội mạnh nhất để giành giải thưởng lớn.',
               },
-            ].map((hackathon, index) => (
+            ].map((hackathon, i) => (
               <div
-                key={index}
-                data-aos="zoom-in"
-                data-aos-delay={index * 150}
-                className="relative group"
+                key={i}
+                data-aos="fade-up"
+                data-aos-delay={i * 100}
+                className="p-8 rounded-2xl border border-white/10 hover:bg-white/5 transition-all"
               >
-                <div
-                  className="absolute inset-0 rounded-2xl opacity-20 group-hover:opacity-30 transition-opacity"
-                  style={{ backgroundColor: hackathon.color }}
-                ></div>
-                <div className="relative bg-black border border-white/10 rounded-2xl p-8 hover:border-white/30 transition-all">
-                  <div
-                    className="w-16 h-16 rounded-xl flex items-center justify-center mb-6"
-                    style={{ backgroundColor: hackathon.color }}
-                  >
-                    <span className="text-2xl font-bold text-black">
-                      {hackathon.season[0]}
-                    </span>
-                  </div>
-                  <h3 className="text-3xl font-bold mb-2">
-                    {hackathon.season}
-                  </h3>
-                  <p
-                    className="text-xl mb-4"
-                    style={{ color: hackathon.color }}
-                  >
-                    {hackathon.theme}
-                  </p>
-                  <p className="text-gray-400 mb-6">{hackathon.date}</p>
-                  <div className="space-y-3">
-                    {hackathon.topics.map((topic, i) => (
-                      <div key={i} className="flex items-center text-gray-500">
-                        <div
-                          className="w-2 h-2 rounded-full mr-3"
-                          style={{ backgroundColor: hackathon.color }}
-                        ></div>
-                        {topic}
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    className="mt-8 w-full py-3 rounded-lg font-semibold transition-all hover:scale-105"
-                    style={{ backgroundColor: hackathon.color, color: 'black' }}
-                  >
-                    Learn More
-                  </button>
-                </div>
+                <span className="text-primary font-bold">
+                  {hackathon.season}
+                </span>
+                <h3 className="text-2xl font-bold mt-4 mb-4">
+                  {hackathon.title}
+                </h3>
+                <p className="text-gray-400">{hackathon.desc}</p>
               </div>
             ))}
           </div>
@@ -423,84 +321,45 @@ const SEALLandingPage = () => {
       </section>
 
       {/* Timeline Section */}
-      <section id="timeline" className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-10"></div>
-        <div className="container mx-auto px-6 relative">
-          <div className="text-center mb-16" data-aos="fade-up">
-            <h2 className="text-5xl font-bold mb-4">
-              Event <span className="text-gradient">Timeline</span>
+      <section id="timeline" className="py-32 relative">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-20" data-aos="fade-up">
+            <h2 className="text-4xl md:text-6xl font-bold mb-6">
+              <span className="text-gradient">Dòng thời gian</span>
             </h2>
-            <p className="text-xl text-gray-400">
-              Your journey through SEAL 2024
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Hành trình của bạn tại SEAL 2024
             </p>
           </div>
 
-          <div className="max-w-4xl mx-auto">
+          <div className="relative max-w-4xl mx-auto">
             {[
               {
-                date: 'January 15',
-                title: 'Registration Opens',
-                desc: 'Team formation and early bird registration begins',
-                status: 'completed',
+                date: 'Tháng 5',
+                title: 'Mở đăng ký',
+                desc: 'Các đội bắt đầu đăng ký tham gia.',
               },
               {
-                date: 'March 1-30',
-                title: 'Spring Hackathon',
-                desc: 'SDLC focused challenges and workshops',
-                status: 'completed',
+                date: 'Tháng 6',
+                title: 'Vòng loại',
+                desc: 'Thí sinh thi đấu loại trực tuyến.',
               },
               {
-                date: 'June 1-30',
-                title: 'Summer Hackathon',
-                desc: 'Emerging technologies exploration',
-                status: 'active',
+                date: 'Tháng 7',
+                title: 'Chung kết',
+                desc: 'Các đội xuất sắc tranh tài tại sân khấu chính.',
               },
-              {
-                date: 'September 1-30',
-                title: 'Fall Hackathon',
-                desc: 'Product design and user experience',
-                status: 'upcoming',
-              },
-              {
-                date: 'November 15',
-                title: 'Grand Finale',
-                desc: 'Annual awards and recognition ceremony',
-                status: 'upcoming',
-              },
-            ].map((event, index) => (
+            ].map((event, i) => (
               <div
-                key={index}
-                className="flex items-center mb-12"
-                data-aos="fade-right"
-                data-aos-delay={index * 100}
+                key={i}
+                className="mb-12 flex items-start"
+                data-aos="fade-up"
+                data-aos-delay={i * 100}
               >
-                <div className="flex-shrink-0 w-32 text-right pr-8">
-                  <p className="text-gray-500">{event.date}</p>
-                </div>
-                <div className="relative flex-shrink-0">
-                  <div
-                    className={`w-4 h-4 rounded-full ${
-                      event.status === 'completed'
-                        ? 'bg-primary'
-                        : event.status === 'active'
-                          ? 'bg-primary animate-pulse'
-                          : 'bg-gray-600'
-                    }`}
-                  ></div>
-                  {index < 4 && (
-                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-0.5 h-24 bg-gray-600"></div>
-                  )}
-                </div>
-                <div
-                  className={`flex-grow pl-8 ${event.status === 'upcoming' ? 'opacity-50' : ''}`}
-                >
-                  <h3 className="text-2xl font-bold mb-1">{event.title}</h3>
+                <div className="w-32 font-bold text-primary">{event.date}</div>
+                <div className="flex-1 p-6 rounded-xl card-gradient">
+                  <h3 className="text-xl font-bold mb-2">{event.title}</h3>
                   <p className="text-gray-400">{event.desc}</p>
-                  {event.status === 'active' && (
-                    <span className="inline-block mt-2 bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">
-                      Currently Active
-                    </span>
-                  )}
                 </div>
               </div>
             ))}
@@ -509,75 +368,56 @@ const SEALLandingPage = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-24 bg-gradient-to-r from-primary/20 to-secondary/20">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { value: '500+', label: 'Total Participants', icon: '👥' },
-              { value: '100+', label: 'Teams Formed', icon: '🏆' },
-              { value: '50+', label: 'Expert Mentors', icon: '👨‍🏫' },
-              { value: '10M+', label: 'Prize Pool (VND)', icon: '💰' },
-            ].map((stat, index) => (
-              <div
-                key={index}
-                className="text-center"
-                data-aos="zoom-in"
-                data-aos-delay={index * 100}
-              >
-                <div className="text-4xl mb-4">{stat.icon}</div>
-                <div className="text-5xl font-bold text-gradient mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-gray-400">{stat.label}</div>
+      <section className="py-32 bg-gradient-to-b from-gray-900 to-black">
+        <div className="container mx-auto px-6 grid md:grid-cols-4 gap-12 text-center">
+          {[
+            { number: '500+', label: 'Tổng số người tham gia' },
+            { number: '120+', label: 'Đội thi đã lập' },
+            { number: '30+', label: 'Chuyên gia mentor' },
+            { number: '200 Triệu+', label: 'Tổng giá trị giải thưởng' },
+          ].map((stat, i) => (
+            <div key={i} data-aos="fade-up" data-aos-delay={i * 100}>
+              <div className="text-5xl font-bold text-primary mb-4">
+                {stat.number}
               </div>
-            ))}
-          </div>
+              <div className="text-gray-400">{stat.label}</div>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-24">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16" data-aos="fade-up">
-            <h2 className="text-5xl font-bold mb-4">
-              Frequently Asked <span className="text-gradient">Questions</span>
+      <section id="faq" className="py-32 relative">
+        <div className="container mx-auto px-6 max-w-4xl">
+          <div className="text-center mb-20" data-aos="fade-up">
+            <h2 className="text-4xl md:text-6xl font-bold mb-6">
+              <span className="text-gradient">Câu hỏi thường gặp</span>
             </h2>
           </div>
 
-          <div className="max-w-3xl mx-auto space-y-4">
+          <div className="space-y-6">
             {[
               {
-                q: 'Who can participate in SEAL hackathons?',
-                a: 'All FPT University HCMC students from SE Department are eligible to participate.',
+                q: 'Ai có thể tham gia Hackathon SEAL?',
+                a: 'Sinh viên FPT HCM hoặc các trường đại học liên kết đều có thể đăng ký.',
               },
               {
-                q: 'How many members can be in a team?',
-                a: 'Teams can have 3-5 members, with at least one member from each academic year.',
+                q: 'Một đội có bao nhiêu thành viên?',
+                a: 'Mỗi đội có từ 3 đến 5 thành viên.',
               },
               {
-                q: 'Are there any participation fees?',
-                a: 'No, SEAL hackathons are completely free for all registered students.',
+                q: 'Có giới hạn đề tài không?',
+                a: 'Không, miễn là ý tưởng phù hợp với chủ đề chính của hackathon.',
               },
-              {
-                q: 'What are the prizes?',
-                a: 'Prizes include cash rewards, internship opportunities, tech gadgets, and certificates.',
-              },
-              {
-                q: 'Can we participate in all three hackathons?',
-                a: 'Yes! We encourage students to participate in all seasonal events to maximize learning.',
-              },
-            ].map((faq, index) => (
+            ].map((faq, i) => (
               <div
-                key={index}
+                key={i}
                 data-aos="fade-up"
-                data-aos-delay={index * 50}
-                className="card-gradient border border-white/10 rounded-xl p-6 hover:border-primary/50 transition-all"
+                data-aos-delay={i * 100}
+                className="p-6 rounded-xl border border-white/10 hover:bg-white/5 transition-all"
               >
-                <h3 className="text-xl font-semibold mb-3 flex items-center">
-                  <span className="text-primary mr-3">▶</span>
-                  {faq.q}
-                </h3>
-                <p className="text-gray-400 ml-8">{faq.a}</p>
+                <h3 className="text-xl font-bold mb-2">{faq.q}</h3>
+                <p className="text-gray-400">{faq.a}</p>
               </div>
             ))}
           </div>
@@ -585,133 +425,185 @@ const SEALLandingPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10"></div>
-        <div className="container mx-auto px-6 relative">
-          <div className="text-center max-w-3xl mx-auto" data-aos="zoom-in">
-            <h2 className="text-5xl font-bold mb-6">
-              Ready to <span className="text-gradient">Revolutionize</span> Your
-              Hackathon Experience?
-            </h2>
-            <p className="text-xl text-gray-400 mb-12">
-              Join the most innovative hackathon series at FPT University HCMC
-            </p>
-            <div className="flex flex-wrap gap-6 justify-center">
-              <button className="bg-primary text-black px-10 py-5 rounded-xl font-bold text-xl hover:scale-105 transition-transform hover-glow">
-                Register Your Team
-              </button>
-              <button className="border border-white/20 px-10 py-5 rounded-xl font-bold text-xl hover:bg-white/10 transition-all">
-                View Guidelines
-              </button>
-            </div>
+      <section className="py-32 bg-gradient-to-b from-black to-gray-900 relative overflow-hidden">
+        <div className="container mx-auto px-6 text-center relative z-10">
+          <h2
+            className="text-4xl md:text-6xl font-bold mb-6"
+            data-aos="fade-up"
+          >
+            Sẵn sàng <span className="text-gradient">bứt phá</span> tại
+            Hackathon?
+          </h2>
+          <p
+            className="text-gray-400 text-lg max-w-2xl mx-auto mb-12"
+            data-aos="fade-up"
+            data-aos-delay="100"
+          >
+            Đăng ký ngay hôm nay để cùng đồng đội chinh phục thử thách công nghệ
+          </p>
+          <div data-aos="fade-up" data-aos-delay="200">
+            <button
+              onClick={() => setShowLoginModal(true)}
+              className="bg-primary text-white px-10 py-5 rounded-xl font-bold text-lg hover:scale-105 transition-transform hover-glow"
+            >
+              Đăng ký đội thi
+            </button>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-white/5 py-16">
-        <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-black font-bold text-xl">S</span>
-                </div>
-                <span className="font-bold text-xl">SEAL</span>
-              </div>
-              <p className="text-gray-400">Software Engineering Agile League</p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4 text-primary">Quick Links</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    Rules
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    Resources
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    Contact
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4 text-primary">Hackathons</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    Spring - SDLC
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    Summer - Emerging Tech
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    Fall - Product/UX
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    Past Winners
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4 text-primary">Connect</h4>
-              <p className="text-gray-400 mb-4">
-                FPT University HCMC
-                <br />
-                SE Department & PDP
-              </p>
-              <div className="flex space-x-4">
-                <a
-                  href="#"
-                  className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-primary transition"
-                >
-                  <span>f</span>
-                </a>
-                <a
-                  href="#"
-                  className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-primary transition"
-                >
-                  <span>in</span>
-                </a>
-                <a
-                  href="#"
-                  className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-primary transition"
-                >
-                  <span>@</span>
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-white/10 pt-8 text-center text-gray-400">
-            <p>
-              &copy; 2024 SEAL - Software Engineering Agile League. All rights
-              reserved.
+      <footer className="py-20 border-t border-white/10">
+        <div className="container mx-auto px-6 grid md:grid-cols-4 gap-12">
+          <div>
+            <h3 className="font-bold text-xl mb-6">SEAL Hackathon</h3>
+            <p className="text-gray-400">
+              Hệ thống quản lý hackathon hiện đại, công bằng và minh bạch.
             </p>
           </div>
+          <div>
+            <h4 className="font-bold mb-4">Liên kết nhanh</h4>
+            <ul className="space-y-2 text-gray-400">
+              <li>
+                <a href="#home">Trang chủ</a>
+              </li>
+              <li>
+                <a href="#features">Tính năng</a>
+              </li>
+              <li>
+                <a href="#hackathons">Hackathon</a>
+              </li>
+              <li>
+                <a href="#timeline">Dòng thời gian</a>
+              </li>
+              <li>
+                <a href="#faq">FAQ</a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold mb-4">Kết nối</h4>
+            <ul className="space-y-2 text-gray-400">
+              <li>Email: contact@seal-hackathon.vn</li>
+              <li>Facebook: fb.com/sealhackathon</li>
+              <li>Zalo: 0123 456 789</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold mb-4">Tài liệu</h4>
+            <ul className="space-y-2 text-gray-400">
+              <li>
+                <a href="#">Hướng dẫn</a>
+              </li>
+              <li>
+                <a href="#">Quy định</a>
+              </li>
+              <li>
+                <a href="#">Điều khoản</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className="text-center text-gray-500 mt-12">
+          © 2025 SEAL Hackathon. Bản quyền thuộc về Ban tổ chức.
         </div>
       </footer>
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div
+            className="bg-black border border-white/20 rounded-2xl shadow-2xl max-w-md w-full relative overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors z-10"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-emerald-400"></div>
+            <div className="absolute -top-20 -right-20 w-40 h-40 bg-green-500/20 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-emerald-400/20 rounded-full blur-3xl"></div>
+
+            <div className="relative p-8">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-black text-2xl">S</span>
+                </div>
+                <h2 className="text-3xl font-bold mb-2">
+                  Tham gia <span className="text-gradient">SEAL</span>
+                </h2>
+                <p className="text-gray-400">
+                  Đăng ký để trải nghiệm hackathon đỉnh cao
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <input
+                    onChange={(e) => setEmail(e.target.value)}
+                    type="email"
+                    placeholder="Email"
+                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+
+                  <button
+                    onClick={() => mutateLoginGoogle(email)}
+                    className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-all hover:scale-[1.02]"
+                  >
+                    Đăng nhập
+                  </button>
+                </div>
+
+                <p className="text-xs text-gray-500 text-center">
+                  Khi đăng ký, bạn đồng ý với{' '}
+                  <a href="#" className="text-green-500 hover:underline">
+                    Điều khoản dịch vụ
+                  </a>{' '}
+                  và{' '}
+                  <a href="#" className="text-green-500 hover:underline">
+                    Chính sách bảo mật
+                  </a>{' '}
+                  của chúng tôi
+                </p>
+              </div>
+
+              {/* Lợi ích */}
+              <div className="mt-8 pt-6 border-t border-white/10">
+                <p className="text-gray-400 text-sm mb-4">Bạn sẽ nhận được:</p>
+                <div className="space-y-2">
+                  {[
+                    'Tham gia toàn bộ 3 hackathon thường niên',
+                    'Được mentor hỗ trợ và hướng dẫn chuyên sâu',
+                    'Kết nối với các chuyên gia trong ngành',
+                    'Cơ hội giành những giải thưởng hấp dẫn',
+                  ].map((benefit, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center text-sm text-gray-300"
+                    >
+                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-3"></div>
+                      {benefit}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
