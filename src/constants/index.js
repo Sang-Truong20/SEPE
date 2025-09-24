@@ -6,6 +6,8 @@ const PATH_NAME = {
   NOT_FOUND: '*',
   MEMBER: '/member',
   ADMIN: '/admin',
+  ADMIN_DASHBOARD: '/admin/dashboard',
+  ADMIN_CHALLENGE_CREATE: '/admin/challenge/create',
 };
 
 const NAV_ELEMENTS = [
