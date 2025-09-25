@@ -1,18 +1,27 @@
 import { useMutation } from '@tanstack/react-query';
+import { Button, Form, Input } from 'antd';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Cookies from 'js-cookie';
-import { jwtDecode } from 'jwt-decode';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import Footer from '../../components/layouts/Footer';
+import UserDropdown from '../../components/layouts/UserDropdown';
 import { PATH_NAME } from '../../constants';
+import { useLogout } from '../../hooks/useLogout';
+import { useUserData } from '../../hooks/useUserData';
 import { loginGoogle } from '../../services/auth';
 import { notify } from '../../utils/index';
 
 const SEALLandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [email, setEmail] = useState('');
+  const [form] = Form.useForm();
+  const { userInfo } = useUserData();
+  const { logout } = useLogout();
+
+  const handleFinish = (values) => {
+    mutateLoginGoogle(values.email);
+  };
 
   useEffect(() => {
     AOS.init({
@@ -29,33 +38,19 @@ const SEALLandingPage = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navigate = useNavigate();
-
-  const { mutate: mutateLoginGoogle } = useMutation({
+  const { mutate: mutateLoginGoogle, isPending } = useMutation({
     mutationFn: loginGoogle,
     onSuccess: (res) => {
-      notify('success', { description: 'Đăng nhập thành công' });
-
       const accessToken = res?.data?.accessToken;
       const refreshToken = res?.data?.refreshToken;
 
       if (accessToken && refreshToken) {
         Cookies.set('accessToken', accessToken);
         Cookies.set('refreshToken', refreshToken);
-        const decoded = jwtDecode(accessToken);
-        const role = decoded['role'];
-        if (role === 'ADMIN') {
-          navigate(PATH_NAME.ADMIN);
-        } else {
-          navigate(PATH_NAME.HOME);
-        }
+        window.location.href = PATH_NAME.HOME;
       }
     },
-    onError: (err) => {
-      if (err && err.status === 401) {
-        notify('error', { description: 'Thông tin đăng nhập không hợp lệ' });
-        return;
-      }
+    onError: () => {
       notify('error', { description: 'Lỗi hệ thống' });
     },
   });
@@ -77,7 +72,6 @@ const SEALLandingPage = () => {
               </div>
               <span className="font-bold text-2xl">SEAL</span>
             </div>
-
             <div className="hidden lg:flex items-center space-x-8">
               <a href="#home" className="hover:text-primary transition-colors">
                 Trang chủ
@@ -103,12 +97,19 @@ const SEALLandingPage = () => {
               <a href="#faq" className="hover:text-primary transition-colors">
                 FAQ
               </a>
-              <button
-                onClick={() => setShowLoginModal(true)}
-                className="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all hover:scale-105"
-              >
-                Đăng ký ngay
-              </button>
+
+              {userInfo ? (
+                <>
+                  <UserDropdown onLogout={logout} />
+                </>
+              ) : (
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all hover:scale-105"
+                >
+                  Tham gia ngay
+                </button>
+              )}
             </div>
 
             <button className="lg:hidden">
@@ -130,14 +131,12 @@ const SEALLandingPage = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <section
         id="home"
         className="relative min-h-screen flex items-center justify-center grid-pattern"
       >
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black"></div>
 
-        {/* Animated Background Elements */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-float"></div>
         <div
           className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float"
@@ -222,7 +221,6 @@ const SEALLandingPage = () => {
         </div>
       </section>
 
-      {/* Features Section */}
       <section id="features" className="py-32 relative">
         <div className="container mx-auto px-6">
           <div className="text-center mb-20" data-aos="fade-up">
@@ -268,7 +266,6 @@ const SEALLandingPage = () => {
         </div>
       </section>
 
-      {/* Hackathons Section */}
       <section
         id="hackathons"
         className="py-32 bg-gradient-to-b from-black to-gray-900"
@@ -320,7 +317,6 @@ const SEALLandingPage = () => {
         </div>
       </section>
 
-      {/* Timeline Section */}
       <section id="timeline" className="py-32 relative">
         <div className="container mx-auto px-6">
           <div className="text-center mb-20" data-aos="fade-up">
@@ -367,7 +363,6 @@ const SEALLandingPage = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
       <section className="py-32 bg-gradient-to-b from-gray-900 to-black">
         <div className="container mx-auto px-6 grid md:grid-cols-4 gap-12 text-center">
           {[
@@ -386,7 +381,6 @@ const SEALLandingPage = () => {
         </div>
       </section>
 
-      {/* FAQ Section */}
       <section id="faq" className="py-32 relative">
         <div className="container mx-auto px-6 max-w-4xl">
           <div className="text-center mb-20" data-aos="fade-up">
@@ -451,63 +445,8 @@ const SEALLandingPage = () => {
           </div>
         </div>
       </section>
+      <Footer />
 
-      {/* Footer */}
-      <footer className="py-20 border-t border-white/10">
-        <div className="container mx-auto px-6 grid md:grid-cols-4 gap-12">
-          <div>
-            <h3 className="font-bold text-xl mb-6">SEAL Hackathon</h3>
-            <p className="text-gray-400">
-              Hệ thống quản lý hackathon hiện đại, công bằng và minh bạch.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-bold mb-4">Liên kết nhanh</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li>
-                <a href="#home">Trang chủ</a>
-              </li>
-              <li>
-                <a href="#features">Tính năng</a>
-              </li>
-              <li>
-                <a href="#hackathons">Hackathon</a>
-              </li>
-              <li>
-                <a href="#timeline">Dòng thời gian</a>
-              </li>
-              <li>
-                <a href="#faq">FAQ</a>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-bold mb-4">Kết nối</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li>Email: contact@seal-hackathon.vn</li>
-              <li>Facebook: fb.com/sealhackathon</li>
-              <li>Zalo: 0123 456 789</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-bold mb-4">Tài liệu</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li>
-                <a href="#">Hướng dẫn</a>
-              </li>
-              <li>
-                <a href="#">Quy định</a>
-              </li>
-              <li>
-                <a href="#">Điều khoản</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div className="text-center text-gray-500 mt-12">
-          © 2025 SEAL Hackathon. Bản quyền thuộc về Ban tổ chức.
-        </div>
-      </footer>
       {showLoginModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div
@@ -551,21 +490,51 @@ const SEALLandingPage = () => {
               </div>
 
               <div className="space-y-6">
-                <div className="space-y-4">
-                  <input
-                    onChange={(e) => setEmail(e.target.value)}
-                    type="email"
-                    placeholder="Email"
-                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-
-                  <button
-                    onClick={() => mutateLoginGoogle(email)}
-                    className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-all hover:scale-[1.02]"
+                <Form
+                  form={form}
+                  onFinish={handleFinish}
+                  layout="vertical"
+                  className="space-y-4"
+                >
+                  <Form.Item
+                    name="email"
+                    rules={[
+                      {
+                        required: true,
+                        message: 'Vui lòng nhập email',
+                      },
+                      {
+                        type: 'email',
+                        message: 'Email không hợp lệ',
+                      },
+                    ]}
                   >
-                    Đăng nhập
-                  </button>
-                </div>
+                    <Input
+                      type="email"
+                      placeholder="Nhập email của bạn"
+                      size="large"
+                      className="bg-white/5 h-14 border-white/20 text-white placeholder-gray-400 hover:border-green-500 focus:border-green-500 focus:shadow-none"
+                      style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        color: 'white',
+                        borderRadius: '8px',
+                      }}
+                    />
+                  </Form.Item>
+
+                  <Form.Item>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={isPending}
+                      size="large"
+                      className="w-full h-12 font-semibold transition-all hover:scale-[1.02]"
+                    >
+                      Tham gia
+                    </Button>
+                  </Form.Item>
+                </Form>
 
                 <p className="text-xs text-gray-500 text-center">
                   Khi đăng ký, bạn đồng ý với{' '}
