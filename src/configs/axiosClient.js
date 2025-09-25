@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 import { callRefreshToken } from '../services/auth';
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.BASE_URL || 'http://localhost:3000',
+  baseURL: import.meta.env.VITE_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
