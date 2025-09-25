@@ -1,4 +1,3 @@
-import { Navigate } from 'react-router-dom';
 import AdminLayout from '../components/layouts/AdminLayout';
 import { Spin } from 'antd';
 import { Navigate, Outlet } from 'react-router-dom';
@@ -17,8 +16,13 @@ const AdminRoutes = () => {
     );
   }
 
-  return isAdmin ? <AdminLayout /> : <Navigate to="/login" replace />;
-  return isAdmin ? <Outlet /> : <Navigate to="/" replace />;
+  return isAdmin ? (
+    <AdminLayout>
+      <Outlet />
+    </AdminLayout>
+  ) : (
+    <Navigate to="/login" replace />
+  );
 };
 
 export default AdminRoutes;
