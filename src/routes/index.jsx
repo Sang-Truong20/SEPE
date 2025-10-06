@@ -9,8 +9,11 @@ import MemberRoutes from './MemberRoutes';
 
 const LandingPage = lazy(() => import('../pages/landing'));
 const MemberPage = lazy(() => import('../pages/member'));
-const AdminPage = lazy(() => import('../pages/admin'));
-const AdminChallengeCreatePage = lazy(() => import('../pages/admin/challenge-create'));
+const AdminChallengeCreatePage = lazy(
+  () => import('../pages/admin/challenge-create'),
+);
+const DashboardPage = lazy(() => import('../pages/admin/dashboard'));
+
 const withSuspense = (Component) => (
   <Suspense
     fallback={
@@ -52,11 +55,13 @@ const router = createBrowserRouter([
     children: [
       {
         path: PATH_NAME.ADMIN,
-        element: withSuspense(AdminPage),
-      },
-      {
-        path: PATH_NAME.ADMIN_CHALLENGE_CREATE,
-        element: withSuspense(AdminChallengeCreatePage),
+        children: [
+          { path: 'dashboard', element: withSuspense(DashboardPage) },
+          {
+            path: 'challenge/create',
+            element: withSuspense(AdminChallengeCreatePage),
+          },
+        ],
       },
     ],
   },
