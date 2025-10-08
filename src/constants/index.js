@@ -6,6 +6,7 @@ const PATH_NAME = {
   ADMIN: '/admin',
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_CHALLENGE_CREATE: '/admin/challenge/create',
+  HACKATHON_CREATE_PAGE: '/admin/hackathon/create',
 };
 
 export { PATH_NAME };
