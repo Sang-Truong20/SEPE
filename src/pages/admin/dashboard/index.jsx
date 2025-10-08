@@ -13,10 +13,13 @@ import {
   UserSwitchOutlined,
 } from '@ant-design/icons';
 import { Avatar, Button, Input, Space, Table, Tabs, Tag, Tooltip } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { PATH_NAME } from '../../../constants';
 
 const { Search } = Input;
 
 const HackathonDashboard = () => {
+  const navigate = useNavigate();
   const stats = [
     {
       icon: <UserOutlined className="text-3xl" />,
@@ -551,7 +554,11 @@ const HackathonDashboard = () => {
           <div className="flex gap-3">
             <Button icon={<FileAddOutlined />}>Duyệt đề bài</Button>
             <Button icon={<DownloadOutlined />}>Xuất dữ liệu</Button>
-            <Button type="primary" icon={<PlusOutlined />}>
+            <Button
+              onClick={() => navigate(PATH_NAME.HACKATHON_CREATE_PAGE)}
+              type="primary"
+              icon={<PlusOutlined />}
+            >
               Tạo Hackathon
             </Button>
           </div>
