@@ -13,6 +13,7 @@ const AdminChallengeCreatePage = lazy(
   () => import('../pages/admin/challenge-create'),
 );
 const DashboardPage = lazy(() => import('../pages/admin/dashboard'));
+const HackathonCreatePage = lazy(() => import('../pages/admin/hackathon'));
 
 const withSuspense = (Component) => (
   <Suspense
@@ -60,6 +61,10 @@ const router = createBrowserRouter([
           {
             path: 'challenge/create',
             element: withSuspense(AdminChallengeCreatePage),
+          },
+          {
+            path: 'hackathon/create',
+            element: withSuspense(HackathonCreatePage),
           },
         ],
       },
