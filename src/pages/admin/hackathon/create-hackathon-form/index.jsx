@@ -35,7 +35,7 @@ export default function HackathonForm() {
     {
       id: 1,
       rank: '1st Place',
-      value: '10.000.000 VND',
+      value: '100.000.000 VND',
       description: 'Tiền mặt + Cơ hội thực tập tại FPT',
     },
     {
