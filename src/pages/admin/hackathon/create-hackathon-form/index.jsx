@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
+import { Button, Steps, Switch, Card, Space, Typography, Divider } from 'antd';
 import {
   Input,
-  Button,
-  Steps,
-  DatePicker,
   Select,
+  DatePicker,
   InputNumber,
-  Switch,
-  Card,
-  Space,
-  Typography,
-  Divider,
-} from 'antd';
+} from '../../../../components/ui';
 import {
   PlusOutlined,
   DeleteOutlined,
@@ -25,7 +19,7 @@ import 'antd/dist/reset.css';
 import { useNavigate } from 'react-router-dom';
 
 const { TextArea } = Input;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export default function HackathonForm() {
   const navigate = useNavigate();
@@ -35,7 +29,7 @@ export default function HackathonForm() {
     {
       id: 1,
       rank: '1st Place',
-      value: '10.000.000 VND',
+      value: '100.000.000 VND',
       description: 'Tiền mặt + Cơ hội thực tập tại FPT',
     },
     {
@@ -93,18 +87,18 @@ export default function HackathonForm() {
       case 0:
         return (
           <Card
-            className="bg-white border border-gray-200 rounded-xl shadow-sm mt-6"
+            className="border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm mt-6"
             title={
               <Space>
-                <FileTextOutlined className="text-orange-500 text-lg" />
-                <span className="text-gray-900 font-semibold">
+                <FileTextOutlined className="text-primary text-lg" />
+                <span className="text-white font-semibold">
                   Thông tin cơ bản
                 </span>
               </Space>
             }
           >
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
+              <label className="block text-gray-300 text-sm font-medium mb-2">
                 Tên Hackathon *
               </label>
               <Input
@@ -115,7 +109,7 @@ export default function HackathonForm() {
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
+              <label className="block text-gray-300 text-sm font-medium mb-2">
                 Tagline
               </label>
               <Input
@@ -126,10 +120,10 @@ export default function HackathonForm() {
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
+              <label className="block text-gray-300 text-sm font-medium mb-2">
                 Mô tả chi tiết *
               </label>
-              <TextArea
+              <Input.TextArea
                 rows={6}
                 placeholder="Mô tả chi tiết về hackathon, mục tiêu, chủ đề..."
                 className="text-base"
@@ -141,24 +135,24 @@ export default function HackathonForm() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-300 text-sm font-medium mb-2">
                   Ngày bắt đầu *
                 </label>
                 <DatePicker
                   showTime
-                  className="w-full h-10"
+                  className="w-full h-10 bg-white/5 border-gray-700 text-white hover:border-primary focus:border-primary"
                   placeholder="mm/dd/yyyy --:-- --"
                   onChange={(date) => handleInputChange('startDate', date)}
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-300 text-sm font-medium mb-2">
                   Ngày kết thúc *
                 </label>
                 <DatePicker
                   showTime
-                  className="w-full h-10"
+                  className="w-full h-10 bg-white/5 border-gray-700 text-white hover:border-primary focus:border-primary"
                   placeholder="mm/dd/yyyy --:-- --"
                   onChange={(date) => handleInputChange('endDate', date)}
                 />
@@ -167,12 +161,12 @@ export default function HackathonForm() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-300 text-sm font-medium mb-2">
                   Hạn đăng ký *
                 </label>
                 <DatePicker
                   showTime
-                  className="w-full h-10"
+                  className="w-full h-10 bg-white/5 border-gray-700 text-white hover:border-primary focus:border-primary"
                   placeholder="mm/dd/yyyy --:-- --"
                   onChange={(date) =>
                     handleInputChange('registrationDeadline', date)
@@ -181,13 +175,17 @@ export default function HackathonForm() {
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-300 text-sm font-medium mb-2">
                   Hình thức *
                 </label>
                 <Select
                   defaultValue="online"
-                  className="w-full h-10"
+                  className="w-full h-10 bg-white/5 border-gray-700 text-white hover:border-primary focus:border-primary [&_.ant-select-selection-item]:text-white [&_.ant-select-arrow]:text-white"
                   onChange={(value) => handleInputChange('format', value)}
+                  dropdownStyle={{
+                    background: 'rgba(0, 0, 0, 0.8)',
+                    backdropFilter: 'blur(10px)',
+                  }}
                 >
                   <Select.Option value="online">Online</Select.Option>
                   <Select.Option value="offline">Offline</Select.Option>
@@ -201,11 +199,11 @@ export default function HackathonForm() {
       case 1:
         return (
           <Card
-            className="bg-white border border-gray-200 rounded-xl shadow-sm mt-6"
+            className="border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm mt-6"
             title={
               <Space>
-                <TeamOutlined className="text-orange-500 text-lg" />
-                <span className="text-gray-900 font-semibold">
+                <TeamOutlined className="text-primary text-lg" />
+                <span className="text-white font-semibold">
                   Cấu hình tham gia
                 </span>
               </Space>
@@ -213,37 +211,37 @@ export default function HackathonForm() {
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-300 text-sm font-medium mb-2">
                   Số thành viên tối thiểu/nhóm *
                 </label>
                 <InputNumber
                   min={1}
                   defaultValue={1}
-                  className="w-full py-1"
+                  className="w-full py-1 bg-white/5 border-gray-700 text-white hover:border-primary focus:border-primary"
                   onChange={(value) => handleInputChange('minTeamSize', value)}
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-300 text-sm font-medium mb-2">
                   Số thành viên tối đa/nhóm *
                 </label>
                 <InputNumber
                   min={1}
                   defaultValue={4}
-                  className="w-full py-1"
+                  className="w-full py-1 bg-white/5 border-gray-700 text-white hover:border-primary focus:border-primary"
                   onChange={(value) => handleInputChange('maxTeamSize', value)}
                 />
               </div>
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
+              <label className="block text-gray-300 text-sm font-medium mb-2">
                 Số lượng người tham gia tối đa
               </label>
               <InputNumber
                 placeholder="Để trống nếu không giới hạn"
-                className="py-1 w-full"
+                className="py-1 w-full bg-white/5 border-gray-700 text-white hover:border-primary focus:border-primary"
                 onChange={(e) =>
                   handleInputChange('maxParticipants', e.target.value)
                 }
@@ -251,7 +249,7 @@ export default function HackathonForm() {
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
+              <label className="block text-gray-300 text-sm font-medium mb-2">
                 Cho phép tham gia cá nhân
               </label>
               <Switch
@@ -261,16 +259,16 @@ export default function HackathonForm() {
                 }
               />
               <div className="mt-2">
-                <Text className="text-gray-500">
+                <Text className="text-gray-400">
                   Người dùng có thể đăng ký mà không cần tạo nhóm
                 </Text>
               </div>
             </div>
 
-            <Divider className="border-gray-200" />
+            <Divider className="border-gray-800" />
 
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
+              <label className="block text-gray-300 text-sm font-medium mb-2">
                 Yêu cầu xác minh tài khoản
               </label>
               <Switch
@@ -279,15 +277,15 @@ export default function HackathonForm() {
                 }
               />
               <div className="mt-2">
-                <Text className="text-gray-500">
+                <Text className="text-gray-400">
                   Người tham gia phải xác minh email/số điện thoại trước khi
                   đăng ký
                 </Text>
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mt-6">
-              <Text className="text-blue-600">
+            <div className="bg-primary/10 border border-primary/30 p-4 rounded-lg mt-6">
+              <Text className="text-primary">
                 💡 Số thành viên tối thiểu phải nhỏ hơn hoặc bằng số thành viên
                 tối đa. Nếu cho phép tham gia cá nhân, số thành viên tối thiểu
                 nên là 1.
@@ -300,12 +298,12 @@ export default function HackathonForm() {
         return (
           <div className="mt-6">
             <Card
-              className="bg-white border border-gray-200 rounded-xl shadow-sm mb-6"
+              className="border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm mb-6"
               title={
                 <div className="flex justify-between items-center">
                   <Space>
-                    <TrophyOutlined className="text-yellow-400 text-lg" />
-                    <span className="text-gray-900 font-semibold">
+                    <TrophyOutlined className="text-primary text-lg" />
+                    <span className="text-white font-semibold">
                       Giải thưởng
                     </span>
                   </Space>
@@ -313,6 +311,7 @@ export default function HackathonForm() {
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={addPrize}
+                    className="bg-primary hover:bg-primary/90 transition-all"
                   >
                     Thêm giải
                   </Button>
@@ -322,7 +321,7 @@ export default function HackathonForm() {
               {prizes.map((prize, index) => (
                 <Card
                   key={prize.id}
-                  className="bg-gray-50 mb-4 border border-gray-200"
+                  className="bg-black/30 mb-4 border border-gray-800"
                   title={
                     <div className="flex justify-between items-center">
                       <span className="text-primary text-sm font-medium">
@@ -338,35 +337,35 @@ export default function HackathonForm() {
                   }
                 >
                   <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-medium mb-2">
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
                       Hạng
                     </label>
                     <Input
                       placeholder="1st Place"
                       defaultValue={prize.rank}
-                      className="h-10"
+                      className="h-10 bg-white/5 border-gray-700 text-white placeholder:text-gray-500 hover:border-primary focus:border-primary"
                     />
                   </div>
 
                   <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-medium mb-2">
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
                       Giá trị
                     </label>
                     <Input
                       placeholder="VD: 10.000.000 VND"
                       defaultValue={prize.value}
-                      className="h-10"
+                      className="h-10 bg-white/5 border-gray-700 text-white placeholder:text-gray-500 hover:border-primary focus:border-primary"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-700 text-sm font-medium mb-2">
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
                       Mô tả
                     </label>
                     <Input
                       placeholder="VD: Tiền mặt + Cơ hội thực tập tại FPT"
                       defaultValue={prize.description}
-                      className="h-10"
+                      className="h-10 bg-white/5 border-gray-700 text-white placeholder:text-gray-500 hover:border-primary focus:border-primary"
                     />
                   </div>
                 </Card>
@@ -374,12 +373,12 @@ export default function HackathonForm() {
             </Card>
 
             <Card
-              className="bg-white border border-gray-200 rounded-xl shadow-sm"
+              className="border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm"
               title={
                 <div className="flex justify-between items-center">
                   <Space>
-                    <TrophyOutlined className="text-yellow-400 text-lg" />
-                    <span className="text-gray-900 font-semibold">
+                    <TrophyOutlined className="text-primary text-lg" />
+                    <span className="text-white font-semibold">
                       Các giai đoạn
                     </span>
                   </Space>
@@ -387,6 +386,7 @@ export default function HackathonForm() {
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={addStage}
+                    className="bg-primary hover:bg-primary/90 transition-all"
                   >
                     Thêm giai đoạn
                   </Button>
@@ -396,10 +396,10 @@ export default function HackathonForm() {
               {stages.map((stage, index) => (
                 <Card
                   key={stage.id}
-                  className="bg-gray-50 mb-4 border border-gray-200"
+                  className="bg-black/30 mb-4 border border-gray-800"
                   title={
                     <div className="flex justify-between items-center">
-                      <span className="text-blue-500 text-sm font-medium">
+                      <span className="text-primary text-sm font-medium">
                         Giai đoạn {index + 1}
                       </span>
                       <Button
@@ -412,48 +412,48 @@ export default function HackathonForm() {
                   }
                 >
                   <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-medium mb-2">
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
                       Tên giai đoạn
                     </label>
                     <Input
                       placeholder="Đăng ký"
                       defaultValue={stage.name}
-                      className="h-10"
+                      className="h-10 bg-white/5 border-gray-700 text-white placeholder:text-gray-500 hover:border-primary focus:border-primary"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                     <div>
-                      <label className="block text-gray-700 text-sm font-medium mb-2">
+                      <label className="block text-gray-300 text-sm font-medium mb-2">
                         Ngày bắt đầu
                       </label>
                       <DatePicker
                         showTime
-                        className="w-full h-10"
+                        className="w-full h-10 bg-white/5 border-gray-700 text-white hover:border-primary focus:border-primary"
                         placeholder="mm/dd/yyyy --:-- --"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-gray-700 text-sm font-medium mb-2">
+                      <label className="block text-gray-300 text-sm font-medium mb-2">
                         Ngày kết thúc
                       </label>
                       <DatePicker
                         showTime
-                        className="w-full h-10"
+                        className="w-full h-10 bg-white/5 border-gray-700 text-white hover:border-primary focus:border-primary"
                         placeholder="mm/dd/yyyy --:-- --"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-gray-700 text-sm font-medium mb-2">
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
                       Mô tả
                     </label>
                     <TextArea
                       rows={3}
                       placeholder="Mô tả về giai đoạn này..."
-                      className="text-base"
+                      className="text-base bg-white/5 border-gray-700 text-white placeholder:text-gray-500 hover:border-primary focus:border-primary"
                     />
                   </div>
                 </Card>
@@ -465,124 +465,124 @@ export default function HackathonForm() {
       case 3:
         return (
           <Card
-            className="bg-white border border-gray-200 rounded-xl shadow-sm mt-6"
+            className="border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm mt-6"
             title={
               <Space>
-                <TrophyOutlined className="text-yellow-500 text-lg" />
-                <span className="text-gray-900 font-semibold">
+                <TrophyOutlined className="text-primary text-lg" />
+                <span className="text-white font-semibold">
                   Quy định & Tiêu chí
                 </span>
               </Space>
             }
           >
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
+              <label className="block text-gray-300 text-sm font-medium mb-2">
                 Quy định & Luật lệ *
               </label>
               <TextArea
                 rows={6}
                 placeholder="Nhập các quy định, luật lệ mà người tham gia cần tuân thủ..."
-                className="text-base"
+                className="text-base bg-white/5 border-gray-700 text-white placeholder:text-gray-500 hover:border-primary focus:border-primary"
                 onChange={(e) => handleInputChange('rules', e.target.value)}
               />
-              <Text className="text-gray-500 mt-2">
+              <Text className="text-gray-400 mt-2">
                 VD: Không sử dụng code có sẵn, không vi phạm bản quyền, v.v.
               </Text>
             </div>
 
-            <Divider className="border-gray-200" />
+            <Divider className="border-gray-800" />
 
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
+              <label className="block text-gray-300 text-sm font-medium mb-2">
                 Yêu cầu kỹ thuật
               </label>
               <TextArea
                 rows={6}
                 placeholder="Các yêu cầu về công nghệ, kỹ năng cần thiết..."
-                className="text-base"
+                className="text-base bg-white/5 border-gray-700 text-white placeholder:text-gray-500 hover:border-primary focus:border-primary"
                 onChange={(e) =>
                   handleInputChange('techRequirements', e.target.value)
                 }
               />
-              <Text className="text-gray-500 mt-2">
+              <Text className="text-gray-400 mt-2">
                 VD: Sử dụng React, Node.js, có kinh nghiệm với AI/ML, v.v.
               </Text>
             </div>
 
-            <Divider className="border-gray-200" />
+            <Divider className="border-gray-800" />
 
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
+              <label className="block text-gray-300 text-sm font-medium mb-2">
                 Tiêu chí đánh giá
               </label>
               <TextArea
                 rows={6}
                 placeholder="Các tiêu chí đánh giá dự án..."
-                className="text-base"
+                className="text-base bg-white/5 border-gray-700 text-white placeholder:text-gray-500 hover:border-primary focus:border-primary"
                 onChange={(e) => handleInputChange('criteria', e.target.value)}
               />
-              <Text className="text-gray-500 mt-2">
+              <Text className="text-gray-400 mt-2">
                 VD: Tính sáng tạo (30%), Kỹ thuật (30%), Khả năng ứng dụng (40%)
               </Text>
             </div>
 
-            <Divider className="border-gray-200" />
+            <Divider className="border-gray-800" />
 
             <Card
-              className="bg-orange-50 border border-orange-200 mt-6"
+              className="bg-black/30 border border-gray-800 mt-6"
               title={
-                <span className="text-gray-900 font-medium">
+                <span className="text-white font-medium">
                   Tóm tắt - Xem lại thông tin trước khi tạo hackathon
                 </span>
               }
             >
-              <Space direction="vertical" className="w-full">
+              <Space direction="vertical" className="w-full ">
                 <div className="flex justify-between">
-                  <Text className="text-gray-600">Tên hackathon:</Text>
-                  <Text strong className="text-gray-900">
+                  <Text className="text-white">Tên hackathon:</Text>
+                  <Text strong className="text-white">
                     {formData.name || 'Chưa nhập'}
                   </Text>
                 </div>
                 <div className="flex justify-between">
-                  <Text className="text-gray-600">Danh mục:</Text>
-                  <Text strong className="text-gray-900">
+                  <Text className="text-white">Danh mục:</Text>
+                  <Text strong className="text-white">
                     {formData.category || 'Chưa chọn'}
                   </Text>
                 </div>
                 <div className="flex justify-between">
-                  <Text className="text-gray-600">Hình thức:</Text>
-                  <Text strong className="text-gray-900">
+                  <Text className="text-white">Hình thức:</Text>
+                  <Text strong className="text-white">
                     {formData.format || 'online'}
                   </Text>
                 </div>
                 <div className="flex justify-between">
-                  <Text className="text-gray-600">Số thành viên/nhóm:</Text>
-                  <Text strong className="text-gray-900">
+                  <Text className="text-white">Số thành viên/nhóm:</Text>
+                  <Text strong className="text-white">
                     {formData.minTeamSize || 1} - {formData.maxTeamSize || 4}{' '}
                     người
                   </Text>
                 </div>
                 <div className="flex justify-between">
-                  <Text className="text-gray-600">Số giải thưởng:</Text>
-                  <Text strong className="text-gray-900">
+                  <Text className="text-white">Số giải thưởng:</Text>
+                  <Text strong className="text-white">
                     {prizes.length} giải
                   </Text>
                 </div>
                 <div className="flex justify-between">
-                  <Text className="text-gray-600">Số giai đoạn:</Text>
-                  <Text strong className="text-gray-900">
+                  <Text className="text-white">Số giai đoạn:</Text>
+                  <Text strong className="text-white">
                     {stages.length} giai đoạn
                   </Text>
                 </div>
                 <div className="flex justify-between">
-                  <Text className="text-gray-600">Tham gia cá nhân:</Text>
-                  <Text strong className="text-gray-900">
+                  <Text className="text-white">Tham gia cá nhân:</Text>
+                  <Text strong className="text-white">
                     {formData.allowIndividual !== false ? 'Có' : 'Không'}
                   </Text>
                 </div>
                 <div className="flex justify-between">
-                  <Text className="text-gray-600">Yêu cầu xác minh:</Text>
-                  <Text strong className="text-gray-900">
+                  <Text className="text-white">Yêu cầu xác minh:</Text>
+                  <Text strong className="text-white">
                     {formData.requireVerification ? 'Có' : 'Không'}
                   </Text>
                 </div>
@@ -597,28 +597,28 @@ export default function HackathonForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-black p-6">
       <div className=" mx-auto">
         <div className="mb-8">
           <Button
             onClick={() => navigate(-1)}
-            type="text"
+            type="link"
             icon={<ArrowLeftOutlined />}
-            className="mb-4 text-gray-600"
+            className="mb-4 !text-light-primary hover:!text-primary"
           >
             Quay lại Admin Dashboard
           </Button>
 
           <div className="flex justify-between items-center">
             <div>
-              <Title level={3} className="text-gray-900 m-0">
+              <h1 className="text-3xl font-bold mb-2 text-white">
                 Tạo Hackathon Mới
-              </Title>
-              <Text className="text-gray-500">
+              </h1>
+              <p className="text-gray-400">
                 Thiết lập và cấu hình hackathon mới cho sinh viên FPT
-              </Text>
+              </p>
             </div>
-            <div className="bg-blue-50 text-blue-600 px-4 py-1 rounded-lg border border-blue-200">
+            <div className="bg-dark-tertiary text-text-accent px-4 py-1 rounded-lg border border-dark-accent">
               Bước {currentStep + 1}/4
             </div>
           </div>
@@ -628,19 +628,19 @@ export default function HackathonForm() {
           current={currentStep}
           className="mb-8"
           items={steps.map((step) => ({
-            title: <span className="text-gray-600">{step.title}</span>,
-            icon: step.icon,
+            title: <span className="text-text-secondary">{step.title}</span>,
+            icon: <span className="text-text-accent">{step.icon}</span>,
           }))}
         />
 
         {renderStepContent()}
 
-        <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+        <div className="flex justify-between items-center mt-8 pt-6 border-t border-dark-accent">
           <Button
             icon={<ArrowLeftOutlined />}
             onClick={prevStep}
             disabled={currentStep === 0}
-            className="text-gray-600"
+            className="!text-text-primary !bg-dark-accent/30 hover:!bg-dark-accent/60 !border !border-dark-accent rounded-md transition-colors duration-200"
           >
             Quay lại
           </Button>

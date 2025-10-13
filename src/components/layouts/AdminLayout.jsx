@@ -77,12 +77,12 @@ const AdminLayout = () => {
   )?.key;
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh' }} className="bg-dark-primary">
       <Sider
         collapsible
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
-        theme="light"
+        theme="dark"
         width={265}
         style={{
           position: 'fixed',
@@ -91,28 +91,41 @@ const AdminLayout = () => {
           top: 0,
           bottom: 0,
           overflow: 'auto',
-          boxShadow: '2px 0 6px rgba(0,0,0,0.1)',
+          boxShadow: '2px 0 6px rgba(0,0,0,0.3)',
           zIndex: 100,
         }}
+        className="bg-dark-secondary"
       >
+        <style>{`
+          .ant-layout-sider-trigger {
+            background-color: rgb(23, 32, 30) !important;
+            color: #ccc !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+          }
+          .ant-layout-sider-trigger:hover {
+            background-color: rgb(30, 42, 39) !important;
+            color: #fff !important;
+          }
+        `}</style>
         <div className="demo-logo-vertical p-4">
           <div className="flex items-center space-x-3">
             <Avatar size="large" icon={<UserOutlined />} />
             {!collapsed && (
               <div>
-                <div className="text-black font-semibold">Admin Panel</div>
-                <div className="text-gray-500 text-sm">Administrator</div>
+                <div className="text-white font-semibold">Admin Panel</div>
+                <div className="text-gray-400 text-sm">Administrator</div>
               </div>
             )}
           </div>
         </div>
 
         <Menu
-          theme="light"
+          theme="dark"
           mode="inline"
           items={items}
           selectedKeys={[location.pathname]}
           defaultOpenKeys={openKey ? [openKey] : []}
+          className="bg-dark-secondary"
         />
       </Sider>
 
@@ -123,7 +136,7 @@ const AdminLayout = () => {
         }}
       >
         <Header
-          className="bg-white"
+          className="bg-dark-secondary border-dark-accent overflow-hidden"
           style={{
             position: 'fixed',
             top: 0,
@@ -134,8 +147,8 @@ const AdminLayout = () => {
             alignItems: 'center',
             justifyContent: 'flex-end',
             padding: '0 24px',
-            boxShadow: '0 1px 4px rgba(0,21,41,.08)',
-            borderBottom: '2px solid #f0f0f0',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+            borderBottom: '1px solid',
             zIndex: 99,
             transition: 'all 0.2s',
           }}
@@ -144,9 +157,9 @@ const AdminLayout = () => {
             menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
             placement="bottomRight"
           >
-            <div className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 px-3 py-2 rounded">
+            <div className="flex items-center space-x-2 cursor-pointer hover:bg-[#2f2f2f] px-3 py-2 rounded">
               <Avatar icon={<UserOutlined />} />
-              <span className="font-medium">Admin User</span>
+              <span className="font-medium text-white">Admin User</span>
             </div>
           </Dropdown>
         </Header>
@@ -156,8 +169,8 @@ const AdminLayout = () => {
             marginTop: 64,
             height: 'calc(100vh - 64px)',
             overflowY: 'auto',
-            background: '#f9f9f9',
             padding: 16,
+            backgroundColor: '#0A1F1C',
           }}
         >
           <Outlet />
