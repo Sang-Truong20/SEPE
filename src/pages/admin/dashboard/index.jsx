@@ -12,9 +12,10 @@ import {
   UserOutlined,
   UserSwitchOutlined,
 } from '@ant-design/icons';
-import { Avatar, Button, Input, Space, Table, Tabs, Tag, Tooltip } from 'antd';
+import { Avatar, Button, Space, Table, Tabs, Tag, Tooltip } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../../constants';
+import { Input } from '../../../components/ui';
 
 const { Search } = Input;
 
@@ -25,29 +26,33 @@ const HackathonDashboard = () => {
       icon: <UserOutlined className="text-3xl" />,
       value: '1247',
       label: 'Tổng người dùng',
-      color: 'bg-blue-50 border-blue-200',
-      iconColor: 'text-blue-600',
+      color:
+        'border border-white/10 bg-white/5 hover:bg-white/10 transition-all',
+      iconColor: 'text-primary',
     },
     {
       icon: <TrophyOutlined className="text-3xl" />,
       value: '3',
       label: 'Hackathon đang diễn ra',
-      color: 'bg-yellow-50 border-yellow-200',
-      iconColor: 'text-yellow-600',
+      color:
+        'border border-white/10 bg-white/5 hover:bg-white/10 transition-all',
+      iconColor: 'text-primary',
     },
     {
       icon: <FileTextOutlined className="text-3xl" />,
       value: '89',
       label: 'Bài nộp',
-      color: 'bg-green-50 border-green-200',
-      iconColor: 'text-green-600',
+      color:
+        'border border-white/10 bg-white/5 hover:bg-white/10 transition-all',
+      iconColor: 'text-primary',
     },
     {
       icon: <BarChartOutlined className="text-3xl" />,
       value: '12',
       label: 'Chờ đánh giá',
-      color: 'bg-purple-50 border-purple-200',
-      iconColor: 'text-purple-600',
+      color:
+        'border border-white/10 bg-white/5 hover:bg-white/10 transition-all',
+      iconColor: 'text-primary',
     },
   ];
 
@@ -55,25 +60,25 @@ const HackathonDashboard = () => {
     {
       text: 'New user registration: Alex Johnson',
       time: '2 minutes ago',
-      color: 'bg-green-500',
+      color: 'bg-primary/20',
     },
     {
       text: 'Submission received: AI Code Assistant',
       time: '15 minutes ago',
-      color: 'bg-blue-500',
+      color: 'bg-secondary/20',
     },
     {
       text: 'Judge completed review: SmartCity AI',
       time: '1 hour ago',
-      color: 'bg-purple-500',
+      color: 'bg-tertiary/20',
     },
   ];
 
   const systemHealth = [
-    { label: 'Server Status', status: 'Online', color: 'text-green-600' },
-    { label: 'Database', status: 'Healthy', color: 'text-green-600' },
-    { label: 'File Storage', status: '85% Full', color: 'text-yellow-600' },
-    { label: 'API Status', status: 'Operational', color: 'text-green-600' },
+    { label: 'Server Status', status: 'Online', color: 'text-primary' },
+    { label: 'Database', status: 'Healthy', color: 'text-primary' },
+    { label: 'File Storage', status: '85% Full', color: 'text-secondary' },
+    { label: 'API Status', status: 'Operational', color: 'text-primary' },
   ];
 
   const hackathonData = [
@@ -143,7 +148,7 @@ const HackathonDashboard = () => {
       dataIndex: 'name',
       key: 'name',
       render: (text) => (
-        <span className="font-medium text-gray-900">{text}</span>
+        <span className="font-medium text-text-primary">{text}</span>
       ),
     },
     {
@@ -178,7 +183,7 @@ const HackathonDashboard = () => {
       dataIndex: 'prize',
       key: 'prize',
       render: (text) => (
-        <span className="text-green-600 font-medium">{text}</span>
+        <span className="text-text-accent font-medium">{text}</span>
       ),
     },
     {
@@ -186,9 +191,22 @@ const HackathonDashboard = () => {
       key: 'actions',
       render: () => (
         <Space size="middle">
-          <Button type="text" icon={<EyeOutlined />} />
-          <Button type="text" icon={<EditOutlined />} />
-          <Button type="text" icon={<DeleteOutlined />} danger />
+          <Button
+            type="text"
+            className="text-white hover:text-primary"
+            icon={<EyeOutlined className="text-white hover:text-primary" />}
+          />
+          <Button
+            type="text"
+            className="text-white hover:text-primary"
+            icon={<EditOutlined className="text-white hover:text-primary" />}
+          />
+          <Button
+            type="text"
+            className="text-white hover:text-red-500"
+            icon={<DeleteOutlined className="text-white hover:text-red-500" />}
+            danger
+          />
         </Space>
       ),
     },
@@ -205,8 +223,8 @@ const HackathonDashboard = () => {
             {record.name.split(' ')[0][0] + record.name.split(' ')[1][0]}
           </Avatar>
           <div>
-            <div className="font-medium text-gray-900">{record.name}</div>
-            <div className="text-gray-500 text-sm">{record.email}</div>
+            <div className="font-medium text-text-primary">{record.name}</div>
+            <div className="text-text-secondary text-sm">{record.email}</div>
           </div>
         </Space>
       ),
@@ -242,9 +260,24 @@ const HackathonDashboard = () => {
       key: 'actions',
       render: () => (
         <Space size="middle">
-          <Button type="text" icon={<EyeOutlined />} />
-          <Button type="text" icon={<UserSwitchOutlined />} />
-          <Button type="text" icon={<DeleteOutlined />} danger />
+          <Button
+            type="text"
+            className="text-white hover:text-primary"
+            icon={<EyeOutlined className="text-white hover:text-primary" />}
+          />
+          <Button
+            type="text"
+            className="text-white hover:text-primary"
+            icon={
+              <UserSwitchOutlined className="text-white hover:text-primary" />
+            }
+          />
+          <Button
+            type="text"
+            className="text-white hover:text-red-500"
+            icon={<DeleteOutlined className="text-white hover:text-red-500" />}
+            danger
+          />
         </Space>
       ),
     },
@@ -266,10 +299,12 @@ const HackathonDashboard = () => {
                 <div className="flex items-center gap-4">
                   <div className={stat.iconColor}>{stat.icon}</div>
                   <div>
-                    <div className="text-3xl font-bold text-gray-900 mb-1">
+                    <div className="text-3xl font-bold text-text-primary mb-1">
                       {stat.value}
                     </div>
-                    <div className="text-sm text-gray-600">{stat.label}</div>
+                    <div className="text-sm text-text-secondary">
+                      {stat.label}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -278,21 +313,24 @@ const HackathonDashboard = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Activity */}
-            <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-              <h2 className="text-xl font-semibold mb-6 text-gray-900">
+            <div className="lg:col-span-2 bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
+              <h2 className="text-xl font-semibold mb-6 text-text-primary">
                 Hoạt động gần đây
               </h2>
               <div className="space-y-4">
                 {activities.map((activity, idx) => (
-                  <div key={idx} className="flex items-start gap-4">
+                  <div
+                    key={idx}
+                    className="flex items-start gap-4 p-2 rounded hover:bg-white/5 transition-colors"
+                  >
                     <div
                       className={`w-2 h-2 ${activity.color} rounded-full mt-2 flex-shrink-0`}
                     ></div>
                     <div className="flex-1">
-                      <p className="text-gray-900 font-medium">
+                      <p className="text-text-primary font-medium">
                         {activity.text}
                       </p>
-                      <p className="text-gray-500 text-sm mt-1">
+                      <p className="text-text-secondary text-sm mt-1">
                         {activity.time}
                       </p>
                     </div>
@@ -302,14 +340,14 @@ const HackathonDashboard = () => {
             </div>
 
             {/* System Health */}
-            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-              <h2 className="text-xl font-semibold mb-6 text-gray-900">
+            <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
+              <h2 className="text-xl font-semibold mb-6 text-text-primary">
                 System Health
               </h2>
               <div className="space-y-4">
                 {systemHealth.map((item, idx) => (
                   <div key={idx} className="flex justify-between items-center">
-                    <span className="text-gray-600">{item.label}</span>
+                    <span className="text-text-secondary">{item.label}</span>
                     <span className={`font-semibold ${item.color}`}>
                       {item.status}
                     </span>
@@ -325,19 +363,77 @@ const HackathonDashboard = () => {
       key: '2',
       label: 'Hackathons',
       children: (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+        <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Manage Hackathons
+            <h2 className="text-xl font-semibold text-text-primary">
+              Quản lý Hackathons
             </h2>
-            <Button type="primary" icon={<PlusOutlined />}>
-              New Hackathon
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              className="bg-primary hover:bg-primary/90 transition-all"
+              onClick={() => navigate(PATH_NAME.HACKATHON_CREATE_PAGE)}
+            >
+              Tạo mới Hackathon
             </Button>
           </div>
           <Table
-            columns={hackathonColumns}
+            columns={hackathonColumns.map((col) => ({
+              ...col,
+              title:
+                col.title === 'Name'
+                  ? 'Tên'
+                  : col.title === 'Status'
+                    ? 'Trạng thái'
+                    : col.title === 'Participants'
+                      ? 'Người tham gia'
+                      : col.title === 'Submissions'
+                        ? 'Bài nộp'
+                        : col.title === 'Dates'
+                          ? 'Ngày'
+                          : col.title === 'Prize'
+                            ? 'Giải thưởng'
+                            : col.title === 'Actions'
+                              ? 'Thao tác'
+                              : col.title,
+              render:
+                col.key === 'name'
+                  ? (text) => (
+                      <span className="font-medium text-white">{text}</span>
+                    )
+                  : col.key === 'prize'
+                    ? (text) => (
+                        <span className="text-primary font-medium">{text}</span>
+                      )
+                    : col.key === 'actions'
+                      ? () => (
+                          <Space size="middle">
+                            <Button
+                              type="text"
+                              icon={
+                                <EyeOutlined className="text-white hover:text-primary" />
+                              }
+                            />
+                            <Button
+                              type="text"
+                              icon={
+                                <EditOutlined className="text-white hover:text-primary" />
+                              }
+                            />
+                            <Button
+                              type="text"
+                              icon={
+                                <DeleteOutlined className="text-white hover:text-red-500" />
+                              }
+                              danger
+                            />
+                          </Space>
+                        )
+                      : col.render,
+            }))}
             dataSource={hackathonData}
             pagination={false}
+            className="[&_.ant-table]:bg-transparent [&_th]:!bg-white/5 [&_th]:!text-white [&_td]:!text-gray-300 [&_td]:border-white/10 [&_th]:border-white/10 [&_tr:hover_td]:!bg-white/[0.03] [&_button]:opacity-100 [&_button:hover]:opacity-100"
           />
         </div>
       ),
@@ -346,18 +442,22 @@ const HackathonDashboard = () => {
       key: '3',
       label: 'Người dùng',
       children: (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+        <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">
-              User Management
+            <h2 className="text-xl font-semibold text-text-primary">
+              Quản lý người dùng
             </h2>
             <div className="flex items-center gap-2">
               <Search
-                placeholder="Search users..."
+                placeholder="Tìm kiếm người dùng..."
                 allowClear
                 className="w-64"
               />
-              <Button icon={<UploadOutlined />} type="primary">
+              <Button
+                icon={<UploadOutlined />}
+                type="primary"
+                className="bg-primary hover:bg-primary/90 transition-all"
+              >
                 Import
               </Button>
             </div>
@@ -366,6 +466,7 @@ const HackathonDashboard = () => {
             columns={userColumns}
             dataSource={userData}
             pagination={false}
+            className="[&_.ant-table]:bg-transparent [&_th]:!bg-white/5 [&_th]:!text-white [&_td]:!text-gray-300 [&_td]:border-white/10 [&_th]:border-white/10 [&_tr:hover_td]:!bg-white/[0.03] [&_button]:opacity-100 [&_button:hover]:opacity-100"
           />
         </div>
       ),
@@ -374,27 +475,34 @@ const HackathonDashboard = () => {
       key: '4',
       label: 'Bài nộp',
       children: (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+        <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Submissions Management
+            <h2 className="text-xl font-semibold text-text-primary">
+              Quản lý bài nộp
             </h2>
-            <Button type="primary" icon={<DownloadOutlined />}>
-              Export
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              className="bg-primary hover:bg-primary/90 transition-all"
+            >
+              Xuất file
             </Button>
           </div>
 
           <Table
+            className="[&_.ant-table]:bg-transparent [&_th]:!bg-white/5 [&_th]:!text-white [&_td]:!text-gray-300 [&_td]:border-white/10 [&_th]:border-white/10 [&_tr:hover_td]:!bg-white/[0.03] [&_button]:opacity-100 [&_button:hover]:opacity-100"
             pagination={false}
             columns={[
               {
-                title: 'Project',
+                title: 'Dự án',
                 dataIndex: 'project',
                 key: 'project',
-                render: (text) => <span className="font-medium">{text}</span>,
+                render: (text) => (
+                  <span className="font-medium text-text-primary">{text}</span>
+                ),
               },
               {
-                title: 'Team',
+                title: 'Đội',
                 dataIndex: 'team',
                 key: 'team',
               },
@@ -404,7 +512,7 @@ const HackathonDashboard = () => {
                 key: 'hackathon',
               },
               {
-                title: 'Status',
+                title: 'Trạng thái',
                 dataIndex: 'status',
                 key: 'status',
                 render: (status) => {
@@ -416,32 +524,46 @@ const HackathonDashboard = () => {
                 },
               },
               {
-                title: 'Submitted',
+                title: 'Đã nộp',
                 dataIndex: 'submitted',
                 key: 'submitted',
               },
               {
-                title: 'Score',
+                title: 'Điểm',
                 dataIndex: 'score',
                 key: 'score',
                 render: (text) => (
                   <span
-                    className={text === 'Not scored' ? 'text-gray-400' : ''}
+                    className={
+                      text === 'Not scored' ? 'text-gray-500' : 'text-primary'
+                    }
                   >
                     {text}
                   </span>
                 ),
               },
               {
-                title: 'Actions',
+                title: 'Thao tác',
                 key: 'actions',
                 render: () => (
                   <Space size="middle">
-                    <Tooltip title="View details">
-                      <Button type="text" icon={<EyeOutlined />} />
+                    <Tooltip title="Xem chi tiết">
+                      <Button
+                        type="text"
+                        className="text-white hover:text-primary"
+                        icon={
+                          <EyeOutlined className="text-white hover:text-primary" />
+                        }
+                      />
                     </Tooltip>
-                    <Tooltip title="Download">
-                      <Button type="text" icon={<DownloadOutlined />} />
+                    <Tooltip title="Tải xuống">
+                      <Button
+                        type="text"
+                        className="text-white hover:text-primary"
+                        icon={
+                          <DownloadOutlined className="text-white hover:text-primary" />
+                        }
+                      />
                     </Tooltip>
                   </Space>
                 ),
@@ -486,25 +608,25 @@ const HackathonDashboard = () => {
       children: (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Platform Settings */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-            <h2 className="text-xl font-semibold mb-6 text-gray-900">
+          <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
+            <h2 className="text-xl font-semibold mb-6 text-text-primary">
               Platform Settings
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-600 mb-1">
+                <label className="block text-text-secondary mb-1">
                   Platform Name
                 </label>
                 <Input defaultValue="SEAL Hackathon" />
               </div>
               <div>
-                <label className="block text-gray-600 mb-1">
+                <label className="block text-text-secondary mb-1">
                   Maximum Team Size
                 </label>
                 <Input defaultValue="5" />
               </div>
               <div>
-                <label className="block text-gray-600 mb-1">
+                <label className="block text-text-secondary mb-1">
                   Default Registration Fee
                 </label>
                 <Input defaultValue="$0" />
@@ -513,21 +635,25 @@ const HackathonDashboard = () => {
           </div>
 
           {/* Email Settings */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-            <h2 className="text-xl font-semibold mb-6 text-gray-900">
+          <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
+            <h2 className="text-xl font-semibold mb-6 text-text-primary">
               Email Settings
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-600 mb-1">SMTP Server</label>
+                <label className="block text-text-secondary mb-1">
+                  SMTP Server
+                </label>
                 <Input defaultValue="smtp.fpt.edu.vn" />
               </div>
               <div>
-                <label className="block text-gray-600 mb-1">From Email</label>
+                <label className="block text-text-secondary mb-1">
+                  From Email
+                </label>
                 <Input defaultValue="seal@fpt.edu.vn" />
               </div>
               <div>
-                <label className="block text-gray-600 mb-1">
+                <label className="block text-text-secondary mb-1">
                   Support Email
                 </label>
                 <Input defaultValue="support.seal@fpt.edu.vn" />
@@ -540,11 +666,11 @@ const HackathonDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 p-6">
+    <div className="min-h-screen bg-black p-6">
       <div className="mb-8">
         <div className="flex justify-between items-start mb-2">
           <div>
-            <h1 className="text-3xl font-bold mb-2">
+            <h1 className="text-3xl font-bold mb-2 text-white">
               Bảng điều khiển Quản trị
             </h1>
             <p className="text-gray-400">
@@ -552,12 +678,23 @@ const HackathonDashboard = () => {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button icon={<FileAddOutlined />}>Duyệt đề bài</Button>
-            <Button icon={<DownloadOutlined />}>Xuất dữ liệu</Button>
+            <Button
+              icon={<FileAddOutlined />}
+              className="border border-white/20 bg-white/5 text-white hover:bg-white/10 transition-all"
+            >
+              Duyệt đề bài
+            </Button>
+            <Button
+              icon={<DownloadOutlined />}
+              className="border border-white/20 bg-white/5 text-white hover:bg-white/10 transition-all"
+            >
+              Xuất dữ liệu
+            </Button>
             <Button
               onClick={() => navigate(PATH_NAME.HACKATHON_CREATE_PAGE)}
               type="primary"
               icon={<PlusOutlined />}
+              className="bg-primary hover:opacity-90 transition-all"
             >
               Tạo Hackathon
             </Button>
@@ -565,7 +702,11 @@ const HackathonDashboard = () => {
         </div>
       </div>
 
-      <Tabs defaultActiveKey="1" items={tabItems} />
+      <Tabs
+        defaultActiveKey="1"
+        items={tabItems}
+        className="[&_.ant-tabs-tab]:text-text-secondary [&_.ant-tabs-tab-active]:text-primary [&_.ant-tabs-ink-bar]:bg-primary"
+      />
     </div>
   );
 };
