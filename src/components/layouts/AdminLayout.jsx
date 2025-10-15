@@ -5,6 +5,7 @@ import {
   TeamOutlined,
   TrophyOutlined,
   UserOutlined,
+  RocketOutlined,
 } from '@ant-design/icons';
 import { Avatar, Dropdown, Layout, Menu } from 'antd';
 import React, { useState } from 'react';
@@ -23,6 +24,20 @@ const items = [
     PATH_NAME.ADMIN_DASHBOARD,
     <PieChartOutlined />,
   ),
+  getItem('Hackathons', 'sub-hackathons', <RocketOutlined />, [
+    getItem(
+      <Link to={PATH_NAME.ADMIN_HACKATHONS}>Hackathons</Link>,
+      PATH_NAME.ADMIN_HACKATHONS,
+    ),
+    getItem(
+      <Link to={PATH_NAME.ADMIN_HACKATHON_PHASES}>Hackathon Phases</Link>,
+      PATH_NAME.ADMIN_HACKATHON_PHASES,
+    ),
+    getItem(
+      <Link to={PATH_NAME.ADMIN_PRIZES}>Prizes</Link>,
+      PATH_NAME.ADMIN_PRIZES,
+    ),
+  ]),
   getItem('Challenges', 'sub1', <TrophyOutlined />, [
     getItem(
       <Link to={PATH_NAME.ADMIN_CHALLENGE_CREATE}>Create Challenge</Link>,
@@ -33,6 +48,11 @@ const items = [
       PATH_NAME.ADMIN_CHALLENGE_MANAGE,
     ),
   ]),
+  getItem(
+    <Link to={PATH_NAME.ADMIN_SEASON}>Seasson</Link>,
+    PATH_NAME.ADMIN_SEASON,
+    <UserOutlined />,
+  ),
   getItem(
     <Link to={PATH_NAME.ADMIN_USERS}>Users</Link>,
     PATH_NAME.ADMIN_USERS,
