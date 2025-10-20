@@ -6,6 +6,7 @@ import { PATH_NAME } from '../constants';
 import NotFound from '../pages/notfound';
 import AdminRoutes from './AdminRoutes';
 import MemberRoutes from './MemberRoutes';
+import StudentRoutes from './StudentRoutes';
 
 const LandingPage = lazy(() => import('../pages/landing'));
 const MemberPage = lazy(() => import('../pages/member'));
@@ -14,6 +15,13 @@ const AdminChallengeCreatePage = lazy(
 );
 const DashboardPage = lazy(() => import('../pages/admin/dashboard'));
 const HackathonCreatePage = lazy(() => import('../pages/admin/hackathon'));
+
+const StudentDashboardPage = lazy(() => import('../pages/student/dashboard'));
+const StudentHackathonsPage = lazy(() => import('../pages/student/hackathons'));
+const StudentTeamsPage = lazy(() => import('../pages/student/teams'));
+const StudentSubmissionsPage = lazy(() => import('../pages/student/submissions'));
+const StudentProfilePage = lazy(() => import('../pages/student/profile'));
+const StudentLeaderboardPage = lazy(() => import('../pages/student/leaderboard'));
 
 const withSuspense = (Component) => (
   <Suspense
@@ -66,6 +74,22 @@ const router = createBrowserRouter([
             path: 'hackathon/create',
             element: withSuspense(HackathonCreatePage),
           },
+        ],
+      },
+    ],
+  },
+  {
+    element: <StudentRoutes />,
+    children: [
+      {
+        path: PATH_NAME.STUDENT,
+        children: [
+          { path: 'dashboard', element: withSuspense(StudentDashboardPage) },
+          { path: 'hackathons', element: withSuspense(StudentHackathonsPage) },
+          { path: 'teams', element: withSuspense(StudentTeamsPage) },
+          { path: 'submissions', element: withSuspense(StudentSubmissionsPage) },
+          { path: 'profile', element: withSuspense(StudentProfilePage) },
+          { path: 'leaderboard', element: withSuspense(StudentLeaderboardPage) },
         ],
       },
     ],
