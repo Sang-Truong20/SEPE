@@ -15,7 +15,7 @@ import {
 import { Avatar, Button, Space, Table, Tabs, Tag, Tooltip } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../../constants';
-import { Input } from '../../../components/ui';
+import { Input } from 'antd';
 
 const { Search } = Input;
 

@@ -5,7 +5,7 @@ import {
   Select,
   DatePicker,
   InputNumber,
-} from '../../../../components/ui';
+} from 'antd';
 import {
   PlusOutlined,
   DeleteOutlined,

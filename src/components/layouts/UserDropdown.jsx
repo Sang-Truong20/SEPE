@@ -34,12 +34,33 @@ const UserDropdown = () => {
           <>
             {userInfo.role === 3 ? (
               <>
-                {/* <Link
-                  to="/statistics"
+                <Link
+                  to={PATH_NAME.ADMIN_DASHBOARD}
                   className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100"
                 >
-                  <PieChartOutlined /> Thống kê
-                </Link> */}
+                  <User size={16} /> Admin Dashboard
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                >
+                  <LogOut size={16} /> Đăng xuất
+                </button>
+              </>
+            ) : userInfo.role === 1 ? (
+              <>
+                <Link
+                  to={PATH_NAME.STUDENT_DASHBOARD}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100"
+                >
+                  <User size={16} /> Student Dashboard
+                </Link>
+                <Link
+                  to={PATH_NAME.STUDENT_PROFILE}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100"
+                >
+                  <User size={16} /> Hồ sơ
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"

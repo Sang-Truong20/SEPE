@@ -3,10 +3,23 @@ const PATH_NAME = {
   AUTH: '/auth',
   NOT_FOUND: '*',
   MEMBER: '/member',
+  STUDENT: '/student',
   ADMIN: '/admin',
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_CHALLENGE_CREATE: '/admin/challenge/create',
+  ADMIN_CHALLENGE_MANAGE: '/admin/challenges',
+  ADMIN_USERS: '/admin/users',
+  ADMIN_TEAMS: '/admin/teams',
+  ADMIN_FILES: '/admin/files',
+  ADMIN_SETTINGS: '/admin/settings',
   HACKATHON_CREATE_PAGE: '/admin/hackathon/create',
+  STUDENT_DASHBOARD: '/student/dashboard',
+  STUDENT_HACKATHONS: '/student/hackathons',
+  STUDENT_TEAMS: '/student/teams',
+  STUDENT_SUBMISSIONS: '/student/submissions',
+  STUDENT_PROFILE: '/student/profile',
+  STUDENT_LEADERBOARD: '/student/leaderboard',
+  USER_INFO: '/user/profile',
 };
 
 export { PATH_NAME };
