@@ -81,37 +81,6 @@ const HackathonDashboard = () => {
     { label: 'API Status', status: 'Operational', color: 'text-primary' },
   ];
 
-  const hackathonData = [
-    {
-      key: '1',
-      name: 'AI Revolution 2024',
-      status: 'active',
-      participants: 1250,
-      submissions: 89,
-      dates: '2024-03-15 - 2024-03-17',
-      prize: '$50,000',
-    },
-    {
-      key: '2',
-      name: 'Web3 Future Hackathon',
-      status: 'completed',
-      participants: 890,
-      submissions: 76,
-      dates: '2024-04-01 - 2024-04-03',
-      prize: '$25,000',
-    },
-    {
-      key: '3',
-      name: 'Green Tech Challenge',
-      status: 'upcoming',
-      participants: 230,
-      submissions: 0,
-      dates: '2024-04-20 - 2024-04-22',
-      prize: '$30,000',
-    },
-  ];
-
-  // === User Data ===
   const userData = [
     {
       key: '1',
@@ -141,77 +110,6 @@ const HackathonDashboard = () => {
       activity: '1 teams, 1 hackathons',
     },
   ];
-
-  const hackathonColumns = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text) => (
-        <span className="font-medium text-text-primary">{text}</span>
-      ),
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => {
-        let color = '';
-        if (status === 'active') color = 'green';
-        else if (status === 'completed') color = 'blue';
-        else color = 'gold';
-        return <Tag color={color}>{status.toUpperCase()}</Tag>;
-      },
-    },
-    {
-      title: 'Participants',
-      dataIndex: 'participants',
-      key: 'participants',
-    },
-    {
-      title: 'Submissions',
-      dataIndex: 'submissions',
-      key: 'submissions',
-    },
-    {
-      title: 'Dates',
-      dataIndex: 'dates',
-      key: 'dates',
-    },
-    {
-      title: 'Prize',
-      dataIndex: 'prize',
-      key: 'prize',
-      render: (text) => (
-        <span className="text-text-accent font-medium">{text}</span>
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: () => (
-        <Space size="middle">
-          <Button
-            type="text"
-            className="text-white hover:text-primary"
-            icon={<EyeOutlined className="text-white hover:text-primary" />}
-          />
-          <Button
-            type="text"
-            className="text-white hover:text-primary"
-            icon={<EditOutlined className="text-white hover:text-primary" />}
-          />
-          <Button
-            type="text"
-            className="text-white hover:text-red-500"
-            icon={<DeleteOutlined className="text-white hover:text-red-500" />}
-            danger
-          />
-        </Space>
-      ),
-    },
-  ];
-
   const userColumns = [
     {
       title: 'User',
@@ -282,162 +180,7 @@ const HackathonDashboard = () => {
       ),
     },
   ];
-
   const tabItems = [
-    {
-      key: '1',
-      label: 'Tổng quan',
-      children: (
-        <>
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {stats.map((stat, idx) => (
-              <div
-                key={idx}
-                className={`${stat.color} border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={stat.iconColor}>{stat.icon}</div>
-                  <div>
-                    <div className="text-3xl font-bold text-text-primary mb-1">
-                      {stat.value}
-                    </div>
-                    <div className="text-sm text-text-secondary">
-                      {stat.label}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Activity */}
-            <div className="lg:col-span-2 bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
-              <h2 className="text-xl font-semibold mb-6 text-text-primary">
-                Hoạt động gần đây
-              </h2>
-              <div className="space-y-4">
-                {activities.map((activity, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-4 p-2 rounded hover:bg-white/5 transition-colors"
-                  >
-                    <div
-                      className={`w-2 h-2 ${activity.color} rounded-full mt-2 flex-shrink-0`}
-                    ></div>
-                    <div className="flex-1">
-                      <p className="text-text-primary font-medium">
-                        {activity.text}
-                      </p>
-                      <p className="text-text-secondary text-sm mt-1">
-                        {activity.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* System Health */}
-            <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
-              <h2 className="text-xl font-semibold mb-6 text-text-primary">
-                System Health
-              </h2>
-              <div className="space-y-4">
-                {systemHealth.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center">
-                    <span className="text-text-secondary">{item.label}</span>
-                    <span className={`font-semibold ${item.color}`}>
-                      {item.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </>
-      ),
-    },
-    {
-      key: '2',
-      label: 'Hackathons',
-      children: (
-        <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-text-primary">
-              Quản lý Hackathons
-            </h2>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              className="bg-primary hover:bg-primary/90 transition-all"
-              onClick={() => navigate(PATH_NAME.HACKATHON_CREATE_PAGE)}
-            >
-              Tạo mới Hackathon
-            </Button>
-          </div>
-          <Table
-            columns={hackathonColumns.map((col) => ({
-              ...col,
-              title:
-                col.title === 'Name'
-                  ? 'Tên'
-                  : col.title === 'Status'
-                    ? 'Trạng thái'
-                    : col.title === 'Participants'
-                      ? 'Người tham gia'
-                      : col.title === 'Submissions'
-                        ? 'Bài nộp'
-                        : col.title === 'Dates'
-                          ? 'Ngày'
-                          : col.title === 'Prize'
-                            ? 'Giải thưởng'
-                            : col.title === 'Actions'
-                              ? 'Thao tác'
-                              : col.title,
-              render:
-                col.key === 'name'
-                  ? (text) => (
-                      <span className="font-medium text-white">{text}</span>
-                    )
-                  : col.key === 'prize'
-                    ? (text) => (
-                        <span className="text-primary font-medium">{text}</span>
-                      )
-                    : col.key === 'actions'
-                      ? () => (
-                          <Space size="middle">
-                            <Button
-                              type="text"
-                              icon={
-                                <EyeOutlined className="text-white hover:text-primary" />
-                              }
-                            />
-                            <Button
-                              type="text"
-                              icon={
-                                <EditOutlined className="text-white hover:text-primary" />
-                              }
-                            />
-                            <Button
-                              type="text"
-                              icon={
-                                <DeleteOutlined className="text-white hover:text-red-500" />
-                              }
-                              danger
-                            />
-                          </Space>
-                        )
-                      : col.render,
-            }))}
-            dataSource={hackathonData}
-            pagination={false}
-            className="[&_.ant-table]:bg-transparent [&_th]:!bg-white/5 [&_th]:!text-white [&_td]:!text-gray-300 [&_td]:border-white/10 [&_th]:border-white/10 [&_tr:hover_td]:!bg-white/[0.03] [&_button]:opacity-100 [&_button:hover]:opacity-100"
-          />
-        </div>
-      ),
-    },
     {
       key: '3',
       label: 'Người dùng',
@@ -677,28 +420,28 @@ const HackathonDashboard = () => {
               Quản lý hackathon, người dùng và cài đặt nền tảng
             </p>
           </div>
-          <div className="flex gap-3">
-            <Button
-              icon={<FileAddOutlined />}
-              className="border border-white/20 bg-white/5 text-white hover:bg-white/10 transition-all"
-            >
-              Duyệt đề bài
-            </Button>
-            <Button
-              icon={<DownloadOutlined />}
-              className="border border-white/20 bg-white/5 text-white hover:bg-white/10 transition-all"
-            >
-              Xuất dữ liệu
-            </Button>
-            <Button
-              onClick={() => navigate(PATH_NAME.HACKATHON_CREATE_PAGE)}
-              type="primary"
-              icon={<PlusOutlined />}
-              className="bg-primary hover:opacity-90 transition-all"
-            >
-              Tạo Hackathon
-            </Button>
-          </div>
+          {/*<div className="flex gap-3">*/}
+            {/*<Button*/}
+            {/*  icon={<FileAddOutlined />}*/}
+            {/*  className="border border-white/20 bg-white/5 text-white hover:bg-white/10 transition-all"*/}
+            {/*>*/}
+            {/*  Duyệt đề bài*/}
+            {/*</Button>*/}
+            {/*<Button*/}
+            {/*  icon={<DownloadOutlined />}*/}
+            {/*  className="border border-white/20 bg-white/5 text-white hover:bg-white/10 transition-all"*/}
+            {/*>*/}
+            {/*  Xuất dữ liệu*/}
+            {/*</Button>*/}
+            {/*<Button*/}
+            {/*  onClick={() => navigate(PATH_NAME.HACKATHON_CREATE_PAGE)}*/}
+            {/*  type="primary"*/}
+            {/*  icon={<PlusOutlined />}*/}
+            {/*  className="bg-primary hover:opacity-90 transition-all"*/}
+            {/*>*/}
+            {/*  Tạo Hackathon*/}
+            {/*</Button>*/}
+          {/*</div>*/}
         </div>
       </div>
 
@@ -707,6 +450,77 @@ const HackathonDashboard = () => {
         items={tabItems}
         className="[&_.ant-tabs-tab]:text-text-secondary [&_.ant-tabs-tab-active]:text-primary [&_.ant-tabs-ink-bar]:bg-primary"
       />
+
+      <>
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {stats.map((stat, idx) => (
+            <div
+              key={idx}
+              className={`${stat.color} border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow`}
+            >
+              <div className="flex items-center gap-4">
+                <div className={stat.iconColor}>{stat.icon}</div>
+                <div>
+                  <div className="text-3xl font-bold text-text-primary mb-1">
+                    {stat.value}
+                  </div>
+                  <div className="text-sm text-text-secondary">
+                    {stat.label}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Activity */}
+          <div className="lg:col-span-2 bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
+            <h2 className="text-xl font-semibold mb-6 text-text-primary">
+              Hoạt động gần đây
+            </h2>
+            <div className="space-y-4">
+              {activities.map((activity, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-start gap-4 p-2 rounded hover:bg-white/5 transition-colors"
+                >
+                  <div
+                    className={`w-2 h-2 ${activity.color} rounded-full mt-2 flex-shrink-0`}
+                  ></div>
+                  <div className="flex-1">
+                    <p className="text-text-primary font-medium">
+                      {activity.text}
+                    </p>
+                    <p className="text-text-secondary text-sm mt-1">
+                      {activity.time}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* System Health */}
+          <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
+            <h2 className="text-xl font-semibold mb-6 text-text-primary">
+              System Health
+            </h2>
+            <div className="space-y-4">
+              {systemHealth.map((item, idx) => (
+                <div key={idx} className="flex justify-between items-center">
+                  <span className="text-text-secondary">{item.label}</span>
+                  <span className={`font-semibold ${item.color}`}>
+                      {item.status}
+                    </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </>
+
     </div>
   );
 };
