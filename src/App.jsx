@@ -1,9 +1,7 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router-dom';
 import AntdProvider from './components/layouts/AntdProvider';
+import { ReactQueryClientProvider } from './providers/react-query-provider';
 import router from './routes';
-
-const queryClient = new QueryClient();
 
 function App() {
   // if ('serviceWorker' in navigator) {
@@ -20,13 +18,13 @@ function App() {
   // useFirebaseMessaging();
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <ReactQueryClientProvider>
       <AntdProvider>
         {/* <GoogleOAuthProvider clientId={import.meta.env.VITE_CLIENT_ID}> */}
-          <RouterProvider router={router} />
+        <RouterProvider router={router} />
         {/* </GoogleOAuthProvider> */}
       </AntdProvider>
-    </QueryClientProvider>
+    </ReactQueryClientProvider>
   );
 }
 

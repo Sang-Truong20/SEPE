@@ -5,18 +5,29 @@ import {
   TeamOutlined,
   FileTextOutlined,
   BarChartOutlined,
-  SettingOutlined,
   LockOutlined,
   BellOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
-import { Button, Card, Col, Row, Avatar, Tag, Statistic, Form, Input, Select, Tabs, Progress } from 'antd';
+import {
+  Button,
+  Card,
+  Avatar,
+  Tag,
+  Statistic,
+  Form,
+  Input,
+  Tabs,
+  message,
+} from 'antd';
 import { useState } from 'react';
-
-const { Option } = Select;
+import StudentVerification from '../../components/features/student/profile/StudentVerification';
 
 const StudentProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
+
+  // Mock verification status - in real app, this would come from API
+  const [verificationStatus, setVerificationStatus] = useState('unverified'); // 'unverified', 'pending', 'verified'
 
   const studentProfile = {
     name: 'Nguyễn Văn A',
@@ -108,6 +119,7 @@ const StudentProfile = () => {
   const handleSaveProfile = (values) => {
     console.log('Saving profile:', values);
     setIsEditing(false);
+    message.success('Thông tin cá nhân đã được cập nhật thành công!');
     // Handle profile update
   };
 
@@ -127,8 +139,12 @@ const StudentProfile = () => {
                     <h2 className="text-2xl font-semibold text-text-primary mb-1">
                       {studentProfile.name}
                     </h2>
-                    <p className="text-muted-foreground mb-2">{studentProfile.email}</p>
-                    <p className="text-muted-foreground">MSSV: {studentProfile.studentId}</p>
+                    <p className="text-muted-foreground mb-2">
+                      {studentProfile.email}
+                    </p>
+                    <p className="text-muted-foreground">
+                      MSSV: {studentProfile.studentId}
+                    </p>
                   </div>
                   <Button
                     type="primary"
@@ -142,17 +158,27 @@ const StudentProfile = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-text-secondary mb-1">Địa điểm</label>
-                    <p className="text-text-primary">{studentProfile.location}</p>
+                    <label className="block text-text-secondary mb-1">
+                      Địa điểm
+                    </label>
+                    <p className="text-text-primary">
+                      {studentProfile.location}
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-text-secondary mb-1">Ngày tham gia</label>
-                    <p className="text-text-primary">{studentProfile.joinDate}</p>
+                    <label className="block text-text-secondary mb-1">
+                      Ngày tham gia
+                    </label>
+                    <p className="text-text-primary">
+                      {studentProfile.joinDate}
+                    </p>
                   </div>
                 </div>
 
                 <div className="mt-4">
-                  <label className="block text-text-secondary mb-2">Giới thiệu</label>
+                  <label className="block text-text-secondary mb-2">
+                    Giới thiệu
+                  </label>
                   <p className="text-text-primary bg-card-background/50 p-3 rounded-lg border border-card-border">
                     {studentProfile.bio}
                   </p>
@@ -164,9 +190,14 @@ const StudentProfile = () => {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
-              <Card key={index} className="bg-card-background border border-card-border backdrop-blur-xl text-center">
+              <Card
+                key={index}
+                className="bg-card-background border border-card-border backdrop-blur-xl text-center"
+              >
                 <Statistic
-                  title={<span className="text-text-secondary">{stat.title}</span>}
+                  title={
+                    <span className="text-text-secondary">{stat.title}</span>
+                  }
                   value={stat.value}
                   suffix={stat.suffix}
                   prefix={stat.icon}
@@ -184,10 +215,15 @@ const StudentProfile = () => {
       children: (
         <div className="space-y-6">
           <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Kỹ năng</h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">
+              Kỹ năng
+            </h3>
             <div className="flex flex-wrap gap-2">
               {studentProfile.skills.map((skill) => (
-                <Tag key={skill} className="bg-primary/20 text-primary border-primary/30">
+                <Tag
+                  key={skill}
+                  className="bg-primary/20 text-primary border-primary/30"
+                >
                   {skill}
                 </Tag>
               ))}
@@ -195,10 +231,15 @@ const StudentProfile = () => {
           </Card>
 
           <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Sở thích</h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">
+              Sở thích
+            </h3>
             <div className="flex flex-wrap gap-2">
               {studentProfile.interests.map((interest) => (
-                <Tag key={interest} className="bg-secondary/20 text-secondary border-secondary/30">
+                <Tag
+                  key={interest}
+                  className="bg-secondary/20 text-secondary border-secondary/30"
+                >
                   {interest}
                 </Tag>
               ))}
@@ -214,12 +255,21 @@ const StudentProfile = () => {
         <Card className="bg-card-background border border-card-border backdrop-blur-xl">
           <div className="space-y-4">
             {achievements.map((achievement) => (
-              <div key={achievement.id} className="flex items-center gap-4 p-4 bg-card-background/50 rounded-lg border border-card-border">
+              <div
+                key={achievement.id}
+                className="flex items-center gap-4 p-4 bg-card-background/50 rounded-lg border border-card-border"
+              >
                 <div className="text-2xl">{achievement.icon}</div>
                 <div className="flex-1">
-                  <h4 className="text-text-primary font-medium m-0">{achievement.name}</h4>
-                  <p className="text-muted-foreground text-sm m-0">{achievement.description}</p>
-                  <p className="text-muted-foreground text-xs m-0">{achievement.date}</p>
+                  <h4 className="text-text-primary font-medium m-0">
+                    {achievement.name}
+                  </h4>
+                  <p className="text-muted-foreground text-sm m-0">
+                    {achievement.description}
+                  </p>
+                  <p className="text-muted-foreground text-xs m-0">
+                    {achievement.date}
+                  </p>
                 </div>
               </div>
             ))}
@@ -229,20 +279,44 @@ const StudentProfile = () => {
     },
     {
       key: '4',
+      label: 'Xác minh sinh viên',
+      children: (
+        <StudentVerification
+          verificationStatus={verificationStatus}
+          setVerificationStatus={setVerificationStatus}
+        />
+      ),
+    },
+    {
+      key: '5',
       label: 'Hoạt động gần đây',
       children: (
         <Card className="bg-card-background border border-card-border backdrop-blur-xl">
           <div className="space-y-4">
             {recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-start gap-4 p-3 bg-card-background/50 rounded-lg border border-card-border">
-                <div className={`w-2 h-2 rounded-full mt-2 ${
-                  activity.status === 'success' ? 'bg-green-400' :
-                  activity.status === 'info' ? 'bg-blue-400' : 'bg-gray-400'
-                }`} />
+              <div
+                key={activity.id}
+                className="flex items-start gap-4 p-3 bg-card-background/50 rounded-lg border border-card-border"
+              >
+                <div
+                  className={`w-2 h-2 rounded-full mt-2 ${
+                    activity.status === 'success'
+                      ? 'bg-green-400'
+                      : activity.status === 'info'
+                        ? 'bg-blue-400'
+                        : 'bg-gray-400'
+                  }`}
+                />
                 <div className="flex-1">
-                  <h4 className="text-text-primary font-medium m-0">{activity.title}</h4>
-                  <p className="text-muted-foreground text-sm m-0">{activity.description}</p>
-                  <p className="text-muted-foreground text-xs m-0">{activity.date}</p>
+                  <h4 className="text-text-primary font-medium m-0">
+                    {activity.title}
+                  </h4>
+                  <p className="text-muted-foreground text-sm m-0">
+                    {activity.description}
+                  </p>
+                  <p className="text-muted-foreground text-xs m-0">
+                    {activity.date}
+                  </p>
                 </div>
               </div>
             ))}
@@ -251,39 +325,86 @@ const StudentProfile = () => {
       ),
     },
     {
-      key: '5',
+      key: '6',
       label: 'Cài đặt',
       children: (
         <div className="space-y-6">
           <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Thông tin cá nhân</h3>
-            <Form layout="vertical" className="max-w-md">
-              <Form.Item label="Họ và tên">
-                <Input defaultValue={studentProfile.name} />
+            <h3 className="text-lg font-semibold text-text-primary mb-4">
+              Thông tin cá nhân
+            </h3>
+            <Form
+              layout="vertical"
+              className="max-w-md"
+              onFinish={handleSaveProfile}
+              disabled={!isEditing}
+            >
+              <Form.Item
+                label="Họ và tên"
+                name="name"
+                initialValue={studentProfile.name}
+              >
+                <Input />
               </Form.Item>
-              <Form.Item label="Email">
-                <Input defaultValue={studentProfile.email} />
+              <Form.Item
+                label="Email"
+                name="email"
+                initialValue={studentProfile.email}
+              >
+                <Input />
               </Form.Item>
-              <Form.Item label="MSSV">
-                <Input defaultValue={studentProfile.studentId} />
+              <Form.Item
+                label="MSSV"
+                name="studentId"
+                initialValue={studentProfile.studentId}
+              >
+                <Input />
               </Form.Item>
-              <Form.Item label="Địa điểm">
-                <Input defaultValue={studentProfile.location} />
+              <Form.Item
+                label="Địa điểm"
+                name="location"
+                initialValue={studentProfile.location}
+              >
+                <Input />
               </Form.Item>
-              <Form.Item label="Giới thiệu">
-                <Input.TextArea rows={3} defaultValue={studentProfile.bio} />
+              <Form.Item
+                label="Giới thiệu"
+                name="bio"
+                initialValue={studentProfile.bio}
+              >
+                <Input.TextArea rows={3} />
               </Form.Item>
-              <Button className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0">Lưu thay đổi</Button>
+
+              {isEditing && (
+                <div className="flex space-x-2">
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
+                  >
+                    Lưu thay đổi
+                  </Button>
+                  <Button onClick={() => setIsEditing(false)}>Hủy</Button>
+                </div>
+              )}
             </Form>
           </Card>
 
           <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Bảo mật</h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">
+              Bảo mật
+            </h3>
             <div className="space-y-4">
-              <Button icon={<LockOutlined />} className="w-full justify-start border-white/20 bg-white/5 hover:bg-white/10">
+              <Button
+                icon={<LockOutlined />}
+                className="w-full justify-start border-white/20 bg-white/5 hover:bg-white/10"
+              >
                 Đổi mật khẩu
               </Button>
-              <Button icon={<BellOutlined />} className="w-full justify-start border-white/20 bg-white/5 hover:bg-white/10">
+              <Button
+                icon={<BellOutlined />}
+                className="w-full justify-start border-white/20 bg-white/5 hover:bg-white/10"
+              >
                 Cài đặt thông báo
               </Button>
             </div>
@@ -327,4 +448,3 @@ const StudentProfile = () => {
 };
 
 export default StudentProfile;
-
