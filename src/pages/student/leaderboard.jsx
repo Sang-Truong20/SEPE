@@ -363,3 +363,4 @@ const StudentLeaderboard = () => {
 };
 
 export default StudentLeaderboard;
+
