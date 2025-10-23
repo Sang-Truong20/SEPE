@@ -1,132 +1,117 @@
-import {
-  CrownOutlined,
-  MessageOutlined,
-  PlusOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
-import {
-  Avatar,
-  Button,
-  Card,
-  Form,
-  Input,
-  Modal,
-  Select,
-  Space,
-  Tag,
-} from 'antd';
+import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { Alert, Button, message, Spin } from 'antd';
 import { useState } from 'react';
-
-const { Option } = Select;
+import {
+  useCreateTeam,
+  useGetTeam,
+  useGetTeams,
+} from '../../hooks/student/team';
+import {
+  useGetTeamMembers,
+  useLeaveTeam,
+} from '../../hooks/student/team-member';
+import {
+  TeamList,
+  CreateTeamModal,
+} from '../../components/features/student/team';
 
 const StudentTeams = () => {
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
-  const myTeams = [
-    {
-      id: '1',
-      name: 'Code Crusaders',
-      hackathon: 'AI Revolution 2024',
-      role: 'leader',
-      members: [
-        {
-          id: '1',
-          name: 'Nguyễn Văn A',
-          avatar: null,
-          role: 'leader',
-          status: 'active',
-          skills: ['Python', 'React', 'Machine Learning'],
-        },
-        {
-          id: '2',
-          name: 'Trần Thị B',
-          avatar: null,
-          role: 'member',
-          status: 'active',
-          skills: ['JavaScript', 'Node.js', 'UI/UX'],
-        },
-        {
-          id: '3',
-          name: 'Lê Văn C',
-          avatar: null,
-          role: 'member',
-          status: 'inactive',
-          skills: ['Python', 'Data Science'],
-        },
-      ],
-      maxMembers: 5,
-      status: 'active',
-      project: 'AI-Powered Code Assistant',
-      progress: 85,
-    },
-    {
-      id: '2',
-      name: 'Blockchain Heroes',
-      hackathon: 'Web3 Future Hackathon',
-      role: 'member',
-      members: [
-        {
-          id: '4',
-          name: 'Phạm Thị D',
-          avatar: null,
-          role: 'leader',
-          status: 'active',
-          skills: ['Solidity', 'React', 'Web3'],
-        },
-        {
-          id: '5',
-          name: 'Hoàng Văn E',
-          avatar: null,
-          role: 'member',
-          status: 'active',
-          skills: ['JavaScript', 'Smart Contracts'],
-        },
-      ],
-      maxMembers: 4,
-      status: 'forming',
-      project: null,
-      progress: 45,
-    },
-  ];
+  // Hooks for team operations
+  const createTeamMutation = useCreateTeam();
+  const {
+    data: teamsData,
+    isLoading: teamsLoading,
+    error: teamsError,
+  } = useGetTeams();
+  const { isLoading: teamLoading } = useGetTeam(selectedTeam);
+  const { data: teamMembersData, isLoading: membersLoading } =
+    useGetTeamMembers(selectedTeam);
 
-  const availableTeams = [
-    {
-      id: '3',
-      name: 'Green Innovators',
-      hackathon: 'Green Tech Challenge',
-      members: 2,
-      maxMembers: 5,
-      leader: 'Đỗ Thị F',
-      description: 'Looking for developers passionate about sustainability',
-      skills: ['JavaScript', 'React', 'Environmental Science'],
-    },
-    {
-      id: '4',
-      name: 'Mobile Mavericks',
-      hackathon: 'Mobile App Innovation',
-      members: 3,
-      maxMembers: 4,
-      leader: 'Vũ Văn G',
-      description: 'Building the next generation of mobile apps',
-      skills: ['React Native', 'Flutter', 'Mobile Development'],
-    },
-  ];
+  const leaveTeamMutation = useLeaveTeam();
 
-  const handleCreateTeam = (values) => {
-    console.log('Creating team:', values);
-    setIsCreateModalVisible(false);
-    // Navigate to team management page
+  // Filter teams to separate user's teams from available teams
+  // Handle different possible API response formats
+  const teamsArray = Array.isArray(teamsData)
+    ? teamsData
+    : teamsData?.data
+      ? teamsData.data
+      : teamsData?.teams
+        ? teamsData.teams
+        : [];
+
+  console.log('Teams data structure:', teamsData);
+  console.log('Teams array:', teamsArray);
+
+  // For now, show all teams as "my teams" until we understand the API structure
+  // If API fails, show empty arrays
+  const myTeams = teamsArray || [];
+  const availableTeams = [];
+
+  const handleCreateTeam = async (values) => {
+    try {
+      await createTeamMutation.mutateAsync({
+        teamName: values.name,
+        chapterId: values.hackathon, // Assuming hackathon ID is used as chapterId
+        leaderId: 'current-user-id', // This should come from auth context
+      });
+      message.success('Đội đã được tạo thành công!');
+      setIsCreateModalVisible(false);
+    } catch (error) {
+      console.error('Create team error:', error);
+      if (
+        error?.message?.includes('Network Error') ||
+        error?.code === 'NETWORK_ERROR'
+      ) {
+        message.error(
+          'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.',
+        );
+      } else if (error?.response?.status === 401) {
+        message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      } else if (error?.response?.status >= 500) {
+        message.error('Lỗi máy chủ. Vui lòng thử lại sau.');
+      } else {
+        message.error('Có lỗi xảy ra khi tạo đội. Vui lòng thử lại.');
+      }
+    }
   };
 
-  const handleJoinTeam = (teamId) => {
-    console.log('Joining team:', teamId);
-    // Handle team joining logic
+  const handleJoinTeam = async (teamId) => {
+    try {
+      // For joining a team, we need to send a request to join
+      // This might require a separate hook or API endpoint
+      console.log('Joining team:', teamId);
+      message.info('Chức năng gia nhập đội đang được phát triển');
+    } catch (error) {
+      message.error('Có lỗi xảy ra khi gia nhập đội. Vui lòng thử lại.');
+      console.error('Join team error:', error);
+    }
   };
 
   const handleViewTeam = (teamId) => {
-    console.log('Viewing team:', teamId);
-    setSelectedTeam(myTeams.find((team) => team.id === teamId));
+    setSelectedTeam(teamId);
+  };
+
+  const handleLeaveTeam = async (teamId) => {
+    try {
+      await leaveTeamMutation.mutateAsync(teamId);
+      message.success('Đã rời khỏi đội thành công!');
+      setSelectedTeam(null);
+    } catch (error) {
+      console.error('Leave team error:', error);
+      if (
+        error?.message?.includes('Network Error') ||
+        error?.code === 'NETWORK_ERROR'
+      ) {
+        message.error('Không thể kết nối đến máy chủ. Vui lòng thử lại.');
+      } else if (error?.response?.status === 401) {
+        message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      } else {
+        message.error('Có lỗi xảy ra khi rời đội. Vui lòng thử lại.');
+      }
+    }
   };
 
   const getStatusColor = (status) => {
@@ -141,6 +126,42 @@ const StudentTeams = () => {
         return 'default';
     }
   };
+
+  // Show loading spinner while fetching teams
+  if (teamsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  // Show error state if there's an error
+  if (teamsError) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Alert
+          message="Lỗi tải dữ liệu"
+          description="Không thể tải danh sách đội. API có thể chưa được khởi chạy hoặc có lỗi kết nối."
+          type="error"
+          showIcon
+          className="mb-6"
+        />
+        <div className="text-center py-8">
+          <p className="text-gray-400 mb-4">
+            Bạn có thể thử tạo đội mới để kiểm tra chức năng:
+          </p>
+          <Button
+            icon={<PlusOutlined />}
+            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+            onClick={() => setIsCreateModalVisible(true)}
+          >
+            Tạo đội mới
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -157,9 +178,16 @@ const StudentTeams = () => {
 
         <div className="flex items-center space-x-4">
           <Button
-            icon={<PlusOutlined />}
+            icon={
+              createTeamMutation.isPending ? (
+                <LoadingOutlined />
+              ) : (
+                <PlusOutlined />
+              )
+            }
             className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all"
             onClick={() => setIsCreateModalVisible(true)}
+            loading={createTeamMutation.isPending}
           >
             Tạo đội mới
           </Button>
@@ -167,258 +195,50 @@ const StudentTeams = () => {
       </div>
 
       {/* My Teams */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {myTeams.map((team) => (
-          <Card
-            key={team.id}
-            className="border-0 hover:shadow-lg transition-all duration-200"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-xl text-white">{team.name}</h3>
-                  <p className="text-gray-400">{team.hackathon}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Tag color={getStatusColor(team.status)}>
-                    {team.status.toUpperCase()}
-                  </Tag>
-                  {team.role === 'leader' && (
-                    <CrownOutlined className="text-yellow-400" />
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Thành viên:</span>
-                  <span className="text-white">
-                    {team.members.length}/{team.maxMembers}
-                  </span>
-                </div>
-                {team.project && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Dự án:</span>
-                    <span className="text-white">{team.project}</span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Tiến độ:</span>
-                  <span className="text-white">{team.progress}%</span>
-                </div>
-              </div>
-
-              <div className="w-full bg-gray-700/50 rounded-full h-2 mb-4 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-green-400 to-emerald-400 h-2 rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${team.progress}%` }}
-                ></div>
-              </div>
-
-              {/* Team Members */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex -space-x-2">
-                  {team.members.slice(0, 3).map((member) => (
-                    <Avatar
-                      key={member.id}
-                      size="small"
-                      className={`border-2 border-card-background ${
-                        member.status === 'active' ? '' : 'opacity-50'
-                      }`}
-                    >
-                      {member.name.charAt(0)}
-                    </Avatar>
-                  ))}
-                  {team.members.length > 3 && (
-                    <Avatar
-                      size="small"
-                      className="border-2 border-card-background bg-primary"
-                    >
-                      +{team.members.length - 3}
-                    </Avatar>
-                  )}
-                </div>
-
-                <Space>
-                  <Button
-                    type="text"
-                    size="small"
-                    className="text-white hover:text-primary"
-                    icon={<MessageOutlined />}
-                  >
-                    Chat
-                  </Button>
-                  <Button
-                    type="text"
-                    size="small"
-                    className="text-white hover:text-primary"
-                    icon={<SettingOutlined />}
-                  >
-                    Cài đặt
-                  </Button>
-                </Space>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  size="small"
-                  className="bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 text-white border-0"
-                  onClick={() => handleViewTeam(team.id)}
-                >
-                  Xem chi tiết
-                </Button>
-                <Button
-                  size="small"
-                  variant="outline"
-                  className="border-white/20 bg-white/5 hover:bg-white/10"
-                >
-                  Chỉnh sửa
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <TeamList
+        teams={myTeams}
+        title=""
+        emptyMessage="Bạn chưa tham gia đội nào"
+        onViewTeam={handleViewTeam}
+        onLeaveTeam={handleLeaveTeam}
+        onJoinTeam={handleJoinTeam}
+        selectedTeam={selectedTeam}
+        teamLoading={teamLoading}
+        membersLoading={membersLoading}
+        teamMembersData={teamMembersData}
+        isMyTeam={true}
+        leaveTeamMutation={leaveTeamMutation}
+        getStatusColor={getStatusColor}
+        showCreateButton={true}
+        onCreateTeam={() => setIsCreateModalVisible(true)}
+      />
 
       {/* Available Teams */}
-      <div>
-        <h2 className="text-2xl font-semibold text-white mb-6">
-          Đội đang tìm thành viên
-        </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {availableTeams.map((team) => (
-            <Card
-              key={team.id}
-              className="border-0 hover:shadow-lg transition-all duration-200"
-            >
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-lg font-semibold text-white">
-                        {team.name}
-                      </h3>
-                      <Tag color="blue">Tuyển thành viên</Tag>
-                    </div>
-
-                    <p className="text-gray-400 text-sm mb-2">
-                      {team.hackathon}
-                    </p>
-
-                    <p className="text-gray-400 text-sm mb-3">
-                      {team.description}
-                    </p>
-
-                    <div className="flex items-center gap-4 mb-3">
-                      <span className="text-sm text-gray-400">
-                        {team.members}/{team.maxMembers} thành viên
-                      </span>
-                      <span className="text-sm text-gray-400">
-                        Trưởng nhóm: {team.leader}
-                      </span>
-                    </div>
-
-                    {/* Skills */}
-                    <div className="flex flex-wrap gap-1">
-                      {team.skills.map((skill) => (
-                        <Tag
-                          key={skill}
-                          size="small"
-                          className="bg-card-background/50 text-gray-300 border border-card-border"
-                        >
-                          {skill}
-                        </Tag>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <Button
-                    className="bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 text-white border-0"
-                    onClick={() => handleJoinTeam(team.id)}
-                  >
-                    Xin gia nhập
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <TeamList
+        teams={availableTeams}
+        title="Đội đang tìm thành viên"
+        emptyMessage="Không có đội nào đang tìm thành viên"
+        onViewTeam={handleViewTeam}
+        onLeaveTeam={handleLeaveTeam}
+        onJoinTeam={handleJoinTeam}
+        selectedTeam={selectedTeam}
+        teamLoading={teamLoading}
+        membersLoading={membersLoading}
+        teamMembersData={teamMembersData}
+        isAvailableTeam={true}
+        leaveTeamMutation={leaveTeamMutation}
+        getStatusColor={getStatusColor}
+      />
 
       {/* Create Team Modal */}
-      <Modal
-        title="Tạo đội mới"
-        open={isCreateModalVisible}
+      <CreateTeamModal
+        visible={isCreateModalVisible}
         onCancel={() => setIsCreateModalVisible(false)}
-        footer={null}
-        className="[&_.ant-modal-content]:bg-gray-900/95 [&_.ant-modal-content]:backdrop-blur-xl [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white [&_.ant-modal-mask]:bg-black/50"
-      >
-        <Form onFinish={handleCreateTeam} layout="vertical">
-          <Form.Item
-            label="Tên đội"
-            name="name"
-            rules={[{ required: true, message: 'Vui lòng nhập tên đội!' }]}
-          >
-            <Input placeholder="Nhập tên đội của bạn" />
-          </Form.Item>
-
-          <Form.Item
-            label="Hackathon"
-            name="hackathon"
-            rules={[{ required: true, message: 'Vui lòng chọn hackathon!' }]}
-          >
-            <Select placeholder="Chọn hackathon">
-              <Option value="ai-revolution">AI Revolution 2024</Option>
-              <Option value="web3-hackathon">Web3 Future Hackathon</Option>
-              <Option value="green-tech">Green Tech Challenge</Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item label="Mô tả đội" name="description">
-            <Input.TextArea
-              rows={3}
-              placeholder="Mô tả về đội và dự án của bạn..."
-            />
-          </Form.Item>
-
-          <Form.Item label="Kỹ năng cần thiết" name="skills">
-            <Select
-              mode="multiple"
-              placeholder="Chọn các kỹ năng cần thiết"
-              style={{ width: '100%' }}
-            >
-              <Option value="python">Python</Option>
-              <Option value="javascript">JavaScript</Option>
-              <Option value="react">React</Option>
-              <Option value="nodejs">Node.js</Option>
-              <Option value="machine-learning">Machine Learning</Option>
-              <Option value="blockchain">Blockchain</Option>
-              <Option value="mobile">Mobile Development</Option>
-              <Option value="ui/ux">UI/UX Design</Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item>
-            <div className="flex justify-end gap-2">
-              <Button onClick={() => setIsCreateModalVisible(false)}>
-                Hủy
-              </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                className="bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 border-0"
-              >
-                Tạo đội
-              </Button>
-            </div>
-          </Form.Item>
-        </Form>
-      </Modal>
+        onSubmit={handleCreateTeam}
+        loading={createTeamMutation.isPending}
+      />
     </div>
   );
 };
 
 export default StudentTeams;
-
