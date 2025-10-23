@@ -6,7 +6,6 @@ import {
   LogOut,
   Settings,
   Trophy,
-  
   User,
   Users,
 } from 'lucide-react';
@@ -108,7 +107,7 @@ const StudentLayout = () => {
                   <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center">
                     <User className="w-4 h-4 text-white" />
                   </div>
-                 
+
                   <ChevronDown
                     className={`w-4 h-4 text-white transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
                   />
@@ -327,4 +326,3 @@ const StudentLayout = () => {
 };
 
 export default StudentLayout;
-
