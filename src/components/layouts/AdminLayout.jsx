@@ -32,36 +32,31 @@ const items = [
       PATH_NAME.ADMIN_HACKATHONS,
     ),
     getItem(
-      <Link to={PATH_NAME.ADMIN_HACKATHON_PHASES}>Hackathon Phases</Link>,
+      <Link to={PATH_NAME.ADMIN_HACKATHON_PHASES}>Giai đoạn</Link>,
       PATH_NAME.ADMIN_HACKATHON_PHASES,
     ),
     getItem(
-      <Link to={PATH_NAME.ADMIN_PRIZES}>Prizes</Link>,
+      <Link to={PATH_NAME.ADMIN_PRIZES}>Giải thưởng</Link>,
       PATH_NAME.ADMIN_PRIZES,
     ),
   ]),
-  getItem('Challenges', 'sub1', <TrophyOutlined />, [
-    getItem(
-      <Link to={PATH_NAME.ADMIN_CHALLENGE_CREATE}>Create Challenge</Link>,
-      PATH_NAME.ADMIN_CHALLENGE_CREATE,
-    ),
-    getItem(
-      <Link to={PATH_NAME.ADMIN_CHALLENGE_MANAGE}>Manage Challenges</Link>,
-      PATH_NAME.ADMIN_CHALLENGE_MANAGE,
-    ),
-  ]),
   getItem(
-    <Link to={PATH_NAME.ADMIN_SEASON}>Seasson</Link>,
+    <Link to={PATH_NAME.ADMIN_CHALLENGES}>Thử thách</Link>,
+    PATH_NAME.ADMIN_CHALLENGES,
+    <TrophyOutlined />,
+  ),
+  getItem(
+    <Link to={PATH_NAME.ADMIN_SEASON}>Mùa</Link>,
     PATH_NAME.ADMIN_SEASON,
     <UserOutlined />,
   ),
   getItem(
-    <Link to={PATH_NAME.ADMIN_USERS}>Users</Link>,
+    <Link to={PATH_NAME.ADMIN_USERS}>Người dùng</Link>,
     PATH_NAME.ADMIN_USERS,
     <UserOutlined />,
   ),
   getItem(
-    <Link to={PATH_NAME.ADMIN_TEAMS}>Teams</Link>,
+    <Link to={PATH_NAME.ADMIN_TEAMS}>Nhóm</Link>,
     PATH_NAME.ADMIN_TEAMS,
     <TeamOutlined />,
   ),
@@ -71,7 +66,7 @@ const items = [
     <FileOutlined />,
   ),
   getItem(
-    <Link to={PATH_NAME.ADMIN_SETTINGS}>Settings</Link>,
+    <Link to={PATH_NAME.ADMIN_SETTINGS}>Cài đặt</Link>,
     PATH_NAME.ADMIN_SETTINGS,
     <SettingOutlined />,
   ),
