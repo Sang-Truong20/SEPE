@@ -7,12 +7,15 @@ const PATH_NAME = {
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_USERS: '/admin/users',
   ADMIN_SEASON: '/admin/season',
-  HACKATHON_DETAIL_PAGE: '/admin/hackathons',
-  HACKATHON_EDIT_PAGE: '/admin/hackathons/edit',
-  HACKATHON_CREATE_PAGE: '/admin/hackathons/create',
+  ADMIN_TEAMS: '/admin/team',
   ADMIN_HACKATHONS: '/admin/hackathons',
   ADMIN_HACKATHON_PHASES: '/admin/hackathons/hackathon-phases',
   ADMIN_PRIZES: '/admin/hackathons/prizes',
+  ADMIN_CHALLENGES: '/admin/challenges',
+  PARTNER: '/partner',
+  PARTNER_HACKATHONS: '/partner/hackathons',
+  PARTNER_CHALLENGES: '/partner/challenges',
+  PARTNER_TEAM_SCORES: '/partner/hackathons/',
 };
 
 export { PATH_NAME };

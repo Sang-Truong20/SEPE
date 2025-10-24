@@ -6,7 +6,7 @@ import { useUserData } from '../hooks/useUserData';
 const AdminRoutes = () => {
   const { isLoading, userInfo } = useUserData();
 
-  // const isAdmin = userInfo && userInfo.role === 3;
+  // const isAdmin = userInfo && userInfo.roleName === "Admin" ;
   const isAdmin = true;
 
   if (isLoading) {
