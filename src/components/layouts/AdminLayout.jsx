@@ -11,6 +11,8 @@ import { Avatar, Dropdown, Layout, Menu } from 'antd';
 import React, { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
+import { useUserData } from '../../hooks/useUserData.js';
+import { useLogout } from '../../hooks/useLogout.js';
 
 const { Header, Content, Sider } = Layout;
 
@@ -78,17 +80,16 @@ const items = [
 const AdminLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const  { userInfo } = useUserData() // Replace with actual user data fetching logic
+  const mutationLogout = useLogout();
 
   const userMenuItems = [
-    { key: '1', label: 'Profile' },
-    { key: '2', label: 'Settings' },
-    { type: 'divider' },
-    { key: '3', label: 'Logout', danger: true },
+    { key: '3', label: 'Đăng xuất', danger: true },
   ];
 
   const handleUserMenuClick = ({ key }) => {
     if (key === '3') {
-      console.log('Logout clicked');
+      mutationLogout();
     }
   };
 
@@ -179,7 +180,7 @@ const AdminLayout = () => {
           >
             <div className="flex items-center space-x-2 cursor-pointer hover:bg-[#2f2f2f] px-3 py-2 rounded">
               <Avatar icon={<UserOutlined />} />
-              <span className="font-medium text-white">Admin User</span>
+              <span className="font-medium text-white">{userInfo?.fullName}</span>
             </div>
           </Dropdown>
         </Header>

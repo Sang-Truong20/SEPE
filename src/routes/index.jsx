@@ -50,7 +50,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: PATH_NAME.HOME,
-        element: withSuspense(LandingPage),
+        element: <LandingPage />,
       },
       {
         element: <MemberRoutes />,

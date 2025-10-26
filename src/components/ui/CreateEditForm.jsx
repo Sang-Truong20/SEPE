@@ -186,7 +186,7 @@ const CreateEditForm = ({
   };
 
   return (
-    <div className="min-h-full bg-black p-6 rounded-xl">
+    <div className="min-h-full bg-white/5 p-6 rounded-xl">
       <div className="m-auto">
         <div className="mb-8">
           <Button
