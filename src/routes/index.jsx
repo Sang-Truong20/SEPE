@@ -6,6 +6,15 @@ import { PATH_NAME } from '../constants';
 import NotFound from '../pages/notfound';
 import AdminRoutes from './AdminRoutes';
 import MemberRoutes from './MemberRoutes';
+import HackathonForm from '../pages/admin/hackathon/hackathon-form/index.jsx';
+import HackathonDetail from '../pages/admin/hackathon/hackathon-detail/index.jsx';
+import HackathonPhaseForm from '../pages/admin/hackathon-phases/hackathon-phase-form/index.jsx';
+import HackathonPhaseDetail from '../pages/admin/hackathon-phases/hackathon-phase-detail/index.jsx';
+import PrizeForm from '../pages/admin/prizes/prize-form/index.jsx';
+import PrizeDetail from '../pages/admin/prizes/prize-detail/index.jsx';
+import SeasonForm from '../pages/admin/season/season-form/index.jsx';
+import SeasonDetail from '../pages/admin/season/season-detail/index.jsx';
+import UserForm from '../pages/admin/users/user-form/index.jsx';
 
 const LandingPage = lazy(() => import('../pages/landing'));
 const MemberPage = lazy(() => import('../pages/member'));
@@ -13,7 +22,11 @@ const AdminChallengeCreatePage = lazy(
   () => import('../pages/admin/challenge-create'),
 );
 const DashboardPage = lazy(() => import('../pages/admin/dashboard'));
-const HackathonCreatePage = lazy(() => import('../pages/admin/hackathon'));
+const Hackathons = lazy(() => import('../pages/admin/hackathon'));
+const HackathonPhases = lazy(() => import('../pages/admin/hackathon-phases'));
+const Prizes = lazy(() => import('../pages/admin/prizes'));
+const Seasons = lazy(() => import('../pages/admin/season'));
+const Users = lazy(() => import('../pages/admin/users'));
 
 const withSuspense = (Component) => (
   <Suspense
@@ -37,7 +50,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: PATH_NAME.HOME,
-        element: withSuspense(LandingPage),
+        element: <LandingPage />,
       },
       {
         element: <MemberRoutes />,
@@ -63,8 +76,47 @@ const router = createBrowserRouter([
             element: withSuspense(AdminChallengeCreatePage),
           },
           {
-            path: 'hackathon/create',
-            element: withSuspense(HackathonCreatePage),
+            path: 'hackathons',
+            children: [
+              { index: true, element: withSuspense(Hackathons) },
+              { path: 'create', element: withSuspense(() => <HackathonForm mode="create" />) },
+              { path: ':id', element: withSuspense(HackathonDetail) },
+              { path: 'edit/:id', element: withSuspense(() => <HackathonForm mode="edit" />) },
+              {
+                path: 'hackathon-phases',
+                children: [
+                  { index: true, element: withSuspense(HackathonPhases) },
+                  { path: 'create', element: withSuspense(() => <HackathonPhaseForm mode="create" />) },
+                  { path: ':id', element: withSuspense(HackathonPhaseDetail) },
+                  { path: 'edit/:id', element: withSuspense(() => <HackathonPhaseForm mode="edit" />) },
+                ]
+              },
+              {
+                path: 'prizes',
+                children: [
+                  { index: true, element: withSuspense(Prizes) },
+                  { path: 'create', element: withSuspense(() => <PrizeForm mode="create" />) },
+                  { path: ':id', element: withSuspense(PrizeDetail) },
+                  { path: 'edit/:id', element: withSuspense(() => <PrizeForm mode="edit" />) },
+                ]
+              },
+            ],
+          },
+          {
+            path: 'season',
+            children: [
+              { index: true, element: withSuspense(Seasons) },
+              { path: 'create', element: withSuspense(() => <SeasonForm mode="create" />) },
+              { path: ':id', element: withSuspense(SeasonDetail) },
+              { path: 'edit/:id', element: withSuspense(() => <SeasonForm mode="edit" />) },
+            ],
+          },
+          {
+            path: 'users',
+            children: [
+              { index: true, element: withSuspense(Users) },
+              { path: 'edit/:id', element: withSuspense(UserForm) },
+            ],
           },
         ],
       },
