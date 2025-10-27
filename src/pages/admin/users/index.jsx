@@ -15,7 +15,7 @@ const Users = () => {
 
     // Model cho bảng users
     const tableModel = useMemo(() => ({
-        entityName: 'User',
+        entityName: 'Người dùng',
         rowKey: 'userId',
         columns: [
             {

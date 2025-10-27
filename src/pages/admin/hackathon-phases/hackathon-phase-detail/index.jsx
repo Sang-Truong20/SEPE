@@ -65,7 +65,7 @@ const HackathonPhaseDetail = () => {
             }}
         >
             <EntityDetail
-                entityName="Hackathon Phase"
+                entityName="Giai đoạn"
                 model={model}
                 data={phase || {}}
                 onBack={() => navigate(`${PATH_NAME.ADMIN_HACKATHON_PHASES}?hackathonId=${hackathonId}`)}
