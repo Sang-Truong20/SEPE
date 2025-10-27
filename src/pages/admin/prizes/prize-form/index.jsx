@@ -139,7 +139,7 @@ const PrizeForm = ({ mode = 'create' }) => {
         >
             <CreateEditForm
                 mode={mode}
-                entityName="Prize"
+                entityName="Giải thưởng"
                 model={model}
                 initialValues={initialValues}
                 onSubmit={handleSubmit}
