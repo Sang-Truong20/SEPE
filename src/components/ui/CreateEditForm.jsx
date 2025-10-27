@@ -1,6 +1,7 @@
 import { Form, Input, Button, Select, DatePicker, Card, Space } from 'antd';
 import { ArrowLeftOutlined, FileTextOutlined, SaveOutlined } from '@ant-design/icons';
 import { useEffect } from 'react';
+import dayjs from 'dayjs';
 
 // Hỗ trợ các type
 const SUPPORTED_TYPES = ['input', 'textarea', 'dropdown', 'datetime', 'column'];
@@ -8,7 +9,7 @@ const normalizeFields = (fields = []) =>
   fields.filter(f => !f.type || SUPPORTED_TYPES.includes(f.type));
 
 const CreateEditForm = ({
-  entityName = 'Entity', // dùng cho header
+  entityName = 'Entity',
   model,
   mode = 'create',
   initialValues = {},
@@ -53,12 +54,23 @@ const CreateEditForm = ({
       );
     }
 
+    // Chuẩn hóa rules: nếu field.rules được truyền thì dùng, nếu không tạo rule required mặc định
+    const baseRequiredRule = field.required
+      ? [{ required: true, message: field.message || `Vui lòng nhập ${field.key || field.name}` }]
+      : [];
+
+    // field.rules có thể là:
+    // - Mảng các object rule thường
+    // - Mảng các hàm (dynamic rule) dạng ({ getFieldValue }) => ({ validator() { ... } })
+    // Giữ nguyên nếu đã truyền
+    const finalRules = field.rules && field.rules.length > 0 ? field.rules : baseRequiredRule;
+
     const commonItemProps = {
       name: field.name,
-      rules: field.required
-        ? [{ required: true, message: field.message || `Vui lòng nhập ${field.key || field.name}` }]
-        : [],
-      className: 'mb-0'
+      rules: finalRules,
+      dependencies: field.dependencies, // cho phép re-validate khi các field khác thay đổi
+      className: 'mb-0',
+      validateTrigger: field.validateTrigger || 'onBlur'
     };
 
     switch (field.type) {
@@ -72,6 +84,7 @@ const CreateEditForm = ({
               <Input
                 placeholder={field.placeholder || ''}
                 disabled={field.disabled}
+                maxLength={field.maxLength}
                 className="h-10 text-base text-white placeholder:text-gray-400 bg-neutral-900 border border-neutral-700 rounded
                            hover:bg-neutral-800 hover:border-primary focus:bg-neutral-800 focus:border-primary focus:outline-none
                            transition-colors duration-150"
@@ -90,6 +103,7 @@ const CreateEditForm = ({
                 rows={field.rows || 6}
                 placeholder={field.placeholder || ''}
                 disabled={field.disabled}
+                maxLength={field.maxLength}
                 className="text-base text-white placeholder:text-gray-400 bg-neutral-900 border border-neutral-700 rounded
                            hover:bg-neutral-800 hover:border-primary focus:bg-neutral-800 focus:border-primary focus:outline-none
                            transition-colors duration-150"
@@ -107,6 +121,7 @@ const CreateEditForm = ({
               <Select
                 placeholder={field.placeholder || ''}
                 disabled={field.disabled}
+                allowClear={field.allowClear}
                 className="w-full h-10 text-white bg-transparent
                            [&_.ant-select-selector]:!bg-neutral-900
                            [&_.ant-select-selector]:!border-neutral-700
@@ -128,13 +143,8 @@ const CreateEditForm = ({
                                 [&_.ant-select-item-option:hover]:!bg-neutral-800"
                 dropdownStyle={{ backgroundColor: '#111111' }}
                 style={{ width: '100%' }}
-              >
-                {(field.items || []).map(opt => (
-                  <Select.Option key={opt.value} value={opt.value}>
-                    {opt.text}
-                  </Select.Option>
-                ))}
-              </Select>
+                options={(field.items || []).map(opt => ({ value: opt.value, label: opt.text }))}
+              />
             </Form.Item>
           </div>
         );
@@ -146,7 +156,7 @@ const CreateEditForm = ({
             </label>
             <Form.Item {...commonItemProps}>
               <DatePicker
-                showTime
+                showTime={field.showTime !== false}
                 disabled={field.disabled}
                 placeholder={field.placeholder || ''}
                 format={field.format || 'DD/MM/YYYY HH:mm'}
@@ -158,6 +168,36 @@ const CreateEditForm = ({
                            [&_.ant-picker-input>input::placeholder]:text-gray-400
                            transition-colors duration-150"
                 style={{ width: '100%' }}
+                disabledDate={(current) => {
+                  if (!current) return false;
+                  // Giới hạn min/max theo cấu hình (nếu là string => parse, nếu là Dayjs => dùng trực tiếp)
+                  const toDayjs = (v) => {
+                    if (!v) return null;
+                    if (dayjs.isDayjs(v)) return v;
+                    return dayjs(v);
+                  };
+                  const minD = toDayjs(field.minDate);
+                  const maxD = toDayjs(field.maxDate);
+
+                  if (minD && current.isBefore(minD.startOf('minute'))) return true;
+                  if (maxD && current.isAfter(maxD.endOf('minute'))) return true;
+
+                  // Ví dụ: nếu là endDate => không cho chọn trước startDate
+                  if (field.name === 'endDate') {
+                    const start = form.getFieldValue('startDate');
+                    if (start && current.isBefore(dayjs(start).startOf('minute'))) {
+                      return true;
+                    }
+                  }
+                  // Nếu là startDate => (option) không cho sau endDate (tuỳ nhu cầu)
+                  if (field.name === 'startDate') {
+                    const end = form.getFieldValue('endDate');
+                    if (end && current.isAfter(dayjs(end).endOf('minute'))) {
+                      return true;
+                    }
+                  }
+                  return false;
+                }}
                 panelRender={(panel) => (
                   <div className="dark-picker-panel
                                   [&_.ant-picker-panel]:bg-neutral-900
