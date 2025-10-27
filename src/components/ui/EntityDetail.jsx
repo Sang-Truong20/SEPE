@@ -1,7 +1,6 @@
 import { Card, Space, Button, Tag } from 'antd';
 import { ArrowLeftOutlined, FileTextOutlined, EditOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import React from 'react';
 
 const SUPPORTED_TYPES = ['input', 'textarea', 'dropdown', 'datetime', 'column'];
 
@@ -94,7 +93,7 @@ const EntityDetail = ({
     };
 
     return (
-        <div className="min-h-full bg-black p-6 rounded-xl">
+        <div className="min-h-full bg-white/5 p-6 rounded-xl">
             <div className="m-auto">
                 <div className="mb-8">
                     <Button
