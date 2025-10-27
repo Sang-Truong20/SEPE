@@ -93,9 +93,19 @@ const AdminLayout = () => {
     }
   };
 
+  // Tìm key phù hợp nhất (chuỗi PATH_NAME nằm trong location.pathname)
+  const allPaths = Object.values(PATH_NAME);
+  const selectedKey =
+    allPaths
+      .filter((p) => p !== '*' && location.pathname.startsWith(p))
+      .sort((a, b) => b.length - a.length)[0] || location.pathname;
+
   const openKey = items.find((item) =>
-    item.children?.some((child) => child.key === location.pathname),
+    item.children?.some((child) =>
+      selectedKey.startsWith(child.key)
+    ),
   )?.key;
+
 
   return (
     <Layout style={{ minHeight: '100vh' }} className="bg-dark-primary">
@@ -144,7 +154,7 @@ const AdminLayout = () => {
           theme="dark"
           mode="inline"
           items={items}
-          selectedKeys={[location.pathname]}
+          selectedKeys={[selectedKey]}
           defaultOpenKeys={openKey ? [openKey] : []}
           className="bg-dark-secondary"
         />
