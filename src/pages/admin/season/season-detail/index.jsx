@@ -1,6 +1,5 @@
 import { Spin, ConfigProvider, theme } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
-import dayjs from 'dayjs';
 import { useSeasons } from '../../../../hooks/admin/seasons/useSeasons';
 import { PATH_NAME } from '../../../../constants';
 import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
