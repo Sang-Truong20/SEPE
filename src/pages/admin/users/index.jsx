@@ -1,9 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ConfigProvider, theme, Modal, Button, Tag, Switch } from 'antd';
+import { ConfigProvider, theme, Modal, Tag, Switch } from 'antd';
 import { ExclamationCircleOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { PATH_NAME } from '../../../constants';
 import { useUsers } from '../../../hooks/admin/users/useUsers';
 import EntityTable from '../../../components/ui/EntityTable.jsx';
 
@@ -15,7 +14,7 @@ const Users = () => {
 
     // Model cho bảng users
     const tableModel = useMemo(() => ({
-        entityName: 'User',
+        entityName: 'Người dùng',
         rowKey: 'userId',
         columns: [
             {

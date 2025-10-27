@@ -1,7 +1,7 @@
 import axiosClient from '../configs/axiosClient';
 
 const loginGoogle = (payload) => {
-  return axiosClient.post(`/Auth/google-login`, payload);
+  return axiosClient.post(`/Auth/google-login-Test-BE`, payload);
 };
 
 const getMe = () => {

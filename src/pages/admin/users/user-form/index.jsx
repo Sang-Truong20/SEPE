@@ -82,7 +82,7 @@ const UserForm = () => {
         >
             <CreateEditForm
                 mode="edit"
-                entityName="User"
+                entityName="Người dùng"
                 model={model}
                 initialValues={initialValues}
                 onSubmit={handleSubmit}

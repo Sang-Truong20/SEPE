@@ -45,7 +45,7 @@ const SEALLandingPage = () => {
       const accessToken = res?.data?.accessToken;
       const refreshToken = res?.data?.refreshToken;
       console.log(res);
-      
+
 
       if (accessToken && refreshToken) {
         Cookies.set('accessToken', accessToken);
@@ -53,7 +53,7 @@ const SEALLandingPage = () => {
         const decoded = jwtDecode(accessToken);
         const role = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
         console.log(role);
-        
+
         if (role === 'Admin') {
           window.location.href = PATH_NAME.ADMIN_DASHBOARD;
         } else {
@@ -69,11 +69,10 @@ const SEALLandingPage = () => {
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
       <nav
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-          isScrolled
-            ? 'bg-black/90 backdrop-blur-lg py-4'
-            : 'bg-transparent py-6'
-        }`}
+        className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled
+          ? 'bg-black/90 backdrop-blur-lg py-4'
+          : 'bg-transparent py-6'
+          }`}
       >
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between">

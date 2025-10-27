@@ -1,20 +1,43 @@
 import { Spin, ConfigProvider, theme } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import CreateEditForm from '../../../../components/ui/CreateEditForm.jsx';
 import { useHackathons } from '../../../../hooks/admin/hackathons/useHackathons';
+import { useSeasons } from '../../../../hooks/admin/seasons/useSeasons';
 import { PATH_NAME } from '../../../../constants';
 
 const HackathonForm = ({ mode = 'create' }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { fetchHackathon, createHackathon, updateHackathon } = useHackathons();
-  const { data: hackathon, isLoading } = mode === 'edit'
+  const { fetchSeasons } = useSeasons();
+  
+  const [isReady, setIsReady] = useState(false);
+  
+  const { data: sessions = [], isLoading: sessionsLoading } = fetchSeasons;
+  const { data: hackathon, isLoading: hackathonLoading } = mode === 'edit'
     ? fetchHackathon(id)
     : { data: null, isLoading: false };
 
-  // Định nghĩa model
+  // Đợi data fetch xong
+  useEffect(() => {
+    if (mode === 'create' && !sessionsLoading) {
+      setIsReady(true);
+    } else if (mode === 'edit' && !sessionsLoading && !hackathonLoading) {
+      setIsReady(true);
+    }
+  }, [mode, sessionsLoading, hackathonLoading]);
+
+  const selectSessions = useMemo(() => 
+    sessions.map(s => ({
+      value: String(s.seasonId),
+      text: s.name
+    })), 
+    [sessions]
+  );
+
+  // Định nghĩa model - phụ thuộc vào selectSessions
   const model = useMemo(() => ({
     modelName: 'Hackathons',
     fields: [
@@ -27,15 +50,16 @@ const HackathonForm = ({ mode = 'create' }) => {
         message: 'Vui lòng nhập tên hackathon'
       },
       {
-        key: 'Season *',
-        type: 'input',
+        key: 'Mùa *',
+        type: 'dropdown',
         placeholder: 'Mùa thi...',
         name: 'season',
         required: true,
-        message: 'Vui lòng nhập mùa'
+        message: 'Vui lòng nhập mùa',
+        items: selectSessions,
       },
       {
-        key: 'Theme',
+        key: 'Chủ đề *',
         type: 'input',
         placeholder: 'Chủ đề...',
         name: 'theme',
@@ -74,13 +98,16 @@ const HackathonForm = ({ mode = 'create' }) => {
         name: 'status',
         required: true,
         message: 'Vui lòng chọn trạng thái',
+        defaultValue: 'Unactive',
         items: [
-          { value: 'Offline', text: 'Offline' },
-          { value: 'Hybrid', text: 'Hybrid' },
+          { value: 'Pending', text: 'Chờ' },
+          { value: 'InProgress', text: 'Đang diễn ra' },
+          { value: 'Completed', text: 'Đã hoàn thành' },
+          { value: 'Unactive', text: 'Chưa bắt đầu' },
         ]
       }
     ]
-  }), []);
+  }), [selectSessions]);
 
   // Initial values cho edit
   const initialValues = useMemo(() => {
@@ -92,7 +119,7 @@ const HackathonForm = ({ mode = 'create' }) => {
         registrationDeadline: hackathon.registrationDeadline ? dayjs(hackathon.registrationDeadline) : null
       };
     }
-    return {};
+    return { status: 'Unactive' };
   }, [hackathon, mode]);
 
   // Submit
@@ -115,7 +142,8 @@ const HackathonForm = ({ mode = 'create' }) => {
     }
   };
 
-  if (isLoading && mode === 'edit') {
+  // Loading state
+  if (!isReady) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Spin size="large" />

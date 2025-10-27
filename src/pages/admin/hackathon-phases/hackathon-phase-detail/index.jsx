@@ -1,6 +1,5 @@
 import { Spin, ConfigProvider, theme } from 'antd';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import dayjs from 'dayjs';
 import { useHackathonPhases } from '../../../../hooks/admin/hackathon-phases/useHackathonPhases';
 import { PATH_NAME } from '../../../../constants';
 import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
@@ -65,7 +64,7 @@ const HackathonPhaseDetail = () => {
             }}
         >
             <EntityDetail
-                entityName="Hackathon Phase"
+                entityName="Giai đoạn"
                 model={model}
                 data={phase || {}}
                 onBack={() => navigate(`${PATH_NAME.ADMIN_HACKATHON_PHASES}?hackathonId=${hackathonId}`)}
