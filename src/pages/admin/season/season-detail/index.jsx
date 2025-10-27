@@ -62,7 +62,7 @@ const SeasonDetail = () => {
             }}
         >
             <EntityDetail
-                entityName="Season"
+                entityName="Mùa"
                 model={model}
                 data={season || {}}
                 onBack={() => navigate(PATH_NAME.ADMIN_SEASON)}

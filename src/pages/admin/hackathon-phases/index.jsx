@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ConfigProvider, theme, Modal, Button, Select } from 'antd';
-import { ExclamationCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { ConfigProvider, theme, Modal, Button, Select, Card, Tag } from 'antd';
+import { ExclamationCircleOutlined, ArrowLeftOutlined, CalendarOutlined  } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { PATH_NAME } from '../../../constants';
 import { useHackathonPhases } from '../../../hooks/admin/hackathon-phases/useHackathonPhases';
@@ -24,7 +24,7 @@ const HackathonPhases = () => {
 
     // Model cho bảng phases
     const tableModel = useMemo(() => ({
-        entityName: 'Hackathon Phase',
+        entityName: 'giai đoạn',
         rowKey: 'phaseId',
         createButton: hackathonId ? {
             label: 'Tạo mới Phase',
@@ -144,11 +144,45 @@ const HackathonPhases = () => {
                     </div>
 
                     {selectedHackathon && (
-                        <div className="bg-neutral-900 border border-neutral-700 rounded p-4 mb-4">
-                            <h3 className="text-white font-semibold mb-2">Hackathon đã chọn:</h3>
-                            <p className="text-gray-300">{selectedHackathon.name} - {selectedHackathon.season}</p>
-                            <p className="text-gray-400 text-sm">{selectedHackathon.theme}</p>
-                        </div>
+                        <Card
+                            bordered={false}
+                            className="bg-neutral-900 border border-neutral-700 rounded-xl shadow-lg"
+                            title={
+                            <h3 className="text-white font-semibold text-lg">
+                                Hackathon đã chọn
+                            </h3>
+                            }
+                        >
+                            <div className="space-y-2">
+                            <p className="text-gray-200 text-base font-medium">
+                                {selectedHackathon.name} - {selectedHackathon.season}
+                            </p>
+                            <p className="text-gray-400 text-sm italic">
+                                {selectedHackathon.theme}
+                            </p>
+
+                            <div className="flex items-center gap-3 pt-2">
+                                <Tag
+                                color="green"
+                                icon={<CalendarOutlined />}
+                                className="flex items-center gap-1"
+                                >
+                                <span className="text-sm text-gray-100">
+                                    {selectedHackathon.startDate}
+                                </span>
+                                </Tag>
+                                <Tag
+                                color="geekblue"
+                                icon={<CalendarOutlined />}
+                                className="flex items-center gap-1"
+                                >
+                                <span className="text-sm text-gray-100">
+                                    {selectedHackathon.endDate}
+                                </span>
+                                </Tag>
+                            </div>
+                            </div>
+                        </Card>
                     )}
                 </div>
 
@@ -158,7 +192,7 @@ const HackathonPhases = () => {
                         data={phasesData}
                         loading={isLoading}
                         handlers={handlers}
-                        emptyText="Không có phase nào cho hackathon này"
+                        emptyText="Không có giai đoạn nào cho hackathon này"
                         dateFormatter={(value, fmt) => value ? dayjs(value).format(fmt) : '--'}
                     />
                 ) : (

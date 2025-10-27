@@ -15,16 +15,16 @@ const Seasons = () => {
 
     // Model cho bảng seasons
     const tableModel = useMemo(() => ({
-        entityName: 'Season',
+        entityName: 'mùa',
         rowKey: 'seasonId',
         createButton: {
-            label: 'Tạo mới Season',
+            label: 'Tạo mới mùa',
             action: () => navigate('/admin/season/create'),
             icon: true
         },
         columns: [
             {
-                title: 'Tên Season',
+                title: 'Tên mùa',
                 dataIndex: 'name',
                 key: 'name',
                 type: 'text',
@@ -113,7 +113,7 @@ const Seasons = () => {
                     data={seasonsData}
                     loading={isLoading}
                     handlers={handlers}
-                    emptyText="Không có season nào"
+                    emptyText="Không có mùa nào"
                     dateFormatter={(value, fmt) => value ? dayjs(value).format(fmt) : '--'}
                 />
             </div>

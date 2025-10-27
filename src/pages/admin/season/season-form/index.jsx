@@ -118,7 +118,7 @@ const SeasonForm = ({ mode = 'create' }) => {
         >
             <CreateEditForm
                 mode={mode}
-                entityName="Season"
+                entityName="Mùa"
                 model={model}
                 initialValues={initialValues}
                 onSubmit={handleSubmit}

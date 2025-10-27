@@ -120,7 +120,7 @@ const HackathonPhaseForm = ({ mode = 'create' }) => {
         >
             <CreateEditForm
                 mode={mode}
-                entityName="Hackathon Phase"
+                entityName="Giai đoạn"
                 model={model}
                 initialValues={initialValues}
                 onSubmit={handleSubmit}

@@ -76,7 +76,7 @@ const PrizeDetail = () => {
             }}
         >
             <EntityDetail
-                entityName="Prize"
+                entityName="Giải thuởng"
                 model={model}
                 data={prize || {}}
                 onBack={() => navigate(`${PATH_NAME.ADMIN_PRIZES}?hackathonId=${hackathonId}`)}
