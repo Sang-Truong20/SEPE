@@ -3,7 +3,6 @@ import { useState, useMemo } from 'react';
 import { ConfigProvider, theme, Modal } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { PATH_NAME } from '../../../constants';
 import { useSeasons } from '../../../hooks/admin/seasons/useSeasons';
 import EntityTable from '../../../components/ui/EntityTable.jsx';
 
