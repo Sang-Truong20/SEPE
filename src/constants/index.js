@@ -11,7 +11,6 @@ const PATH_NAME = {
   HACKATHON_DETAIL_PAGE: '/admin/hackathons',
   HACKATHON_EDIT_PAGE: '/admin/hackathons/edit',
   ADMIN_CHALLENGE_MANAGE: '/admin/challenges',
-  ADMIN_USERS: '/admin/users',
   ADMIN_TEAMS: '/admin/teams',
   ADMIN_FILES: '/admin/files',
   ADMIN_SETTINGS: '/admin/settings',
