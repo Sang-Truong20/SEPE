@@ -3,6 +3,7 @@ import { Button, Form, Input } from 'antd';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 import { useEffect, useState } from 'react';
 import Footer from '../../components/layouts/Footer';
 import UserDropdown from '../../components/layouts/UserDropdown';
@@ -43,11 +44,21 @@ const SEALLandingPage = () => {
     onSuccess: (res) => {
       const accessToken = res?.data?.accessToken;
       const refreshToken = res?.data?.refreshToken;
+      console.log(res);
+
 
       if (accessToken && refreshToken) {
         Cookies.set('accessToken', accessToken);
         Cookies.set('refreshToken', refreshToken);
-        window.location.href = PATH_NAME.HOME;
+        const decoded = jwtDecode(accessToken);
+        const role = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+        console.log(role);
+
+        if (role === 'Admin') {
+          window.location.href = PATH_NAME.ADMIN_DASHBOARD;
+        } else {
+          window.location.href = PATH_NAME.HOME;
+        }
       }
     },
     onError: () => {
@@ -58,11 +69,10 @@ const SEALLandingPage = () => {
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
       <nav
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-          isScrolled
-            ? 'bg-black/90 backdrop-blur-lg py-4'
-            : 'bg-transparent py-6'
-        }`}
+        className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled
+          ? 'bg-black/90 backdrop-blur-lg py-4'
+          : 'bg-transparent py-6'
+          }`}
       >
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between">

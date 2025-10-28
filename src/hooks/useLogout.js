@@ -14,7 +14,6 @@ const useLogout = () => {
       localStorage.clear();
       queryClient.clear();
       window.location.href = PATH_NAME.HOME;
-      notify('success', { description: 'Đăng xuất thành công' });
     },
     onError: (err) => {
       console.log('check err', err);

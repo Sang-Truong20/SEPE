@@ -24,7 +24,7 @@ function Login() {
         const decoded = jwtDecode(accessToken);
         const role = decoded['role'];
         if (role === 'ADMIN') {
-          navigate(PATH_NAME.ADMIN);
+          navigate(PATH_NAME.ADMIN_DASHBOARD);
         } else {
           navigate(PATH_NAME.HOME);
         }
