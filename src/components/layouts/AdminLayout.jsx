@@ -5,11 +5,14 @@ import {
   TeamOutlined,
   TrophyOutlined,
   UserOutlined,
+  RocketOutlined,
 } from '@ant-design/icons';
 import { Avatar, Dropdown, Layout, Menu } from 'antd';
 import React, { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
+import { useUserData } from '../../hooks/useUserData.js';
+import { useLogout } from '../../hooks/useLogout.js';
 
 const { Header, Content, Sider } = Layout;
 
@@ -23,6 +26,20 @@ const items = [
     PATH_NAME.ADMIN_DASHBOARD,
     <PieChartOutlined />,
   ),
+  getItem('Hackathons', 'sub-hackathons', <RocketOutlined />, [
+    getItem(
+      <Link to={PATH_NAME.ADMIN_HACKATHONS}>Hackathons</Link>,
+      PATH_NAME.ADMIN_HACKATHONS,
+    ),
+    getItem(
+      <Link to={PATH_NAME.ADMIN_HACKATHON_PHASES}>Hackathon Phases</Link>,
+      PATH_NAME.ADMIN_HACKATHON_PHASES,
+    ),
+    getItem(
+      <Link to={PATH_NAME.ADMIN_PRIZES}>Prizes</Link>,
+      PATH_NAME.ADMIN_PRIZES,
+    ),
+  ]),
   getItem('Challenges', 'sub1', <TrophyOutlined />, [
     getItem(
       <Link to={PATH_NAME.ADMIN_CHALLENGE_CREATE}>Create Challenge</Link>,
@@ -33,6 +50,11 @@ const items = [
       PATH_NAME.ADMIN_CHALLENGE_MANAGE,
     ),
   ]),
+  getItem(
+    <Link to={PATH_NAME.ADMIN_SEASON}>Seasson</Link>,
+    PATH_NAME.ADMIN_SEASON,
+    <UserOutlined />,
+  ),
   getItem(
     <Link to={PATH_NAME.ADMIN_USERS}>Users</Link>,
     PATH_NAME.ADMIN_USERS,
@@ -58,23 +80,32 @@ const items = [
 const AdminLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const  { userInfo } = useUserData() // Replace with actual user data fetching logic
+  const mutationLogout = useLogout();
 
   const userMenuItems = [
-    { key: '1', label: 'Profile' },
-    { key: '2', label: 'Settings' },
-    { type: 'divider' },
-    { key: '3', label: 'Logout', danger: true },
+    { key: '3', label: 'Đăng xuất', danger: true },
   ];
 
   const handleUserMenuClick = ({ key }) => {
     if (key === '3') {
-      console.log('Logout clicked');
+      mutationLogout();
     }
   };
 
+  // Tìm key phù hợp nhất (chuỗi PATH_NAME nằm trong location.pathname)
+  const allPaths = Object.values(PATH_NAME);
+  const selectedKey =
+    allPaths
+      .filter((p) => p !== '*' && location.pathname.startsWith(p))
+      .sort((a, b) => b.length - a.length)[0] || location.pathname;
+
   const openKey = items.find((item) =>
-    item.children?.some((child) => child.key === location.pathname),
+    item.children?.some((child) =>
+      selectedKey.startsWith(child.key)
+    ),
   )?.key;
+
 
   return (
     <Layout style={{ minHeight: '100vh' }} className="bg-dark-primary">
@@ -123,7 +154,7 @@ const AdminLayout = () => {
           theme="dark"
           mode="inline"
           items={items}
-          selectedKeys={[location.pathname]}
+          selectedKeys={[selectedKey]}
           defaultOpenKeys={openKey ? [openKey] : []}
           className="bg-dark-secondary"
         />
@@ -159,7 +190,7 @@ const AdminLayout = () => {
           >
             <div className="flex items-center space-x-2 cursor-pointer hover:bg-[#2f2f2f] px-3 py-2 rounded">
               <Avatar icon={<UserOutlined />} />
-              <span className="font-medium text-white">Admin User</span>
+              <span className="font-medium text-white">{userInfo?.fullName}</span>
             </div>
           </Dropdown>
         </Header>
