@@ -1,6 +1,6 @@
 import { Spin } from 'antd';
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Outlet } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import LandingLayout from '../components/layouts/LandingLayout';
 import { PATH_NAME } from '../constants';
 import NotFound from '../pages/notfound';
@@ -168,28 +168,7 @@ const router = createBrowserRouter([
       {
         path: PATH_NAME.STUDENT,
         children: [
-          { path: 'dashboard', element: withSuspense(StudentDashboardPage) },
-          { path: 'hackathons', element: withSuspense(StudentHackathonsPage) },
-          { path: 'teams', element: withSuspense(StudentTeamsPage) },
-          {
-            path: 'submissions',
-            element: withSuspense(StudentSubmissionsPage),
-          },
-          { path: 'profile', element: withSuspense(StudentProfilePage) },
-          {
-            path: 'leaderboard',
-            element: withSuspense(StudentLeaderboardPage),
-          },
-        ],
-      },
-    ],
-  },
-  {
-    element: <StudentRoutes />,
-    children: [
-      {
-        path: PATH_NAME.STUDENT,
-        children: [
+          { index: true, element: <Navigate to="dashboard" replace /> },
           { path: 'dashboard', element: withSuspense(StudentDashboardPage) },
           { path: 'hackathons', element: withSuspense(StudentHackathonsPage) },
           { path: 'teams', element: withSuspense(StudentTeamsPage) },
