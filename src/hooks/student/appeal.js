@@ -17,7 +17,7 @@ export const useCreateAppeal = () => {
     return useMutation({
         mutationKey: appealQueryKeys.create(),
         mutationFn: async (appealData) => {
-            const response = await axiosClient.post('/api/Appeal', {
+            const response = await axiosClient.post('/Appeal', {
                 adjustmentId: appealData.adjustmentId,
                 teamId: appealData.teamId,
                 message: appealData.message,
@@ -40,7 +40,7 @@ export const useGetAllAppeals = (options = {}) => {
     return useQuery({
         queryKey: appealQueryKeys.appeals(),
         queryFn: async () => {
-            const response = await axiosClient.get('/api/Appeal/all');
+            const response = await axiosClient.get('/Appeal/all');
             return response.data;
         },
         staleTime: 5 * 60 * 1000, // 5 minutes
@@ -53,7 +53,7 @@ export const useGetTeamAppeals = (teamId, options = {}) => {
     return useQuery({
         queryKey: appealQueryKeys.teamAppeals(teamId),
         queryFn: async () => {
-            const response = await axiosClient.get(`/api/Appeal/team/${teamId}`);
+            const response = await axiosClient.get(`/Appeal/team/${teamId}`);
             return response.data;
         },
         enabled: !!teamId && (options.enabled !== false),
@@ -67,7 +67,7 @@ export const useGetAppeal = (appealId, options = {}) => {
     return useQuery({
         queryKey: appealQueryKeys.appeal(appealId),
         queryFn: async () => {
-            const response = await axiosClient.get(`/api/Appeal/${appealId}`);
+            const response = await axiosClient.get(`/Appeal/${appealId}`);
             return response.data;
         },
         enabled: !!appealId && (options.enabled !== false),
@@ -83,7 +83,7 @@ export const useReviewAppeal = () => {
     return useMutation({
         mutationKey: appealQueryKeys.review(),
         mutationFn: async ({ appealId, status, adminResponse, reviewedById }) => {
-            const response = await axiosClient.put(`/api/Appeal/${appealId}/review`, {
+            const response = await axiosClient.put(`/Appeal/${appealId}/review`, {
                 status,
                 adminResponse,
                 reviewedById,

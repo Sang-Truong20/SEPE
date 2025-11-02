@@ -17,7 +17,7 @@ export const useCreateDraftSubmission = () => {
     return useMutation({
         mutationKey: submissionQueryKeys.createDraft(),
         mutationFn: async (submissionData) => {
-            const response = await axiosClient.post('/api/Submission/create-draft', {
+            const response = await axiosClient.post('/Submission/create-draft', {
                 teamId: submissionData.teamId,
                 challengeId: submissionData.challengeId,
                 title: submissionData.title,
@@ -48,7 +48,7 @@ export const useSetFinalSubmission = () => {
     return useMutation({
         mutationKey: submissionQueryKeys.setFinal(),
         mutationFn: async (submissionId) => {
-            const response = await axiosClient.post('/api/Submission/set-final', {
+            const response = await axiosClient.post('/Submission/set-final', {
                 submissionId: submissionId,
             });
 
@@ -66,7 +66,7 @@ export const useGetSubmissions = (teamId, phaseChallengeId, options = {}) => {
     return useQuery({
         queryKey: submissionQueryKeys.submissions(teamId, phaseChallengeId),
         queryFn: async () => {
-            const response = await axiosClient.get('/api/Submission/submissions', {
+            const response = await axiosClient.get('/Submission/submissions', {
                 params: {
                     teamId,
                     phaseChallengeId,
