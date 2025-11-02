@@ -13,7 +13,7 @@ export const useGetChallenges = (options = {}) => {
     return useQuery({
         queryKey: challengeQueryKeys.challenges(),
         queryFn: async () => {
-            const response = await axiosClient.get('/api/Challenge');
+            const response = await axiosClient.get('/Challenge');
             return response.data;
         },
         staleTime: 5 * 60 * 1000, // 5 minutes
@@ -26,7 +26,7 @@ export const useGetChallenge = (challengeId, options = {}) => {
     return useQuery({
         queryKey: challengeQueryKeys.challenge(challengeId),
         queryFn: async () => {
-            const response = await axiosClient.get(`/api/Challenge/${challengeId}`);
+            const response = await axiosClient.get(`/Challenge/${challengeId}`);
             return response.data;
         },
         enabled: !!challengeId && (options.enabled !== false),

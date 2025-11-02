@@ -13,7 +13,7 @@ export const useGetTeamMembers = (teamId, options = {}) => {
     return useQuery({
         queryKey: teamMemberQueryKeys.members(teamId),
         queryFn: async () => {
-            const response = await axiosClient.get(`/api/TeamMember/${teamId}/members`);
+            const response = await axiosClient.get(`/TeamMember/${teamId}/members`);
             return response.data;
         },
         enabled: !!teamId && (options.enabled !== false),
@@ -29,7 +29,7 @@ export const useKickTeamMember = () => {
     return useMutation({
         mutationKey: teamMemberQueryKeys.kick(),
         mutationFn: async ({ teamId, memberId }) => {
-            const response = await axiosClient.post(`/api/TeamMember/${teamId}/kick/${memberId}`);
+            const response = await axiosClient.post(`/TeamMember/${teamId}/kick/${memberId}`);
             return response.data;
         },
         onSuccess: (data, variables) => {
@@ -48,7 +48,7 @@ export const useLeaveTeam = () => {
     return useMutation({
         mutationKey: teamMemberQueryKeys.leave(),
         mutationFn: async (teamId) => {
-            const response = await axiosClient.post(`/api/TeamMember/${teamId}/leave`);
+            const response = await axiosClient.post(`/TeamMember/${teamId}/leave`);
             return response.data;
         },
         onSuccess: (data, variables) => {
