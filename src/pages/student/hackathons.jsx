@@ -7,79 +7,19 @@ import {
   PlusOutlined,
   SearchOutlined,
   FilterOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
-import { Button, Card, Col, Input, Row, Tag, Avatar, Space, Select, Badge } from 'antd';
+import { Button, Card, Col, Input, Row, Tag, Avatar, Space, Select, Badge, Spin, Alert } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
+import { useGetHackathons } from '../../hooks/student/hackathon';
 
 const { Search } = Input;
 const { Option } = Select;
 
 const StudentHackathons = () => {
   const navigate = useNavigate();
-
-  const hackathons = [
-    {
-      id: '1',
-      name: 'AI Revolution 2024',
-      status: 'active',
-      participants: 1250,
-      maxParticipants: 2000,
-      startDate: '2024-03-15',
-      endDate: '2024-03-17',
-      prize: '$50,000',
-      difficulty: 'Intermediate',
-      technologies: ['Python', 'Machine Learning', 'TensorFlow'],
-      description: 'Build innovative AI solutions for real-world problems',
-      joined: true,
-      team: 'Code Crusaders',
-    },
-    {
-      id: '2',
-      name: 'Web3 Future Hackathon',
-      status: 'upcoming',
-      participants: 890,
-      maxParticipants: 1500,
-      startDate: '2024-04-01',
-      endDate: '2024-04-03',
-      prize: '$25,000',
-      difficulty: 'Advanced',
-      technologies: ['Solidity', 'React', 'Node.js'],
-      description: 'Create the next generation of decentralized applications',
-      joined: false,
-      team: null,
-    },
-    {
-      id: '3',
-      name: 'Green Tech Challenge',
-      status: 'upcoming',
-      participants: 230,
-      maxParticipants: 1000,
-      startDate: '2024-04-20',
-      endDate: '2024-04-22',
-      prize: '$30,000',
-      difficulty: 'Beginner',
-      technologies: ['JavaScript', 'React', 'Node.js'],
-      description: 'Develop sustainable technology solutions for environmental challenges',
-      joined: false,
-      team: null,
-    },
-    {
-      id: '4',
-      name: 'Mobile App Innovation',
-      status: 'completed',
-      participants: 567,
-      maxParticipants: 800,
-      startDate: '2024-02-10',
-      endDate: '2024-02-12',
-      prize: '$15,000',
-      difficulty: 'Intermediate',
-      technologies: ['React Native', 'Flutter', 'iOS', 'Android'],
-      description: 'Create innovative mobile applications that solve real problems',
-      joined: true,
-      team: 'Mobile Mavericks',
-    },
-  ];
+  const { data: hackathons, isLoading, error } = useGetHackathons();
 
   const handleJoinHackathon = (hackathonId) => {
     console.log('Joining hackathon:', hackathonId);
@@ -88,20 +28,32 @@ const StudentHackathons = () => {
   };
 
   const handleViewDetails = (hackathonId) => {
-    console.log('Viewing hackathon details:', hackathonId);
-    // Navigate to hackathon details page
+    navigate(`/student/hackathons/${hackathonId}`);
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 'orange';
       case 'active':
         return 'green';
-      case 'upcoming':
-        return 'blue';
       case 'completed':
         return 'default';
       default:
         return 'default';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 'SẮP DIỄN RA';
+      case 'active':
+        return 'ĐANG DIỄN RA';
+      case 'completed':
+        return 'ĐÃ KẾT THÚC';
+      default:
+        return status?.toUpperCase() || 'UNKNOWN';
     }
   };
 
@@ -118,7 +70,28 @@ const StudentHackathons = () => {
     }
   };
 
-  const filteredHackathons = hackathons.filter(h => h.status !== 'completed');
+  const filteredHackathons = hackathons?.filter(h => h.status?.toLowerCase() !== 'completed') || [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Alert
+          message="Lỗi tải dữ liệu"
+          description="Không thể tải danh sách hackathon. Vui lòng thử lại sau."
+          type="error"
+          showIcon
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -173,7 +146,7 @@ const StudentHackathons = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {filteredHackathons.map((hackathon) => (
-          <Card key={hackathon.id} className="bg-card-background border border-card-border backdrop-blur-xl">
+          <Card key={hackathon.hackathonId} className="bg-card-background border border-card-border backdrop-blur-xl">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
@@ -182,54 +155,36 @@ const StudentHackathons = () => {
                       {hackathon.name}
                     </h3>
                     <Tag color={getStatusColor(hackathon.status)}>
-                      {hackathon.status.toUpperCase()}
-                    </Tag>
-                    <Tag color={getDifficultyColor(hackathon.difficulty)}>
-                      {hackathon.difficulty}
+                      {getStatusText(hackathon.status)}
                     </Tag>
                   </div>
 
-                  <p className="text-gray-400 mb-4 line-clamp-2">
-                    {hackathon.description}
-                  </p>
-
-                  {/* Technologies */}
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {hackathon.technologies.map((tech) => (
-                      <Tag key={tech} size="small" className="bg-card-background/50 text-text-secondary border border-card-border">
-                        {tech}
-                      </Tag>
-                    ))}
+                  <div className="flex items-center gap-4 text-muted-foreground mb-4">
+                    <span>Mùa: {hackathon.seasonName}</span>
+                    <span>•</span>
+                    <span>Chủ đề: {hackathon.theme}</span>
                   </div>
 
                   {/* Stats */}
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className="flex items-center gap-2">
-                      <UserOutlined className="text-primary" />
-                      <span className="text-sm text-gray-400">
-                        {hackathon.participants}/{hackathon.maxParticipants}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <DollarOutlined className="text-primary" />
-                      <span className="text-sm text-gray-400">
-                        {hackathon.prize}
-                      </span>
+                      <CalendarOutlined className="text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Bắt đầu</p>
+                        <span className="text-sm text-gray-400">
+                          {hackathon.startDate}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <CalendarOutlined className="text-primary" />
-                      <span className="text-sm text-gray-400">
-                        {hackathon.startDate}
-                      </span>
-                    </div>
-                    {hackathon.team && (
-                      <div className="flex items-center gap-2">
-                        <TeamOutlined className="text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Kết thúc</p>
                         <span className="text-sm text-gray-400">
-                          {hackathon.team}
+                          {hackathon.endDate}
                         </span>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -241,23 +196,19 @@ const StudentHackathons = () => {
                     type="text"
                     className="text-white hover:text-primary"
                     icon={<TrophyOutlined />}
-                    onClick={() => handleViewDetails(hackathon.id)}
+                    onClick={() => handleViewDetails(hackathon.hackathonId)}
                   >
                     Chi tiết
                   </Button>
-                  {hackathon.joined && (
-                    <Tag color="green">Đã tham gia</Tag>
-                  )}
                 </Space>
 
-                {!hackathon.joined && (
-                  <Button
-                    className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
-                    onClick={() => handleJoinHackathon(hackathon.id)}
-                  >
-                    Tham gia ngay
-                  </Button>
-                )}
+                <Button
+                  className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
+                  onClick={() => handleJoinHackathon(hackathon.hackathonId)}
+                  disabled={hackathon.status?.toLowerCase() === 'completed'}
+                >
+                  {hackathon.status?.toLowerCase() === 'completed' ? 'Đã kết thúc' : 'Tham gia ngay'}
+                </Button>
               </div>
             </div>
           </Card>
