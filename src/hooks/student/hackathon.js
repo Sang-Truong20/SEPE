@@ -12,7 +12,7 @@ export const useGetHackathons = () => {
     return useQuery({
         queryKey: hackathonQueryKeys.hackathons(),
         queryFn: async () => {
-            const response = await axiosClient.get('/api/Hackathons');
+            const response = await axiosClient.get('/Hackathons');
             return response.data;
         },
         staleTime: 5 * 60 * 1000, // 5 minutes
@@ -25,7 +25,7 @@ export const useGetHackathon = (hackathonId) => {
     return useQuery({
         queryKey: hackathonQueryKeys.hackathon(hackathonId),
         queryFn: async () => {
-            const response = await axiosClient.get(`/api/Hackathons/${hackathonId}`);
+            const response = await axiosClient.get(`/Hackathons/${hackathonId}`);
             return response.data;
         },
         enabled: !!hackathonId ,
