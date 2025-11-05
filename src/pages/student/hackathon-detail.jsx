@@ -262,3 +262,4 @@ const StudentHackathonDetail = () => {
 };
 
 export default StudentHackathonDetail;
+

@@ -6,6 +6,7 @@ export const teamMemberQueryKeys = {
     members: (teamId) => [...teamMemberQueryKeys.origin, 'members', teamId],
     kick: (teamId, memberId) => [...teamMemberQueryKeys.origin, 'kick', teamId, memberId],
     leave: (teamId) => [...teamMemberQueryKeys.origin, 'leave', teamId],
+    invite: (teamId) => [...teamMemberQueryKeys.origin, 'invite', teamId],
 };
 
 // Get team members
@@ -61,6 +62,25 @@ export const useLeaveTeam = () => {
             });
 
            
+        },
+    });
+};
+
+// Invite team member
+export const useInviteTeamMember = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationKey: teamMemberQueryKeys.invite(),
+        mutationFn: async ({ teamId, email }) => {
+            const response = await axiosClient.post(`/TeamMember/${teamId}/invite`, {
+                email: email,
+            });
+            return response.data;
+        },
+        onSuccess: (data, variables) => {
+            // Invalidate team members list to show pending invitations
+            queryClient.invalidateQueries({ queryKey: teamMemberQueryKeys.members(variables.teamId) });
         },
     });
 };
