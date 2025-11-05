@@ -1,6 +1,7 @@
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { Alert, Button, message, Spin } from 'antd';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   useCreateTeam,
   useGetTeam,
@@ -16,6 +17,7 @@ import {
 } from '../../components/features/student/team';
 
 const StudentTeams = () => {
+  const navigate = useNavigate();
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
@@ -91,7 +93,8 @@ const StudentTeams = () => {
   };
 
   const handleViewTeam = (teamId) => {
-    setSelectedTeam(teamId);
+    // Navigate to team detail page
+    navigate(`/student/teams/${teamId}`);
   };
 
   const handleLeaveTeam = async (teamId) => {

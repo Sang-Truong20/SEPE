@@ -33,6 +33,7 @@ const StudentDashboardPage = lazy(() => import('../pages/student/dashboard'));
 const StudentHackathonsPage = lazy(() => import('../pages/student/hackathons'));
 const StudentHackathonDetailPage = lazy(() => import('../pages/student/hackathon-detail'));
 const StudentTeamsPage = lazy(() => import('../pages/student/teams'));
+const StudentMyTeamPage = lazy(() => import('../pages/student/my-team'));
 const StudentSubmissionsPage = lazy(
   () => import('../pages/student/submissions'),
 );
@@ -174,6 +175,7 @@ const router = createBrowserRouter([
           { path: 'hackathons', element: withSuspense(StudentHackathonsPage) },
           { path: 'hackathons/:id', element: withSuspense(StudentHackathonDetailPage) },
           { path: 'teams', element: withSuspense(StudentTeamsPage) },
+          { path: 'teams/:id', element: withSuspense(StudentMyTeamPage) },
           {
             path: 'submissions',
             element: withSuspense(StudentSubmissionsPage),
