@@ -1,7 +1,9 @@
-import { Spin, ConfigProvider, theme } from 'antd';
+import { Spin, ConfigProvider, theme, Card, Tag, Empty } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
+import { CalendarOutlined } from '@ant-design/icons';
 import { useHackathons } from '../../../../hooks/admin/hackathons/useHackathons';
+import { useHackathonPhases } from '../../../../hooks/admin/hackathon-phases/useHackathonPhases';
 import { PATH_NAME } from '../../../../constants';
 import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
 
@@ -10,6 +12,8 @@ const HackathonDetail = () => {
   const navigate = useNavigate();
   const { fetchHackathon } = useHackathons();
   const { data: hackathon, isLoading, error } = fetchHackathon(id);
+  const { fetchHackathonPhases } = useHackathonPhases();
+  const { data: phases = [], isLoading: phasesLoading } = fetchHackathonPhases(id);
 
   const model = {
     modelName: 'Hackathons',
@@ -88,15 +92,70 @@ const HackathonDetail = () => {
         }
       }}
     >
-      <EntityDetail
-        entityName="Hackathon"
-        model={model}
-        data={hackathon || {}}
-        onBack={() => navigate(PATH_NAME.ADMIN_HACKATHONS)}
-        onEdit={(rec) => navigate(`${PATH_NAME.HACKATHON_EDIT_PAGE}/${rec.hackathonId}`)}
-        showEdit
-        valueRenders={valueRenders}
-      />
+      <div className="space-y-6">
+        <EntityDetail
+          entityName="Hackathon"
+          model={model}
+          data={hackathon || {}}
+          onBack={() => navigate(PATH_NAME.ADMIN_HACKATHONS)}
+          onEdit={(rec) => navigate(`${PATH_NAME.HACKATHON_EDIT_PAGE}/${rec.hackathonId}`)}
+          showEdit
+          valueRenders={valueRenders}
+        />
+
+        {/* Hackathon Phases Section */}
+        <Card
+          className="border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm mx-6"
+          title={
+            <span className="text-white font-semibold">
+              Các giai đoạn của Hackathon
+            </span>
+          }
+          loading={phasesLoading}
+        >
+          {phases && phases.length > 0 ? (
+            <div className="space-y-4">
+              {phases.map((phase) => (
+                <Card
+                  key={phase.phaseId}
+                  className="bg-neutral-900 border border-neutral-700"
+                  size="small"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="text-white font-medium text-base mb-2">
+                        {phase.phaseName}
+                      </h4>
+                      <div className="flex items-center gap-4 flex-wrap">
+                        <Tag
+                          color="green"
+                          icon={<CalendarOutlined />}
+                          className="flex items-center gap-1"
+                        >
+                          <span className="text-sm">
+                            Bắt đầu: {dayjs(phase.startDate).format('DD/MM/YYYY HH:mm')}
+                          </span>
+                        </Tag>
+                        <Tag
+                          color="geekblue"
+                          icon={<CalendarOutlined />}
+                          className="flex items-center gap-1"
+                        >
+                          <span className="text-sm">
+                            Kết thúc: {dayjs(phase.endDate).format('DD/MM/YYYY HH:mm')}
+                          </span>
+                        </Tag>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Empty description="Chưa có giai đoạn nào" />
+          )}
+        </Card>
+      </div>
     </ConfigProvider>
   );
 };

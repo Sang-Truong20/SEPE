@@ -8,15 +8,18 @@ import {
   ArrowLeftOutlined,
   LoadingOutlined,
 } from '@ant-design/icons';
-import { Button, Card, Spin, Tag, Avatar, Space, Divider, Alert } from 'antd';
+import { Button, Card, Spin, Tag, Avatar, Space, Divider, Alert, Empty } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
+import dayjs from 'dayjs';
 import { useGetHackathon } from '../../hooks/student/hackathon';
+import { useGetHackathonPhases } from '../../hooks/student/hackathon-phase';
 import { PATH_NAME } from '../../constants';
 
 const StudentHackathonDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { data: hackathon, isLoading, error } = useGetHackathon(id);
+  const { data: phases = [], isLoading: phasesLoading } = useGetHackathonPhases(id);
 
   const handleJoinHackathon = () => {
     navigate(PATH_NAME.STUDENT_TEAMS);
@@ -180,6 +183,46 @@ const StudentHackathonDetail = () => {
             </div>
           </Card>
 
+          {/* Hackathon Phases */}
+          <Card className="bg-card-background border border-card-border backdrop-blur-xl">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">
+              Các giai đoạn của Hackathon
+            </h3>
+            {phasesLoading ? (
+              <div className="flex justify-center py-8">
+                <Spin />
+              </div>
+            ) : phases && phases.length > 0 ? (
+              <div className="space-y-3">
+                {phases.map((phase) => (
+                  <Card
+                    key={phase.phaseId}
+                    className="bg-card-background/50 border border-card-border/50"
+                    size="small"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="text-text-primary font-medium mb-2">
+                          {phase.phaseName}
+                        </h4>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <Tag color="green" icon={<CalendarOutlined />}>
+                            Bắt đầu: {dayjs(phase.startDate).format('DD/MM/YYYY HH:mm')}
+                          </Tag>
+                          <Tag color="blue" icon={<CalendarOutlined />}>
+                            Kết thúc: {dayjs(phase.endDate).format('DD/MM/YYYY HH:mm')}
+                          </Tag>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Empty description="Chưa có giai đoạn nào" />
+            )}
+          </Card>
+
           {/* Rules & Guidelines */}
           <Card className="bg-card-background border border-card-border backdrop-blur-xl">
             <h3 className="text-lg font-semibold text-text-primary mb-4">
@@ -262,4 +305,7 @@ const StudentHackathonDetail = () => {
 };
 
 export default StudentHackathonDetail;
+
+
+
 
