@@ -36,10 +36,101 @@ import { PATH_NAME } from '../../constants';
 
 dayjs.extend(relativeTime);
 
+// Mock data for UI preview
+const mockNotifications = [
+  {
+    notificationId: 1,
+    id: 1,
+    type: 'TEAM_INVITE',
+    title: 'Lời mời tham gia đội',
+    message: 'Bạn đã nhận được lời mời tham gia đội "Code Crusaders" từ Nguyễn Văn A',
+    content: 'Bạn đã nhận được lời mời tham gia đội "Code Crusaders" từ Nguyễn Văn A',
+    isRead: false,
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    teamId: 1,
+    relatedId: 1,
+  },
+  {
+    notificationId: 2,
+    id: 2,
+    type: 'HACKATHON',
+    title: 'Hackathon mới đã được công bố',
+    message: 'AI Revolution 2024 đã được công bố. Đăng ký ngay để tham gia!',
+    content: 'AI Revolution 2024 đã được công bố. Đăng ký ngay để tham gia!',
+    isRead: false,
+    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
+  },
+  {
+    notificationId: 3,
+    id: 3,
+    type: 'DEADLINE',
+    title: 'Nhắc nhở deadline',
+    message: 'Deadline nộp bài cho milestone 3 còn lại 2 ngày. Hãy hoàn thiện và nộp bài đúng hạn!',
+    content: 'Deadline nộp bài cho milestone 3 còn lại 2 ngày. Hãy hoàn thiện và nộp bài đúng hạn!',
+    isRead: false,
+    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
+  },
+  {
+    notificationId: 4,
+    id: 4,
+    type: 'ANNOUNCEMENT',
+    title: 'Cập nhật tiêu chí chấm điểm',
+    message: 'Tiêu chí chấm điểm cho AI Revolution 2024 đã được cập nhật. Vui lòng xem chi tiết.',
+    content: 'Tiêu chí chấm điểm cho AI Revolution 2024 đã được cập nhật. Vui lòng xem chi tiết.',
+    isRead: true,
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+  },
+  {
+    notificationId: 5,
+    id: 5,
+    type: 'ACHIEVEMENT',
+    title: 'Hoàn thành hồ sơ',
+    message: 'Chúc mừng! Hồ sơ của bạn đã được hoàn thành 100% và hiển thị cho các đội khác.',
+    content: 'Chúc mừng! Hồ sơ của bạn đã được hoàn thành 100% và hiển thị cho các đội khác.',
+    isRead: true,
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+  },
+  {
+    notificationId: 6,
+    id: 6,
+    type: 'TEAM_INVITE',
+    title: 'Lời mời tham gia đội',
+    message: 'Bạn đã nhận được lời mời tham gia đội "Tech Warriors" từ Trần Thị B',
+    content: 'Bạn đã nhận được lời mời tham gia đội "Tech Warriors" từ Trần Thị B',
+    isRead: true,
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+    teamId: 2,
+    relatedId: 2,
+  },
+  {
+    notificationId: 7,
+    id: 7,
+    type: 'RESULT',
+    title: 'Kết quả Hackathon',
+    message: 'Kết quả Web3 Future Hackathon đã được công bố. Kiểm tra xếp hạng của đội bạn!',
+    content: 'Kết quả Web3 Future Hackathon đã được công bố. Kiểm tra xếp hạng của đội bạn!',
+    isRead: true,
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+  },
+  {
+    notificationId: 8,
+    id: 8,
+    type: 'HACKATHON',
+    title: 'Hackathon sắp bắt đầu',
+    message: 'AI Revolution 2024 sẽ bắt đầu vào ngày mai. Hãy chuẩn bị sẵn sàng!',
+    content: 'AI Revolution 2024 sẽ bắt đầu vào ngày mai. Hãy chuẩn bị sẵn sàng!',
+    isRead: false,
+    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
+  },
+];
+
 const StudentNotifications = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState('all');
-  const { data: notifications = [], isLoading } = useGetNotifications();
+  // Use mock data for UI preview - comment out when API is ready
+  const { data: notifications = mockNotifications, isLoading } = useGetNotifications();
+  // Uncomment below and remove mockNotifications when API is ready:
+  // const { data: notifications = [], isLoading } = useGetNotifications();
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
   const acceptInvite = useAcceptTeamInvite();
