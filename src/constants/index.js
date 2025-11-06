@@ -25,6 +25,7 @@ const PATH_NAME = {
   STUDENT_SUBMISSIONS: '/student/submissions',
   STUDENT_PROFILE: '/student/profile',
   STUDENT_LEADERBOARD: '/student/leaderboard',
+  STUDENT_NOTIFICATIONS: '/student/notifications',
   USER_INFO: '/user/profile',
 };
 
