@@ -8,15 +8,28 @@ import {
   Trophy,
   User,
   Users,
+  Bell,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
+import { useGetNotifications, useGetUnreadCount, useMarkAsRead } from '../../hooks/student/notification';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 const StudentLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const { data: notifications = [], isLoading: notificationsLoading } = useGetNotifications();
+  const { data: unreadCount = 0 } = useGetUnreadCount();
+  const markAsRead = useMarkAsRead();
+
+  const recentNotifications = notifications.slice(0, 5);
+  const unreadNotifications = notifications.filter((n) => !n.isRead).slice(0, 5);
 
   const userData = {
     name: 'Nguyễn Văn A',
@@ -98,10 +111,142 @@ const StudentLayout = () => {
 
             {/* User Menu */}
             <div className="flex items-center space-x-2 lg:space-x-4">
+              {/* Notification Bell */}
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    setIsNotificationOpen(!isNotificationOpen);
+                    setIsDropdownOpen(false);
+                  }}
+                  className="relative p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400/20"
+                >
+                  <Bell className="w-5 h-5 text-white" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notification Dropdown */}
+                {isNotificationOpen && (
+                  <>
+                    {/* Overlay */}
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsNotificationOpen(false)}
+                    />
+
+                    {/* Dropdown Content */}
+                    <div className="absolute right-0 top-full mt-2 w-96 bg-dark-secondary/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 max-h-[600px] flex flex-col">
+                      {/* Header */}
+                      <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                        <h3 className="text-white font-semibold text-lg">Thông báo</h3>
+                        <button
+                          onClick={() => navigate(PATH_NAME.STUDENT_NOTIFICATIONS)}
+                          className="text-sm text-green-400 hover:text-green-300 transition-colors"
+                        >
+                          Xem tất cả
+                        </button>
+                      </div>
+
+                      {/* Notifications List */}
+                      <div className="overflow-y-auto flex-1">
+                        {notificationsLoading ? (
+                          <div className="p-8 text-center">
+                            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                          </div>
+                        ) : recentNotifications.length > 0 ? (
+                          <div className="divide-y divide-white/10">
+                            {recentNotifications.map((notification) => {
+                              const isUnread = !notification.isRead;
+                              const isTeamInvite =
+                                notification.type === 'TEAM_INVITE' ||
+                                notification.type === 'team_invite' ||
+                                notification.type?.toLowerCase().includes('team');
+
+                              return (
+                                <div
+                                  key={notification.notificationId || notification.id}
+                                  className={`p-4 hover:bg-white/5 transition-colors cursor-pointer ${
+                                    isUnread ? 'bg-blue-500/5' : ''
+                                  }`}
+                                  onClick={() => {
+                                    if (isUnread) {
+                                      markAsRead.mutate(
+                                        notification.notificationId || notification.id,
+                                      );
+                                    }
+                                    if (isTeamInvite && notification.teamId) {
+                                      navigate(`${PATH_NAME.STUDENT_TEAMS}/${notification.teamId}`);
+                                    } else {
+                                      navigate(PATH_NAME.STUDENT_NOTIFICATIONS);
+                                    }
+                                    setIsNotificationOpen(false);
+                                  }}
+                                >
+                                  <div className="flex items-start space-x-3">
+                                    {isUnread && (
+                                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p
+                                        className={`text-sm font-medium truncate ${
+                                          isUnread ? 'text-white' : 'text-muted-foreground'
+                                        }`}
+                                      >
+                                        {notification.title || notification.message}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                        {notification.message || notification.content}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground mt-2">
+                                        {dayjs(
+                                          notification.createdAt ||
+                                            notification.createdDate ||
+                                            notification.timestamp,
+                                        ).fromNow()}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="p-8 text-center text-muted-foreground">
+                            <Bell className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                            <p>Không có thông báo nào</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Footer */}
+                      {recentNotifications.length > 0 && (
+                        <div className="p-3 border-t border-white/10">
+                          <button
+                            onClick={() => {
+                              navigate(PATH_NAME.STUDENT_NOTIFICATIONS);
+                              setIsNotificationOpen(false);
+                            }}
+                            className="w-full text-center text-sm text-green-400 hover:text-green-300 transition-colors"
+                          >
+                            Xem tất cả thông báo
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
               {/* Dropdown Avatar */}
               <div className="relative">
                 <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onClick={() => {
+                    setIsDropdownOpen(!isDropdownOpen);
+                    setIsNotificationOpen(false);
+                  }}
                   className="flex items-center space-x-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400/20"
                 >
                   <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center">

@@ -43,6 +43,9 @@ const StudentProfilePage = lazy(() => import('../pages/student/profile'));
 const StudentLeaderboardPage = lazy(
   () => import('../pages/student/leaderboard'),
 );
+const StudentNotificationsPage = lazy(
+  () => import('../pages/student/notifications'),
+);
 
 const withSuspense = (Component) => (
   <Suspense
@@ -189,6 +192,10 @@ const router = createBrowserRouter([
           {
             path: 'leaderboard',
             element: withSuspense(StudentLeaderboardPage),
+          },
+          {
+            path: 'notifications',
+            element: withSuspense(StudentNotificationsPage),
           },
         ],
       },
