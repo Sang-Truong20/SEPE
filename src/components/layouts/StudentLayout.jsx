@@ -19,13 +19,73 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
 
+// Mock data for UI preview
+const mockNotifications = [
+  {
+    notificationId: 1,
+    id: 1,
+    type: 'TEAM_INVITE',
+    title: 'Lời mời tham gia đội',
+    message: 'Bạn đã nhận được lời mời tham gia đội "Code Crusaders" từ Nguyễn Văn A',
+    content: 'Bạn đã nhận được lời mời tham gia đội "Code Crusaders" từ Nguyễn Văn A',
+    isRead: false,
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    teamId: 1,
+    relatedId: 1,
+  },
+  {
+    notificationId: 2,
+    id: 2,
+    type: 'HACKATHON',
+    title: 'Hackathon mới đã được công bố',
+    message: 'AI Revolution 2024 đã được công bố. Đăng ký ngay để tham gia!',
+    content: 'AI Revolution 2024 đã được công bố. Đăng ký ngay để tham gia!',
+    isRead: false,
+    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    notificationId: 3,
+    id: 3,
+    type: 'DEADLINE',
+    title: 'Nhắc nhở deadline',
+    message: 'Deadline nộp bài cho milestone 3 còn lại 2 ngày.',
+    content: 'Deadline nộp bài cho milestone 3 còn lại 2 ngày.',
+    isRead: false,
+    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    notificationId: 4,
+    id: 4,
+    type: 'ANNOUNCEMENT',
+    title: 'Cập nhật tiêu chí chấm điểm',
+    message: 'Tiêu chí chấm điểm cho AI Revolution 2024 đã được cập nhật.',
+    content: 'Tiêu chí chấm điểm cho AI Revolution 2024 đã được cập nhật.',
+    isRead: true,
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    notificationId: 5,
+    id: 5,
+    type: 'ACHIEVEMENT',
+    title: 'Hoàn thành hồ sơ',
+    message: 'Chúc mừng! Hồ sơ của bạn đã được hoàn thành 100%.',
+    content: 'Chúc mừng! Hồ sơ của bạn đã được hoàn thành 100%.',
+    isRead: true,
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
 const StudentLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const { data: notifications = [], isLoading: notificationsLoading } = useGetNotifications();
-  const { data: unreadCount = 0 } = useGetUnreadCount();
+  // Use mock data for UI preview - comment out when API is ready
+  const { data: notifications = mockNotifications, isLoading: notificationsLoading } = useGetNotifications();
+  // Uncomment below and remove mockNotifications when API is ready:
+  // const { data: notifications = [], isLoading: notificationsLoading } = useGetNotifications();
+  const { data: unreadCountData = { count: mockNotifications.filter((n) => !n.isRead).length } } = useGetUnreadCount();
+  const unreadCount = unreadCountData?.count || mockNotifications.filter((n) => !n.isRead).length;
   const markAsRead = useMarkAsRead();
 
   const recentNotifications = notifications.slice(0, 5);
