@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { Button, Form, Input } from 'antd';
+import { Form } from 'antd';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Cookies from 'js-cookie';
@@ -12,6 +12,7 @@ import { useLogout } from '../../hooks/useLogout';
 import { useUserData } from '../../hooks/useUserData';
 import { loginGoogle } from '../../services/auth';
 import { notify } from '../../utils/index';
+import Login from '../../components/login';
 
 const SEALLandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -499,7 +500,7 @@ const SEALLandingPage = () => {
                 </p>
               </div>
 
-              <div className="space-y-6">
+              {/* <div className="space-y-6">
                 <Form
                   form={form}
                   onFinish={handleFinish}
@@ -534,15 +535,7 @@ const SEALLandingPage = () => {
                   </Form.Item>
 
                   <Form.Item>
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      loading={isPending}
-                      size="large"
-                      className="w-full h-12 font-semibold transition-all hover:scale-[1.02]"
-                    >
-                      Tham gia
-                    </Button>
+                    
                   </Form.Item>
                 </Form>
 
@@ -557,7 +550,9 @@ const SEALLandingPage = () => {
                   </a>{' '}
                   của chúng tôi
                 </p>
-              </div>
+              </div> */}
+                <Login/>
+
 
               {/* Lợi ích */}
               <div className="mt-8 pt-6 border-t border-white/10">

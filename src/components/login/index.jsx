@@ -1,4 +1,4 @@
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
 import { useMutation } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
@@ -39,19 +39,26 @@ function Login() {
     },
   });
 
+  const login = useGoogleLogin({
+  onSuccess: tokenResponse => console.log(tokenResponse),
+  });
+
   return (
-    <GoogleLogin
-      text="signin_with"
-      theme="outline"
-      size="large"
-      width="100%"
-      onSuccess={(credentialResponse) => {
-        mutateLoginGoogle(credentialResponse?.credential);
-      }}
-      onError={() => {
-        console.log('Login Failed');
-      }}
-    />
+      <GoogleLogin
+        text="signin_with"
+        theme="outline"
+        size="large"
+        width="100%"
+        onSuccess={(credentialResponse) => {
+          console.log(credentialResponse);
+          
+          mutateLoginGoogle(credentialResponse?.credential);
+        }}
+        onError={() => {
+          console.log('Login Failed');
+        }}
+      />
+  
   );
 }
 
