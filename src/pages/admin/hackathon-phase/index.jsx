@@ -3,9 +3,9 @@ import { useState, useMemo } from 'react';
 import { ConfigProvider, theme, Modal, Button, Select, Card, Tag } from 'antd';
 import { ExclamationCircleOutlined, ArrowLeftOutlined, CalendarOutlined  } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { PATH_NAME } from '../../../constants';
-import { useHackathonPhases } from '../../../hooks/admin/hackathon-phases/useHackathonPhases';
-import { useHackathons } from '../../../hooks/admin/hackathons/useHackathons';
+import { PATH_NAME } from '../../../constants/index.js';
+import { useHackathonPhases } from '../../../hooks/admin/hackathon-phases/useHackathonPhases.js';
+import { useHackathons } from '../../../hooks/admin/hackathons/useHackathons.js';
 import EntityTable from '../../../components/ui/EntityTable.jsx';
 
 const HackathonPhases = () => {

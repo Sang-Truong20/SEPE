@@ -1,8 +1,8 @@
 import { Spin, ConfigProvider, theme } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { useHackathons } from '../../../../hooks/admin/hackathons/useHackathons';
-import { PATH_NAME } from '../../../../constants';
+import { useHackathons } from '../../../../hooks/admin/hackathons/useHackathons.js';
+import { PATH_NAME } from '../../../../constants/index.js';
 import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
 
 const HackathonDetail = () => {
@@ -93,7 +93,7 @@ const HackathonDetail = () => {
         model={model}
         data={hackathon || {}}
         onBack={() => navigate(PATH_NAME.ADMIN_HACKATHONS)}
-        onEdit={(rec) => navigate(`${PATH_NAME.HACKATHON_EDIT_PAGE}/${rec.hackathonId}`)}
+        onEdit={(rec) => navigate(`${PATH_NAME.ADMIN_HACKATHONS}/edit/${rec.hackathonId}`)}
         showEdit
         valueRenders={valueRenders}
       />
