@@ -27,6 +27,11 @@ const PATH_NAME = {
   STUDENT_LEADERBOARD: '/student/leaderboard',
   STUDENT_NOTIFICATIONS: '/student/notifications',
   USER_INFO: '/user/profile',
+  ADMIN_CHALLENGES: '/admin/challenges',
+  PARTNER: '/partner',
+  PARTNER_HACKATHONS: '/partner/hackathons',
+  PARTNER_CHALLENGES: '/partner/challenges',
+  PARTNER_TEAM_SCORES: '/partner/hackathons/',
 };
 
 export { PATH_NAME };

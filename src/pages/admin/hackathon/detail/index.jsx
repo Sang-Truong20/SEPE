@@ -5,6 +5,8 @@ import { CalendarOutlined } from '@ant-design/icons';
 import { useHackathons } from '../../../../hooks/admin/hackathons/useHackathons';
 import { useHackathonPhases } from '../../../../hooks/admin/hackathon-phases/useHackathonPhases';
 import { PATH_NAME } from '../../../../constants';
+
+
 import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
 
 const HackathonDetail = () => {
@@ -156,6 +158,15 @@ const HackathonDetail = () => {
           )}
         </Card>
       </div>
+      <EntityDetail
+        entityName="Hackathon"
+        model={model}
+        data={hackathon || {}}
+        onBack={() => navigate(PATH_NAME.ADMIN_HACKATHONS)}
+        onEdit={(rec) => navigate(`${PATH_NAME.ADMIN_HACKATHONS}/edit/${rec.hackathonId}`)}
+        showEdit
+        valueRenders={valueRenders}
+      />
     </ConfigProvider>
   );
 };

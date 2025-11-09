@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { callRefreshToken } from '../services/auth';
+import { useLogout } from '../hooks/useLogout';
 
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL,
@@ -26,6 +27,7 @@ axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const logout = useLogout();
 
     if (error?.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -52,6 +54,7 @@ axiosClient.interceptors.response.use(
           }
         } catch (error) {
           console.error('err', error);
+          logout();
         }
       }
     }

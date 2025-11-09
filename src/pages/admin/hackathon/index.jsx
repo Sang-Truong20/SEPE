@@ -19,7 +19,7 @@ const Hackathons = () => {
     rowKey: 'hackathonId',
     createButton: {
       label: 'Tạo mới Hackathon',
-      action: () => navigate(PATH_NAME.HACKATHON_CREATE_PAGE),
+      action: () => navigate(`${PATH_NAME.ADMIN_HACKATHONS}/create`),
       icon: true
     },
     columns: [
@@ -109,8 +109,8 @@ const Hackathons = () => {
   };
 
   const handlers = {
-    onView: (record) => navigate(`${PATH_NAME.HACKATHON_DETAIL_PAGE}/${record.hackathonId}`),
-    onEdit: (record) => navigate(`${PATH_NAME.HACKATHON_EDIT_PAGE}/${record.hackathonId}`),
+    onView: (record) => navigate(`${PATH_NAME.ADMIN_HACKATHONS}/${record.hackathonId}`),
+    onEdit: (record) => navigate(`${PATH_NAME.ADMIN_HACKATHONS}/edit/${record.hackathonId}`),
     onDelete: (record) => handleDeleteConfirm(record.hackathonId),
     isDeleting: (record) => deletingId === record.hackathonId
   };

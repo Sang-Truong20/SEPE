@@ -1,10 +1,8 @@
 import {
   FileOutlined,
   PieChartOutlined,
-  SettingOutlined,
-  TeamOutlined,
   TrophyOutlined,
-  UserOutlined,
+  TeamOutlined,
   RocketOutlined,
 } from '@ant-design/icons';
 import { Avatar, Dropdown, Layout, Menu } from 'antd';
@@ -20,75 +18,40 @@ function getItem(label, key, icon, children) {
   return { key, icon, children, label };
 }
 
+// === MENU CHỈ CÓ 3 CHỨC NĂNG ===
 const items = [
   getItem(
-    <Link to={PATH_NAME.ADMIN_DASHBOARD}>Dashboard</Link>,
-    PATH_NAME.ADMIN_DASHBOARD,
-    <PieChartOutlined />,
+    <Link to={PATH_NAME.PARTNER_HACKATHONS}>Danh sách Hackathon</Link>,
+    PATH_NAME.PARTNER_HACKATHONS,
+    <RocketOutlined />,
   ),
-  getItem('Hackathons', 'sub-hackathons', <RocketOutlined />, [
-    getItem(
-      <Link to={PATH_NAME.ADMIN_HACKATHONS}>Hackathons</Link>,
-      PATH_NAME.ADMIN_HACKATHONS,
-    ),
-    getItem(
-      <Link to={PATH_NAME.ADMIN_HACKATHON_PHASES}>Giai đoạn</Link>,
-      PATH_NAME.ADMIN_HACKATHON_PHASES,
-    ),
-    getItem(
-      <Link to={PATH_NAME.ADMIN_PRIZES}>Giải thưởng</Link>,
-      PATH_NAME.ADMIN_PRIZES,
-    ),
-  ]),
   getItem(
-    <Link to={PATH_NAME.ADMIN_CHALLENGES}>Thử thách</Link>,
-    PATH_NAME.ADMIN_CHALLENGES,
+    <Link to={PATH_NAME.PARTNER_CHALLENGES}>Thử thách</Link>,
+    PATH_NAME.PARTNER_CHALLENGES,
     <TrophyOutlined />,
   ),
   getItem(
-    <Link to={PATH_NAME.ADMIN_SEASON}>Mùa</Link>,
-    PATH_NAME.ADMIN_SEASON,
-    <UserOutlined />,
-  ),
-  getItem(
-    <Link to={PATH_NAME.ADMIN_USERS}>Người dùng</Link>,
-    PATH_NAME.ADMIN_USERS,
-    <UserOutlined />,
-  ),
-  getItem(
-    <Link to={PATH_NAME.ADMIN_TEAMS}>Nhóm</Link>,
-    PATH_NAME.ADMIN_TEAMS,
+    <Link to={PATH_NAME.PARTNER_TEAM_SCORES}>Điểm nhóm</Link>,
+    PATH_NAME.PARTNER_TEAM_SCORES,
     <TeamOutlined />,
-  ),
-  getItem(
-    <Link to={PATH_NAME.ADMIN_FILES}>Files</Link>,
-    PATH_NAME.ADMIN_FILES,
-    <FileOutlined />,
-  ),
-  getItem(
-    <Link to={PATH_NAME.ADMIN_SETTINGS}>Cài đặt</Link>,
-    PATH_NAME.ADMIN_SETTINGS,
-    <SettingOutlined />,
   ),
 ];
 
-const AdminLayout = () => {
+const PartnerLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const  { userInfo } = useUserData() // Replace with actual user data fetching logic
+  const { userInfo } = useUserData();
   const mutationLogout = useLogout();
 
-  const userMenuItems = [
-    { key: '3', label: 'Đăng xuất', danger: true },
-  ];
+  const userMenuItems = [{ key: 'logout', label: 'Đăng xuất', danger: true }];
 
   const handleUserMenuClick = ({ key }) => {
-    if (key === '3') {
+    if (key === 'logout') {
       mutationLogout();
     }
   };
 
-  // Tìm key phù hợp nhất (chuỗi PATH_NAME nằm trong location.pathname)
+  // Tự động chọn menu item dựa trên URL
   const allPaths = Object.values(PATH_NAME);
   const selectedKey =
     allPaths
@@ -96,11 +59,8 @@ const AdminLayout = () => {
       .sort((a, b) => b.length - a.length)[0] || location.pathname;
 
   const openKey = items.find((item) =>
-    item.children?.some((child) =>
-      selectedKey.startsWith(child.key)
-    ),
+    item.children?.some((child) => selectedKey.startsWith(child.key)),
   )?.key;
-
 
   return (
     <Layout style={{ minHeight: '100vh' }} className="bg-dark-primary">
@@ -133,13 +93,14 @@ const AdminLayout = () => {
             color: #fff !important;
           }
         `}</style>
+
         <div className="demo-logo-vertical p-4">
           <div className="flex items-center space-x-3">
-            <Avatar size="large" icon={<UserOutlined />} />
+            <Avatar size="large" icon={<TrophyOutlined />} />
             {!collapsed && (
               <div>
-                <div className="text-white font-semibold">Admin Panel</div>
-                <div className="text-gray-400 text-sm">Administrator</div>
+                <div className="text-white font-semibold">Partner Panel</div>
+                <div className="text-gray-400 text-sm">Đối tác tổ chức</div>
               </div>
             )}
           </div>
@@ -162,7 +123,7 @@ const AdminLayout = () => {
         }}
       >
         <Header
-          className="bg-dark-secondary border-dark-accent overflow-hidden"
+          className="bg-dark-secondary border-dark-accent"
           style={{
             position: 'fixed',
             top: 0,
@@ -174,7 +135,7 @@ const AdminLayout = () => {
             justifyContent: 'flex-end',
             padding: '0 24px',
             boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-            borderBottom: '1px solid',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
             zIndex: 99,
             transition: 'all 0.2s',
           }}
@@ -184,8 +145,10 @@ const AdminLayout = () => {
             placement="bottomRight"
           >
             <div className="flex items-center space-x-2 cursor-pointer hover:bg-[#2f2f2f] px-3 py-2 rounded">
-              <Avatar icon={<UserOutlined />} />
-              <span className="font-medium text-white">{userInfo?.fullName}</span>
+              <Avatar icon={<TrophyOutlined />} />
+              <span className="font-medium text-white">
+                {userInfo?.fullName || 'Partner'}
+              </span>
             </div>
           </Dropdown>
         </Header>
@@ -193,7 +156,7 @@ const AdminLayout = () => {
         <Content
           style={{
             marginTop: 64,
-            height: 'calc(100vh - 64px)',
+            minHeight: 'calc(100vh - 64px)',
             overflowY: 'auto',
             padding: 16,
             backgroundColor: '#0A1F1C',
@@ -206,4 +169,4 @@ const AdminLayout = () => {
   );
 };
 
-export default AdminLayout;
+export default PartnerLayout;

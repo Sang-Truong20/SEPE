@@ -240,7 +240,7 @@ const CreateEditForm = ({
 
           <div className="px-6">
             <h1 className="text-3xl font-bold mb-2 text-white">
-              {mode === 'create' ? `Tạo ${entityName} Mới` : `Chỉnh sửa ${entityName}`}
+              {mode === 'create' ? `Tạo ${lowerEntity} Mới` : `Chỉnh sửa ${lowerEntity}`}
             </h1>
             <p className="text-gray-400">
               {mode === 'create'

@@ -1,13 +1,15 @@
-import AdminLayout from '../components/layouts/AdminLayout';
+// src/routes/PartnerRoutes.jsx
+import PartnerLayout from '../components/layouts/PartnerLayout';
 import { Spin } from 'antd';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useUserData } from '../hooks/useUserData';
 
-const AdminRoutes = () => {
+const PartnerRoutes = () => {
   const { isLoading, userInfo } = useUserData();
 
-  // const isAdmin = userInfo && userInfo.roleName === "Admin" ;
-  const isAdmin = true;
+  // Giả lập: role 2 = Partner
+  // const isPartner = userInfo && userInfo.role === 2;
+  const isPartner = true;
 
   if (isLoading) {
     return (
@@ -17,13 +19,13 @@ const AdminRoutes = () => {
     );
   }
 
-  return isAdmin ? (
-    <AdminLayout>
+  return isPartner ? (
+    <PartnerLayout>
       <Outlet />
-    </AdminLayout>
+    </PartnerLayout>
   ) : (
     <Navigate to="/login" replace />
   );
 };
 
-export default AdminRoutes;
+export default PartnerRoutes;
