@@ -22,6 +22,25 @@ export const useChallenges = () => {
         },
     });
 
+    const createChallenge = useMutation({
+        mutationFn: async (payload) => {
+            const formData = new FormData();
+
+            formData.append("Title", payload.title);
+            formData.append("Description", payload.description);
+            formData.append("HackathonId", Number(payload.hackathonId));
+            if (payload.file) formData.append("File", payload.file);
+
+            return axiosClient.post(`/Challenge/create`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: challengeQueryKeys.lists() });
+            message.success("Challenge created!");
+        },
+    });
+
     // Fetch single challenge
     const fetchChallenge = (id) => useQuery({
         queryKey: challengeQueryKeys.detail(id),
@@ -76,6 +95,7 @@ export const useChallenges = () => {
     return {
         fetchChallenges,
         fetchChallenge,
+        createChallenge,
         updateChallenge,
         updateChallengeStatus,
         deleteChallenge,
