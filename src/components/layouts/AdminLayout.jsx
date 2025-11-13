@@ -10,7 +10,7 @@ import {
 import { Avatar, Dropdown, Layout, Menu } from 'antd';
 import React, { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { PATH_NAME } from '../../constants';
+import { GROUP, PATH_NAME } from '../../constants';
 import { useUserData } from '../../hooks/useUserData.js';
 import { useLogout } from '../../hooks/useLogout.js';
 
@@ -75,12 +75,10 @@ const items = [
 const AdminLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const  { userInfo } = useUserData() // Replace with actual user data fetching logic
+  const { userInfo } = useUserData(); // Replace with actual user data fetching logic
   const mutationLogout = useLogout();
 
-  const userMenuItems = [
-    { key: '3', label: 'Đăng xuất', danger: true },
-  ];
+  const userMenuItems = [{ key: '3', label: 'Đăng xuất', danger: true }];
 
   const handleUserMenuClick = ({ key }) => {
     if (key === '3') {
@@ -89,18 +87,49 @@ const AdminLayout = () => {
   };
 
   // Tìm key phù hợp nhất (chuỗi PATH_NAME nằm trong location.pathname)
-  const allPaths = Object.values(PATH_NAME);
-  const selectedKey =
-    allPaths
-      .filter((p) => p !== '*' && location.pathname.startsWith(p))
-      .sort((a, b) => b.length - a.length)[0] || location.pathname;
+  function getMenuKeys(items) {
+    const keys = [];
+
+    function walk(list) {
+      list.forEach((item) => {
+        if (item.key && !item.children) keys.push(item.key);
+        if (item.children) walk(item.children);
+      });
+    }
+
+    walk(items);
+    return keys;
+  }
+
+  function findSelectedKey(pathname, items, group) {
+    const menuKeys = getMenuKeys(items);
+
+    // 1. Tìm theo key trong menu (ưu tiên)
+    const matchMenu =
+      menuKeys
+        .filter((p) => pathname.startsWith(p))
+        .sort((a, b) => b.length - a.length)[0] || null;
+
+    if (matchMenu) return matchMenu;
+
+    // 2. Không có → fallback group
+    for (const [groupKey, groupPaths] of Object.entries(group)) {
+      if (groupPaths.some((p) => pathname.startsWith(p))) return groupKey;
+    }
+
+    // 3. cuối cùng → fallback PATH_NAME
+    const allPaths = Object.values(PATH_NAME);
+    return (
+      allPaths
+        .filter((p) => pathname.startsWith(p))
+        .sort((a, b) => b.length - a.length)[0] || pathname
+    );
+  }
+  const selectedKey = findSelectedKey(location.pathname, items, GROUP);
 
   const openKey = items.find((item) =>
-    item.children?.some((child) =>
-      selectedKey.startsWith(child.key)
-    ),
+    item.children?.some((child) => selectedKey.startsWith(child.key)),
   )?.key;
-
 
   return (
     <Layout style={{ minHeight: '100vh' }} className="bg-dark-primary">
@@ -185,7 +214,9 @@ const AdminLayout = () => {
           >
             <div className="flex items-center space-x-2 cursor-pointer hover:bg-[#2f2f2f] px-3 py-2 rounded">
               <Avatar icon={<UserOutlined />} />
-              <span className="font-medium text-white">{userInfo?.fullName}</span>
+              <span className="font-medium text-white">
+                {userInfo?.fullName}
+              </span>
             </div>
           </Dropdown>
         </Header>
