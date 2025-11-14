@@ -38,6 +38,13 @@ const PATH_NAME = {
   CHAPTER_MENTOR_MANAGEMENT: '/chapter/mentor-management',
   CHAPTER_TEAMS: '/chapter/teams',
   CHAPTER_NOTIFICATIONS: '/chapter/notifications',
+  MENTOR: '/mentor',
+  MENTOR_DASHBOARD: '/mentor/dashboard',
+  MENTOR_MY_TEAMS: '/mentor/my-teams',
+  MENTOR_SCHEDULE: '/mentor/schedule',
+  MENTOR_RESOURCES: '/mentor/resources',
+  MENTOR_NOTIFICATIONS: '/mentor/notifications',
+  MENTOR_PROFILE: '/mentor/profile',
 };
 
 export { PATH_NAME };
