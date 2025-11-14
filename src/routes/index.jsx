@@ -7,6 +7,7 @@ import NotFound from '../pages/notfound';
 import AdminRoutes from './AdminRoutes';
 import PartnerRoutes from './PartnerRoutes';
 import MemberRoutes from './MemberRoutes';
+import ChapterRoutes from './ChapterRoutes';
 import HackathonForm from '../pages/admin/hackathon/form/index.jsx';
 import HackathonDetail from '../pages/admin/hackathon/detail/index.jsx';
 import HackathonPhaseForm from '../pages/admin/hackathon-phase/hackathon-phase-form';
@@ -52,6 +53,11 @@ const StudentLeaderboardPage = lazy(
 const StudentNotificationsPage = lazy(
   () => import('../pages/student/notifications'),
 );
+
+const ChapterDashboardPage = lazy(() => import('../pages/chapter/dashboard'));
+const ChapterVerifyStudentsPage = lazy(() => import('../pages/chapter/verify-students'));
+const ChapterMentorManagementPage = lazy(() => import('../pages/chapter/mentor-management'));
+const ChapterTeamsPage = lazy(() => import('../pages/chapter/teams'));
 
 const withSuspense = (Component) => (
   <Suspense
@@ -243,6 +249,22 @@ const router = createBrowserRouter([
             path: 'notifications',
             element: withSuspense(StudentNotificationsPage),
           },
+        ],
+      },
+    ],
+  },
+  {
+    element: <ChapterRoutes />,
+    children: [
+      {
+        path: PATH_NAME.CHAPTER,
+        children: [
+          { index: true, element: <Navigate to="dashboard" replace /> },
+          { path: 'dashboard', element: withSuspense(ChapterDashboardPage) },
+          { path: 'verify-students', element: withSuspense(ChapterVerifyStudentsPage) },
+          { path: 'mentor-management', element: withSuspense(ChapterMentorManagementPage) },
+          { path: 'teams', element: withSuspense(ChapterTeamsPage) },
+          { path: 'notifications', element: withSuspense(StudentNotificationsPage) },
         ],
       },
     ],

@@ -32,6 +32,12 @@ const PATH_NAME = {
   PARTNER_HACKATHONS: '/partner/hackathons',
   PARTNER_CHALLENGES: '/partner/challenges',
   PARTNER_TEAM_SCORES: '/partner/hackathons/',
+  CHAPTER: '/chapter',
+  CHAPTER_DASHBOARD: '/chapter/dashboard',
+  CHAPTER_VERIFY_STUDENTS: '/chapter/verify-students',
+  CHAPTER_MENTOR_MANAGEMENT: '/chapter/mentor-management',
+  CHAPTER_TEAMS: '/chapter/teams',
+  CHAPTER_NOTIFICATIONS: '/chapter/notifications',
 };
 
 export { PATH_NAME };
