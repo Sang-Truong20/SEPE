@@ -17,9 +17,12 @@ import SeasonForm from '../pages/admin/season/season-form/index.jsx';
 import SeasonDetail from '../pages/admin/season/season-detail/index.jsx';
 import UserForm from '../pages/admin/users/user-form/index.jsx';
 import ChallengeDetail from '../pages/admin/challenge/detail/index.jsx';
-import ChallengeStatusForm from '../pages/admin/challenge/form/index.jsx';
+import ChallengeForm from '../pages/admin/challenge/form/index.jsx';
 import TeamDetail from '../pages/admin/team/detail/index.jsx';
-
+import TrackForm from '../pages/admin/track/form/index.jsx';
+import TrackDetail from '../pages/admin/track/detail/index.jsx';
+import CriterionForm from '../pages/admin/criteria/form/index.jsx';
+import CriterionDetail from '../pages/admin/criteria/detail/index.jsx';
 
 const LandingPage = lazy(() => import('../pages/landing'));
 const MemberPage = lazy(() => import('../pages/member'));
@@ -32,7 +35,9 @@ const Seasons = lazy(() => import('../pages/admin/season'));
 const Users = lazy(() => import('../pages/admin/users'));
 const Teams = lazy(() => import('../pages/admin/team/index.jsx'));
 
-
+const PChallenges = lazy(() => import('../pages/partner/challenge/index.jsx'));
+import PChallengeDetail from '../pages/partner/challenge/detail/index.jsx';
+import PChallengeForm from '../pages/partner/challenge/form/index.jsx';
 
 const withSuspense = (Component) => (
   <Suspense
@@ -82,33 +87,90 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: withSuspense(Challenges) },
               { path: ':id', element: withSuspense(ChallengeDetail) },
-              { path: 'edit/:id', element: withSuspense(() => <ChallengeStatusForm mode="edit" />) },
-            ]
+              {
+                path: 'edit/:id',
+                element: withSuspense(() => <ChallengeForm mode="edit" />),
+              },
+              {
+                path: 'create',
+                element: withSuspense(() => <ChallengeForm mode="create" />),
+              },
+            ],
           },
           {
             path: 'hackathons',
             children: [
               { index: true, element: withSuspense(Hackathons) },
-              { path: 'create', element: withSuspense(() => <HackathonForm mode="create" />) },
+              {
+                path: 'create',
+                element: withSuspense(() => <HackathonForm mode="create" />),
+              },
               { path: ':id', element: withSuspense(HackathonDetail) },
-              { path: 'edit/:id', element: withSuspense(() => <HackathonForm mode="edit" />) },
+              {
+                path: 'edit/:id',
+                element: withSuspense(() => <HackathonForm mode="edit" />),
+              },
               {
                 path: 'hackathon-phases',
                 children: [
                   { index: true, element: withSuspense(HackathonPhases) },
-                  { path: 'create', element: withSuspense(() => <HackathonPhaseForm mode="create" />) },
+                  {
+                    path: 'create',
+                    element: withSuspense(() => (
+                      <HackathonPhaseForm mode="create" />
+                    )),
+                  },
                   { path: ':id', element: withSuspense(HackathonPhaseDetail) },
-                  { path: 'edit/:id', element: withSuspense(() => <HackathonPhaseForm mode="edit" />) },
-                ]
+                  {
+                    path: 'edit/:id',
+                    element: withSuspense(() => (
+                      <HackathonPhaseForm mode="edit" />
+                    )),
+                  },
+                ],
               },
               {
                 path: 'prizes',
                 children: [
                   { index: true, element: withSuspense(Prizes) },
-                  { path: 'create', element: withSuspense(() => <PrizeForm mode="create" />) },
+                  {
+                    path: 'create',
+                    element: withSuspense(() => <PrizeForm mode="create" />),
+                  },
                   { path: ':id', element: withSuspense(PrizeDetail) },
-                  { path: 'edit/:id', element: withSuspense(() => <PrizeForm mode="edit" />) },
-                ]
+                  {
+                    path: 'edit/:id',
+                    element: withSuspense(() => <PrizeForm mode="edit" />),
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            path: 'tracks',
+            children: [
+              {
+                path: 'create',
+                element: withSuspense(() => <TrackForm mode="create" />),
+              },
+              { path: ':id', element: withSuspense(TrackDetail) },
+              {
+                path: 'edit/:id',
+                element: withSuspense(() => <TrackForm mode="edit" />),
+              },
+            ],
+          },
+          {
+            path: 'criterias',
+            children: [
+              {
+                path: 'create',
+                element: withSuspense(() => <CriterionForm mode="create" />),
+              },
+              { path: ':id', element: withSuspense(CriterionDetail) },
+              {
+                path: 'edit/:id',
+                element: withSuspense(() => <CriterionForm mode="edit" />),
               },
             ],
           },
@@ -116,9 +178,15 @@ const router = createBrowserRouter([
             path: 'season',
             children: [
               { index: true, element: withSuspense(Seasons) },
-              { path: 'create', element: withSuspense(() => <SeasonForm mode="create" />) },
+              {
+                path: 'create',
+                element: withSuspense(() => <SeasonForm mode="create" />),
+              },
               { path: ':id', element: withSuspense(SeasonDetail) },
-              { path: 'edit/:id', element: withSuspense(() => <SeasonForm mode="edit" />) },
+              {
+                path: 'edit/:id',
+                element: withSuspense(() => <SeasonForm mode="edit" />),
+              },
             ],
           },
           {
@@ -147,17 +215,20 @@ const router = createBrowserRouter([
         children: [
           {
             path: 'hackathons',
-            children: [
-              { index: true, element: withSuspense(Hackathons) },
-            ],
+            children: [{ index: true, element: withSuspense(Hackathons) }],
           },
           {
             path: 'challenges',
             children: [
-              { index: true, element: withSuspense(Challenges) },
-              { path: ':hackathonId', element: withSuspense(Challenges) },
-              { path: ':hackathonId/challenge/:id', element: withSuspense(ChallengeDetail) },
-              { path: ':hackathonId/challenge/edit/:id', element: withSuspense(() => <ChallengeStatusForm mode="edit" />) },
+              { index: true, element: withSuspense(PChallenges) },
+              {
+                path: ':id',
+                element: withSuspense(PChallengeDetail),
+              },
+              {
+                path: 'edit/:id',
+                element: withSuspense(() => <PChallengeForm mode="edit" />),
+              },
             ],
           },
           // {
