@@ -88,8 +88,8 @@ const MentorDashboard = () => {
       label: 'Teams Hướng Dẫn',
       value: myTeams.length,
       icon: TeamOutlined,
-      color: 'from-cyan-500/20 to-blue-500/20',
-      iconColor: 'text-cyan-400',
+      color: 'from-green-500/20 to-emerald-500/20',
+      iconColor: 'text-green-400',
     },
     {
       label: 'Cuộc Họp Tuần Này',
@@ -169,7 +169,7 @@ const MentorDashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl lg:text-4xl bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl lg:text-4xl bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
             Mentor Dashboard
           </h1>
           <p className="text-gray-400 mt-2">
@@ -186,7 +186,7 @@ const MentorDashboard = () => {
           </div>
           <Avatar
             size={48}
-            className="bg-gradient-to-r from-cyan-500 to-blue-500"
+            className="bg-gradient-to-r from-green-500 to-emerald-500"
           >
             {mentorInfo.name
               .split(' ')
@@ -232,7 +232,7 @@ const MentorDashboard = () => {
               <Button
                 type="link"
                 onClick={() => navigate(PATH_NAME.MENTOR_MY_TEAMS)}
-                className="text-cyan-400"
+                className="text-green-400"
               >
                 Xem tất cả
               </Button>
@@ -280,7 +280,7 @@ const MentorDashboard = () => {
 
                   <div className="flex items-center justify-between mt-3 text-sm">
                     {team.nextMeeting ? (
-                      <div className="flex items-center gap-1 text-cyan-400">
+                      <div className="flex items-center gap-1 text-green-400">
                         <ClockCircleOutlined />
                         <span>
                           Họp:{' '}
@@ -339,7 +339,7 @@ const MentorDashboard = () => {
             <Button
               type="link"
               onClick={() => navigate(PATH_NAME.MENTOR_SCHEDULE)}
-              className="w-full mt-4 text-cyan-400"
+              className="w-full mt-4 text-green-400"
             >
               Xem lịch đầy đủ
             </Button>
@@ -358,12 +358,12 @@ const MentorDashboard = () => {
               key={activity.id}
               className="flex items-start gap-3 p-3 rounded-lg bg-white/5"
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 flex items-center justify-center shrink-0">
                 {activity.type === 'feedback' && (
                   <CheckCircleOutlined className="text-green-400" />
                 )}
                 {activity.type === 'meeting' && (
-                  <CalendarOutlined className="text-blue-400" />
+                  <CalendarOutlined className="text-emerald-400" />
                 )}
                 {activity.type === 'resource' && (
                   <FileTextOutlined className="text-purple-400" />
@@ -382,14 +382,14 @@ const MentorDashboard = () => {
       </Card>
 
       {/* Quick Actions */}
-      <Card className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-cyan-500/20 backdrop-blur-xl mt-6">
+      <Card className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/20 backdrop-blur-xl mt-6">
         <h3 className="text-xl mb-4 text-white">Thao Tác Nhanh</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Button
             onClick={() => navigate(PATH_NAME.MENTOR_MY_TEAMS)}
             className="h-auto py-4 flex flex-col items-center border-white/20 bg-white/5 hover:bg-white/10"
           >
-            <TeamOutlined className="w-6 h-6 mb-2 text-cyan-400" />
+            <TeamOutlined className="w-6 h-6 mb-2 text-green-400" />
             <span>Quản Lý Teams</span>
           </Button>
 
@@ -397,7 +397,7 @@ const MentorDashboard = () => {
             onClick={() => navigate(PATH_NAME.MENTOR_SCHEDULE)}
             className="h-auto py-4 flex flex-col items-center border-white/20 bg-white/5 hover:bg-white/10"
           >
-            <CalendarOutlined className="w-6 h-6 mb-2 text-blue-400" />
+            <CalendarOutlined className="w-6 h-6 mb-2 text-emerald-400" />
             <span>Đặt Lịch Họp</span>
           </Button>
 

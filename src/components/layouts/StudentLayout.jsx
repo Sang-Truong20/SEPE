@@ -89,7 +89,6 @@ const StudentLayout = () => {
   const markAsRead = useMarkAsRead();
 
   const recentNotifications = notifications.slice(0, 5);
-  const unreadNotifications = notifications.filter((n) => !n.isRead).slice(0, 5);
 
   const userData = {
     name: 'Nguyễn Văn A',

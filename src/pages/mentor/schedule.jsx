@@ -137,7 +137,7 @@ const MentorSchedule = () => {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
             Lịch Hẹn
           </h1>
           <p className="text-gray-400 text-lg mt-2">
@@ -149,7 +149,7 @@ const MentorSchedule = () => {
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => setShowCreateModal(true)}
-          className="bg-gradient-to-r from-cyan-600 to-blue-600 border-0"
+          className="bg-gradient-to-r from-green-600 to-emerald-600 border-0"
         >
           Tạo Lịch Họp
         </Button>
@@ -159,8 +159,8 @@ const MentorSchedule = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="border-0 bg-white/5 backdrop-blur-xl">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
-              <CalendarOutlined className="w-6 h-6 text-cyan-400" />
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-green-500/20 to-emerald-500/20 flex items-center justify-center">
+              <CalendarOutlined className="w-6 h-6 text-green-400" />
             </div>
             <div>
               <p className="text-2xl text-white">{upcomingMeetings.length}</p>
@@ -244,22 +244,22 @@ const MentorSchedule = () => {
 
                   <div className="grid grid-cols-2 gap-3 text-sm mb-3">
                     <div className="flex items-center gap-2 text-gray-400">
-                      <CalendarOutlined className="text-cyan-400" />
+                      <CalendarOutlined className="text-green-400" />
                       <span>
                         {meeting.date.toLocaleDateString('vi-VN')}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400">
-                      <ClockCircleOutlined className="text-cyan-400" />
+                      <ClockCircleOutlined className="text-green-400" />
                       <span>
                         {meeting.time} • {meeting.duration}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400 col-span-2">
                       {meeting.location === 'online' ? (
-                        <VideoCameraOutlined className="text-cyan-400" />
+                        <VideoCameraOutlined className="text-green-400" />
                       ) : (
-                        <EnvironmentOutlined className="text-cyan-400" />
+                        <EnvironmentOutlined className="text-green-400" />
                       )}
                       <span>{meeting.locationDetail}</span>
                     </div>
@@ -292,7 +292,7 @@ const MentorSchedule = () => {
                         size="small"
                         type="primary"
                         icon={<VideoCameraOutlined />}
-                        className="ml-auto bg-gradient-to-r from-cyan-600 to-blue-600 border-0"
+                        className="ml-auto bg-gradient-to-r from-green-600 to-emerald-600 border-0"
                       >
                         Tham gia
                       </Button>

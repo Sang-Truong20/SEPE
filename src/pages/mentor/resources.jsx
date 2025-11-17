@@ -171,8 +171,8 @@ const MentorResources = () => {
       label: 'Tổng Tài Nguyên',
       value: resources.length,
       icon: BookOutlined,
-      color: 'from-cyan-500/20 to-blue-500/20',
-      iconColor: 'text-cyan-400',
+      color: 'from-green-500/20 to-emerald-500/20',
+      iconColor: 'text-green-400',
     },
     {
       label: 'Lượt Xem',
@@ -213,7 +213,7 @@ const MentorResources = () => {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
             Tài Nguyên
           </h1>
           <p className="text-gray-400 text-lg mt-2">
@@ -225,7 +225,7 @@ const MentorResources = () => {
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => setShowCreateModal(true)}
-          className="bg-gradient-to-r from-cyan-600 to-blue-600 border-0"
+          className="bg-gradient-to-r from-green-600 to-emerald-600 border-0"
         >
           Thêm Tài Nguyên
         </Button>
@@ -308,12 +308,12 @@ const MentorResources = () => {
               className="border-0 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition-all group"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
-                  <Icon className="w-6 h-6 text-cyan-400" />
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-green-500/20 to-emerald-500/20 flex items-center justify-center">
+                  <Icon className="w-6 h-6 text-green-400" />
                 </div>
                 {getTypeBadge(resource.type)}
               </div>
-              <h3 className="text-lg text-white group-hover:text-cyan-400 transition-colors mb-2">
+              <h3 className="text-lg text-white group-hover:text-green-400 transition-colors mb-2">
                 {resource.title}
               </h3>
               <p className="text-sm text-gray-400 line-clamp-2 mb-4">
@@ -348,7 +348,7 @@ const MentorResources = () => {
               <div className="flex items-center gap-2 pt-4 border-t border-white/10">
                 <Button
                   type="primary"
-                  className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 border-0"
+                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 border-0"
                 >
                   <EyeOutlined /> Xem
                 </Button>

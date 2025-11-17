@@ -115,9 +115,9 @@ const ChapterDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-orange-900/20 to-slate-900 p-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-2">
             Chapter Dashboard
@@ -136,7 +136,7 @@ const ChapterDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {chapterStats.map((stat, index) => {
           const IconComponent = stat.icon;
           return (
@@ -163,7 +163,7 @@ const ChapterDashboard = () => {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Pending Student Verifications */}
         <Card
           className="bg-white/5 border-white/10 backdrop-blur-xl"
@@ -269,7 +269,7 @@ const ChapterDashboard = () => {
 
       {/* University Overview */}
       <Card
-        className="bg-white/5 border-white/10 backdrop-blur-xl mb-8"
+        className="bg-white/5 border-white/10 backdrop-blur-xl"
         title={
           <div className="flex items-center">
             <BankOutlined className="w-5 h-5 mr-2 text-orange-400" />

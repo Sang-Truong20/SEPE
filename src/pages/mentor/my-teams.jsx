@@ -244,7 +244,7 @@ const MentorMyTeams = () => {
 
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
               {selectedTeam.name}
             </h1>
             <p className="text-gray-400 text-lg mt-2">
@@ -257,8 +257,8 @@ const MentorMyTeams = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="border-0 bg-white/5 backdrop-blur-xl">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
-                <RiseOutlined className="w-6 h-6 text-cyan-400" />
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-green-500/20 to-emerald-500/20 flex items-center justify-center">
+                <RiseOutlined className="w-6 h-6 text-green-400" />
               </div>
               <div>
                 <p className="text-2xl text-white">{selectedTeam.progress}%</p>
@@ -326,8 +326,8 @@ const MentorMyTeams = () => {
                         <Progress
                           percent={selectedTeam.progress}
                           strokeColor={{
-                            '0%': '#06b6d4',
-                            '100%': '#3b82f6',
+                            '0%': '#22c55e',
+                            '100%': '#10b981',
                           }}
                         />
                       </div>
@@ -373,7 +373,7 @@ const MentorMyTeams = () => {
                         className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10"
                       >
                         <div className="flex items-center gap-4">
-                          <Avatar className="bg-gradient-to-r from-cyan-500 to-blue-500">
+                          <Avatar className="bg-gradient-to-r from-green-500 to-emerald-500">
                             {member.name
                               .split(' ')
                               .map((n) => n[0])
@@ -465,7 +465,7 @@ const MentorMyTeams = () => {
                     />
                     <Button
                       type="primary"
-                      className="bg-gradient-to-r from-cyan-600 to-blue-600 border-0"
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 border-0"
                     >
                       <MessageOutlined /> Gửi Feedback
                     </Button>
@@ -519,7 +519,7 @@ const MentorMyTeams = () => {
       </Button>
 
       <div>
-        <h1 className="text-4xl bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+        <h1 className="text-4xl bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
           My Teams
         </h1>
         <p className="text-gray-400 text-lg mt-2">
@@ -549,7 +549,7 @@ const MentorMyTeams = () => {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
-                <h3 className="text-xl text-white group-hover:text-cyan-400 transition-colors">
+                <h3 className="text-xl text-white group-hover:text-green-400 transition-colors">
                   {team.name}
                 </h3>
                 <p className="text-gray-400 mt-2">{team.hackathon}</p>
@@ -568,8 +568,8 @@ const MentorMyTeams = () => {
               <Progress
                 percent={team.progress}
                 strokeColor={{
-                  '0%': '#06b6d4',
-                  '100%': '#3b82f6',
+                  '0%': '#22c55e',
+                  '100%': '#10b981',
                 }}
                 showInfo={false}
               />
@@ -577,11 +577,11 @@ const MentorMyTeams = () => {
 
             <div className="flex items-center justify-between text-sm pt-4 border-t border-white/10">
               <div className="flex items-center gap-2 text-gray-400">
-                <TeamOutlined className="text-cyan-400" />
+                <TeamOutlined className="text-green-400" />
                 <span>{team.members.length} thành viên</span>
               </div>
               {team.nextMeeting && (
-                <div className="flex items-center gap-2 text-cyan-400">
+                <div className="flex items-center gap-2 text-green-400">
                   <ClockCircleOutlined />
                   <span className="text-xs">
                     {new Date(team.nextMeeting).toLocaleString('vi-VN', {
@@ -597,7 +597,7 @@ const MentorMyTeams = () => {
 
             <Button
               type="primary"
-              className="w-full mt-4 bg-gradient-to-r from-cyan-600 to-blue-600 border-0"
+              className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 border-0"
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedTeam(team);
