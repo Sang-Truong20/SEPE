@@ -1,15 +1,14 @@
 import {
-  UsersOutlined,
-  CalendarOutlined,
   BookOutlined,
-  RiseOutlined,
-  ClockCircleOutlined,
+  CalendarOutlined,
   CheckCircleOutlined,
-  AlertOutlined,
+  ClockCircleOutlined,
   FileTextOutlined,
+  RiseOutlined,
   TrophyOutlined,
+  TeamOutlined
 } from '@ant-design/icons';
-import { Badge, Button, Card, Progress, Tag, Avatar } from 'antd';
+import { Avatar, Badge, Button, Card, Progress, Tag } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 
@@ -88,7 +87,7 @@ const MentorDashboard = () => {
     {
       label: 'Teams Hướng Dẫn',
       value: myTeams.length,
-      icon: UsersOutlined,
+      icon: TeamOutlined,
       color: 'from-cyan-500/20 to-blue-500/20',
       iconColor: 'text-cyan-400',
     },
@@ -260,7 +259,7 @@ const MentorDashboard = () => {
                       showZero
                       className="bg-white/10 text-white"
                     >
-                      <UsersOutlined className="text-gray-400" />
+                      <TeamOutlined className="text-gray-400" />
                     </Badge>
                   </div>
 
@@ -390,7 +389,7 @@ const MentorDashboard = () => {
             onClick={() => navigate(PATH_NAME.MENTOR_MY_TEAMS)}
             className="h-auto py-4 flex flex-col items-center border-white/20 bg-white/5 hover:bg-white/10"
           >
-            <UsersOutlined className="w-6 h-6 mb-2 text-cyan-400" />
+            <TeamOutlined className="w-6 h-6 mb-2 text-cyan-400" />
             <span>Quản Lý Teams</span>
           </Button>
 
@@ -424,6 +423,7 @@ const MentorDashboard = () => {
 };
 
 export default MentorDashboard;
+
 
 
 

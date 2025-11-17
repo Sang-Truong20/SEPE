@@ -1,7 +1,7 @@
 import {
   CalendarOutlined,
   ClockCircleOutlined,
-  UsersOutlined,
+  TeamOutlined,
   PlusOutlined,
   VideoCameraOutlined,
   EnvironmentOutlined,
@@ -196,7 +196,7 @@ const MentorSchedule = () => {
         <Card className="border-0 bg-white/5 backdrop-blur-xl">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-yellow-500/20 to-orange-500/20 flex items-center justify-center">
-              <UsersOutlined className="w-6 h-6 text-yellow-400" />
+              <TeamOutlined className="w-6 h-6 text-yellow-400" />
             </div>
             <div>
               <p className="text-2xl text-white">{teams.length}</p>
@@ -466,6 +466,7 @@ const MentorSchedule = () => {
 };
 
 export default MentorSchedule;
+
 
 
 

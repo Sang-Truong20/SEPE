@@ -1,5 +1,5 @@
 import {
-  UsersOutlined,
+  TeamOutlined,
   SearchOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
@@ -270,7 +270,7 @@ const MentorMyTeams = () => {
           <Card className="border-0 bg-white/5 backdrop-blur-xl">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                <UsersOutlined className="w-6 h-6 text-purple-400" />
+                <TeamOutlined className="w-6 h-6 text-purple-400" />
               </div>
               <div>
                 <p className="text-2xl text-white">
@@ -577,7 +577,7 @@ const MentorMyTeams = () => {
 
             <div className="flex items-center justify-between text-sm pt-4 border-t border-white/10">
               <div className="flex items-center gap-2 text-gray-400">
-                <UsersOutlined className="text-cyan-400" />
+                <TeamOutlined className="text-cyan-400" />
                 <span>{team.members.length} thành viên</span>
               </div>
               {team.nextMeeting && (
@@ -612,7 +612,7 @@ const MentorMyTeams = () => {
       {filteredTeams.length === 0 && (
         <Card className="border-0 bg-white/5 backdrop-blur-xl">
           <div className="p-12 text-center">
-            <UsersOutlined className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <TeamOutlined className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-400">Không tìm thấy team nào phù hợp</p>
           </div>
         </Card>
@@ -622,6 +622,7 @@ const MentorMyTeams = () => {
 };
 
 export default MentorMyTeams;
+
 
 
 
