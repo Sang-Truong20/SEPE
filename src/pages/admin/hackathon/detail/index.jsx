@@ -1,13 +1,11 @@
 import { Spin, ConfigProvider, theme, Card, Tag, Empty } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { CalendarOutlined } from '@ant-design/icons';
-import { useHackathons } from '../../../../hooks/admin/hackathons/useHackathons';
-import { useHackathonPhases } from '../../../../hooks/admin/hackathon-phases/useHackathonPhases';
-import { PATH_NAME } from '../../../../constants';
-
-
+import { useHackathons } from '../../../../hooks/admin/hackathons/useHackathons.js';
+import { PATH_NAME } from '../../../../constants/index.js';
 import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
+import { useHackathonPhases } from '../../../../hooks/admin/hackathon-phases/useHackathonPhases.js';
+import { CalendarOutlined } from '@ant-design/icons';
 
 const HackathonDetail = () => {
   const { id } = useParams();

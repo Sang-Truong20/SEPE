@@ -10,10 +10,6 @@ const PATH_NAME = {
   ADMIN_SEASON: '/admin/season',
   HACKATHON_DETAIL_PAGE: '/admin/hackathons',
   HACKATHON_EDIT_PAGE: '/admin/hackathons/edit',
-  ADMIN_CHALLENGE_MANAGE: '/admin/challenges',
-  ADMIN_TEAMS: '/admin/teams',
-  ADMIN_FILES: '/admin/files',
-  ADMIN_SETTINGS: '/admin/settings',
   HACKATHON_CREATE_PAGE: '/admin/hackathons/create',
   ADMIN_HACKATHONS: '/admin/hackathons',
   ADMIN_HACKATHON_PHASES: '/admin/hackathons/hackathon-phases',
@@ -45,6 +41,7 @@ const PATH_NAME = {
   MENTOR_RESOURCES: '/mentor/resources',
   MENTOR_NOTIFICATIONS: '/mentor/notifications',
   MENTOR_PROFILE: '/mentor/profile',
+
 };
 
 export { PATH_NAME };
