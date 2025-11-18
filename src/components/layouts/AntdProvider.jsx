@@ -2,6 +2,11 @@ import { ConfigProvider, theme } from 'antd';
 import React from 'react';
 
 const { darkAlgorithm } = theme;
+const overlayBg = '#0f172a';
+const overlayBorder = 'rgba(255, 255, 255, 0.12)';
+const overlayHoverBg = 'rgba(34, 197, 94, 0.12)';
+const overlayActiveBg = 'rgba(34, 197, 94, 0.2)';
+const overlayText = '#f8fafc';
 
 const AntdProvider = ({ children }) => {
   return (
@@ -14,7 +19,7 @@ const AntdProvider = ({ children }) => {
           colorPrimaryHover: '#16a34a', // green-600
 
           // Background colors
-          colorBgContainer: 'rgba(17, 24, 39, 0.6)', // gray-800 with opacity
+          colorBgContainer: '#111827', // solid to avoid nested opacity bugs
           colorBgLayout: '#0a0f1a', // very dark blue
           colorBgSpotlight: 'rgba(17, 24, 39, 0.8)',
 
@@ -29,7 +34,7 @@ const AntdProvider = ({ children }) => {
           colorBorderSecondary: 'rgba(255, 255, 255, 0.05)',
 
           // Component specific colors
-          colorBgElevated: 'rgba(17, 24, 39, 0.8)',
+          colorBgElevated: overlayBg,
           colorFill: 'rgba(255, 255, 255, 0.05)',
           colorFillSecondary: 'rgba(255, 255, 255, 0.03)',
           colorFillTertiary: 'rgba(255, 255, 255, 0.02)',
@@ -81,6 +86,35 @@ const AntdProvider = ({ children }) => {
           },
           Badge: {
             colorBgContainer: 'rgba(17, 24, 39, 0.8)',
+          },
+          Dropdown: {
+            colorBgElevated: overlayBg,
+            controlItemBgHover: overlayHoverBg,
+            controlItemBgActive: overlayActiveBg,
+            controlItemBgActiveHover: 'rgba(34, 197, 94, 0.24)',
+            colorBorder: overlayBorder,
+          },
+          Select: {
+            colorBgElevated: overlayBg,
+            optionSelectedBg: overlayActiveBg,
+            optionSelectedColor: overlayText,
+            optionActiveBg: overlayHoverBg,
+            colorBorder: overlayBorder,
+          },
+          Modal: {
+            colorBgElevated: overlayBg,
+            headerBg: overlayBg,
+            titleColor: overlayText,
+            colorBorder: overlayBorder,
+          },
+          Popover: {
+            colorBgElevated: overlayBg,
+            colorText: overlayText,
+            colorBorder: overlayBorder,
+          },
+          Tooltip: {
+            colorBgDefault: overlayBg,
+            colorTextLightSolid: overlayText,
           },
         },
       }}

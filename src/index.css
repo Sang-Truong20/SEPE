@@ -46,6 +46,31 @@
   color: #ffffff !important;
 }
 
+/* Normalize Ant Design overlay opacity for dropdowns/modals/popups */
+:where(.ant-dropdown),
+:where(.ant-select-dropdown),
+:where(.ant-modal),
+:where(.ant-popover),
+:where(.ant-picker-dropdown) {
+  opacity: 1 !important;
+}
+
+:where(.ant-dropdown .ant-dropdown-menu),
+:where(.ant-select-dropdown),
+:where(.ant-modal-content),
+:where(.ant-popover-inner),
+:where(.ant-picker-dropdown .ant-picker-panel-container),
+:where(.ant-picker-panel-container .ant-picker-panel) {
+  background: rgba(15, 23, 42, 0.98) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(12px);
+}
+
+:where(.ant-modal-mask),
+:where(.ant-drawer-mask) {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+
 @layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent;

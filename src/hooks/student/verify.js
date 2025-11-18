@@ -33,7 +33,7 @@ export const useSubmitVerification = () => {
                 formData.append('BackCardImage', verificationData.backCardImage);
             }
 
-            const response = await axiosClient.post('/api/StudentVerification/submit', formData, {
+            const response = await axiosClient.post('/StudentVerification/submit', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
