@@ -3,10 +3,11 @@ import axiosClient from '../../configs/axiosClient';
 
 export const teamMemberQueryKeys = {
     origin: ['student', 'team-member'],
+    leader: ['student', 'team-member', 'leader'],
     members: (teamId) => [...teamMemberQueryKeys.origin, 'members', teamId],
-    kick: (teamId, memberId) => [...teamMemberQueryKeys.origin, 'kick', teamId, memberId],
+    kick: (teamId, memberId) => [...teamMemberQueryKeys.leader, 'kick', teamId, memberId],
     leave: (teamId) => [...teamMemberQueryKeys.origin, 'leave', teamId],
-    invite: (teamId) => [...teamMemberQueryKeys.origin, 'invite', teamId],
+    invite: (teamId) => [...teamMemberQueryKeys.leader, 'invite', teamId],
 };
 
 // Get team members
