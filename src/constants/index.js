@@ -12,10 +12,19 @@ const PATH_NAME = {
   ADMIN_HACKATHON_PHASES: '/admin/hackathons/hackathon-phases',
   ADMIN_PRIZES: '/admin/hackathons/prizes',
   ADMIN_CHALLENGES: '/admin/challenges',
+  ADMIN_TRACKS: '/admin/tracks',
+  ADMIN_CRITERIAS: '/admin/criterias',
   PARTNER: '/partner',
   PARTNER_HACKATHONS: '/partner/hackathons',
   PARTNER_CHALLENGES: '/partner/challenges',
   PARTNER_TEAM_SCORES: '/partner/hackathons/',
 };
 
-export { PATH_NAME };
+const GROUP = {
+  [PATH_NAME.ADMIN_HACKATHON_PHASES]: [
+    PATH_NAME.ADMIN_TRACKS,
+    PATH_NAME.ADMIN_CRITERIAS,
+  ],
+};
+
+export { PATH_NAME, GROUP };
