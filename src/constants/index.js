@@ -17,7 +17,7 @@ const PATH_NAME = {
   PARTNER: '/partner',
   PARTNER_HACKATHONS: '/partner/hackathons',
   PARTNER_CHALLENGES: '/partner/challenges',
-  PARTNER_TEAM_SCORES: '/partner/hackathons/',
+  PARTNER_TEAM_SCORES: '/partner/score/',
 };
 
 const GROUP = {

@@ -36,8 +36,11 @@ const Users = lazy(() => import('../pages/admin/users'));
 const Teams = lazy(() => import('../pages/admin/team/index.jsx'));
 
 const PChallenges = lazy(() => import('../pages/partner/challenge/index.jsx'));
+const PHackathons = lazy(() => import('../pages/partner/hackathon'));
+import PHackathonDetail from '../pages/partner/hackathon/detail/index.jsx';
 import PChallengeDetail from '../pages/partner/challenge/detail/index.jsx';
 import PChallengeForm from '../pages/partner/challenge/form/index.jsx';
+import JudgeRoutes from './JudgeRoutes.jsx';
 
 const withSuspense = (Component) => (
   <Suspense
@@ -215,7 +218,10 @@ const router = createBrowserRouter([
         children: [
           {
             path: 'hackathons',
-            children: [{ index: true, element: withSuspense(Hackathons) }],
+            children: [
+              { index: true, element: withSuspense(PHackathons) },
+              { path: ':id', element: withSuspense(PHackathonDetail) },
+            ],
           },
           {
             path: 'challenges',
@@ -229,6 +235,10 @@ const router = createBrowserRouter([
                 path: 'edit/:id',
                 element: withSuspense(() => <PChallengeForm mode="edit" />),
               },
+              {
+                path: 'create',
+                element: withSuspense(() => <PChallengeForm mode="create" />),
+              },
             ],
           },
           // {
@@ -239,7 +249,20 @@ const router = createBrowserRouter([
       },
     ],
   },
-
+  {
+    element: <JudgeRoutes />,
+    children: [
+      {
+        path: PATH_NAME.PARTNER,
+        children: [
+          {
+            path: 'hackathons',
+            children: [{ index: true, element: withSuspense(Hackathons) }],
+          },
+        ],
+      },
+    ],
+  },
   {
     path: PATH_NAME.NOT_FOUND,
     element: <NotFound />,
