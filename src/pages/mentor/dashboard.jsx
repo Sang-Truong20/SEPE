@@ -5,8 +5,8 @@ import {
   ClockCircleOutlined,
   FileTextOutlined,
   RiseOutlined,
+  TeamOutlined,
   TrophyOutlined,
-  TeamOutlined
 } from '@ant-design/icons';
 import { Avatar, Badge, Button, Card, Progress, Tag } from 'antd';
 import { useNavigate } from 'react-router-dom';
@@ -53,33 +53,6 @@ const MentorDashboard = () => {
       progress: 90,
       status: 'excellent',
       lastUpdate: '5 giờ trước',
-    },
-  ];
-
-  const upcomingMeetings = [
-    {
-      id: '1',
-      teamName: 'Tech Innovators',
-      time: 'Hôm nay, 14:00',
-      duration: '1 giờ',
-      topic: 'Sprint Review & Demo',
-      type: 'review',
-    },
-    {
-      id: '2',
-      teamName: 'AI Warriors',
-      time: 'Ngày mai, 10:00',
-      duration: '45 phút',
-      topic: 'Technical Guidance - ML Model',
-      type: 'feedback',
-    },
-    {
-      id: '3',
-      teamName: 'Blockchain Pioneers',
-      time: '12/10, 15:00',
-      duration: '30 phút',
-      topic: 'Final Preparation',
-      type: 'planning',
     },
   ];
 
@@ -151,19 +124,6 @@ const MentorDashboard = () => {
     }
   };
 
-  const getMeetingTypeBadge = (type) => {
-    switch (type) {
-      case 'review':
-        return <Tag color="blue">Review</Tag>;
-      case 'planning':
-        return <Tag color="purple">Planning</Tag>;
-      case 'feedback':
-        return <Tag color="green">Feedback</Tag>;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -223,15 +183,15 @@ const MentorDashboard = () => {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 gap-6 mb-6">
         {/* My Teams */}
-        <div className="lg:col-span-2">
+        <div>
           <Card
             title="Teams Đang Hướng Dẫn"
             extra={
               <Button
                 type="link"
-                onClick={() => navigate(PATH_NAME.MENTOR_MY_TEAMS)}
+                onClick={() => navigate(PATH_NAME.MENTOR_HACKATHONS)}
                 className="text-green-400"
               >
                 Xem tất cả
@@ -244,7 +204,7 @@ const MentorDashboard = () => {
                 <div
                   key={team.id}
                   className="p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all cursor-pointer"
-                  onClick={() => navigate(PATH_NAME.MENTOR_MY_TEAMS)}
+                  onClick={() => navigate(PATH_NAME.MENTOR_HACKATHONS)}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -304,47 +264,6 @@ const MentorDashboard = () => {
             </div>
           </Card>
         </div>
-
-        {/* Upcoming Meetings */}
-        <div>
-          <Card
-            title="Lịch Họp Sắp Tới"
-            className="border-0 bg-white/5 backdrop-blur-xl"
-          >
-            <div className="space-y-4">
-              {upcomingMeetings.map((meeting) => (
-                <div
-                  key={meeting.id}
-                  className="p-3 rounded-lg bg-white/5 border border-white/10"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <h5 className="text-sm text-white mb-1">
-                        {meeting.teamName}
-                      </h5>
-                      <p className="text-xs text-gray-400">{meeting.topic}</p>
-                    </div>
-                    {getMeetingTypeBadge(meeting.type)}
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-gray-400 mt-2">
-                    <div className="flex items-center gap-1">
-                      <ClockCircleOutlined />
-                      <span>{meeting.time}</span>
-                    </div>
-                    <span>{meeting.duration}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Button
-              type="link"
-              onClick={() => navigate(PATH_NAME.MENTOR_SCHEDULE)}
-              className="w-full mt-4 text-green-400"
-            >
-              Xem lịch đầy đủ
-            </Button>
-          </Card>
-        </div>
       </div>
 
       {/* Recent Activities */}
@@ -386,19 +305,11 @@ const MentorDashboard = () => {
         <h3 className="text-xl mb-4 text-white">Thao Tác Nhanh</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Button
-            onClick={() => navigate(PATH_NAME.MENTOR_MY_TEAMS)}
+            onClick={() => navigate(PATH_NAME.MENTOR_HACKATHONS)}
             className="h-auto py-4 flex flex-col items-center border-white/20 bg-white/5 hover:bg-white/10"
           >
-            <TeamOutlined className="w-6 h-6 mb-2 text-green-400" />
-            <span>Quản Lý Teams</span>
-          </Button>
-
-          <Button
-            onClick={() => navigate(PATH_NAME.MENTOR_SCHEDULE)}
-            className="h-auto py-4 flex flex-col items-center border-white/20 bg-white/5 hover:bg-white/10"
-          >
-            <CalendarOutlined className="w-6 h-6 mb-2 text-emerald-400" />
-            <span>Đặt Lịch Họp</span>
+            <TrophyOutlined className="w-6 h-6 mb-2 text-green-400" />
+            <span>Hackathon</span>
           </Button>
 
           <Button
@@ -408,14 +319,6 @@ const MentorDashboard = () => {
             <BookOutlined className="w-6 h-6 mb-2 text-purple-400" />
             <span>Chia Sẻ Tài Nguyên</span>
           </Button>
-
-          <Button
-            onClick={() => navigate(PATH_NAME.MENTOR_MY_TEAMS)}
-            className="h-auto py-4 flex flex-col items-center border-white/20 bg-white/5 hover:bg-white/10"
-          >
-            <TrophyOutlined className="w-6 h-6 mb-2 text-orange-400" />
-            <span>Tìm Teams Mới</span>
-          </Button>
         </div>
       </Card>
     </div>
@@ -423,8 +326,3 @@ const MentorDashboard = () => {
 };
 
 export default MentorDashboard;
-
-
-
-
-

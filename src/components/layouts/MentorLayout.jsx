@@ -3,19 +3,22 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import {
   Bell,
   BookOpen,
-  Calendar,
   ChevronDown,
   Home,
   LogOut,
   Settings,
   Target,
+  Trophy,
   User,
-  Users
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
-import { useGetNotifications, useGetUnreadCount, useMarkAsRead } from '../../hooks/student/notification';
+import {
+  useGetNotifications,
+  useGetUnreadCount,
+  useMarkAsRead,
+} from '../../hooks/student/notification';
 
 dayjs.extend(relativeTime);
 
@@ -60,9 +63,17 @@ const MentorLayout = () => {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const { data: notifications = mockNotifications, isLoading: notificationsLoading } = useGetNotifications();
-  const { data: unreadCountData = { count: mockNotifications.filter((n) => !n.isRead).length } } = useGetUnreadCount();
-  const unreadCount = unreadCountData?.count || mockNotifications.filter((n) => !n.isRead).length;
+  const {
+    data: notifications = mockNotifications,
+    isLoading: notificationsLoading,
+  } = useGetNotifications();
+  const {
+    data: unreadCountData = {
+      count: mockNotifications.filter((n) => !n.isRead).length,
+    },
+  } = useGetUnreadCount();
+  const unreadCount =
+    unreadCountData?.count || mockNotifications.filter((n) => !n.isRead).length;
   const markAsRead = useMarkAsRead();
 
   const recentNotifications = notifications.slice(0, 5);
@@ -82,16 +93,10 @@ const MentorLayout = () => {
       path: PATH_NAME.MENTOR_DASHBOARD,
     },
     {
-      id: 'my-teams',
-      label: 'My Teams',
-      icon: Users,
-      path: PATH_NAME.MENTOR_MY_TEAMS,
-    },
-    {
-      id: 'schedule',
-      label: 'Lịch hẹn',
-      icon: Calendar,
-      path: PATH_NAME.MENTOR_SCHEDULE,
+      id: 'hackathons',
+      label: 'Hackathon',
+      icon: Trophy,
+      path: PATH_NAME.MENTOR_HACKATHONS,
     },
     {
       id: 'resources',
@@ -173,10 +178,15 @@ const MentorLayout = () => {
 
                     <div className="absolute right-0 top-full mt-2 w-96 bg-dark-secondary/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 max-h-[600px] flex flex-col">
                       <div className="p-4 border-b border-white/10 flex items-center justify-between">
-                        <h3 className="text-white font-semibold text-lg">Thông báo</h3>
+                        <h3 className="text-white font-semibold text-lg">
+                          Thông báo
+                        </h3>
                         <button
                           onClick={() => {
-                            navigate(PATH_NAME.MENTOR_NOTIFICATIONS || PATH_NAME.STUDENT_NOTIFICATIONS);
+                            navigate(
+                              PATH_NAME.MENTOR_NOTIFICATIONS ||
+                                PATH_NAME.STUDENT_NOTIFICATIONS,
+                            );
                             setIsNotificationOpen(false);
                           }}
                           className="text-sm text-green-400 hover:text-green-300 transition-colors"
@@ -197,14 +207,18 @@ const MentorLayout = () => {
 
                               return (
                                 <div
-                                  key={notification.notificationId || notification.id}
+                                  key={
+                                    notification.notificationId ||
+                                    notification.id
+                                  }
                                   className={`p-4 hover:bg-white/5 transition-colors cursor-pointer ${
                                     isUnread ? 'bg-blue-500/5' : ''
                                   }`}
                                   onClick={() => {
                                     if (isUnread) {
                                       markAsRead.mutate(
-                                        notification.notificationId || notification.id,
+                                        notification.notificationId ||
+                                          notification.id,
                                       );
                                     }
                                     setIsNotificationOpen(false);
@@ -217,13 +231,17 @@ const MentorLayout = () => {
                                     <div className="flex-1 min-w-0">
                                       <p
                                         className={`text-sm font-medium truncate ${
-                                          isUnread ? 'text-white' : 'text-muted-foreground'
+                                          isUnread
+                                            ? 'text-white'
+                                            : 'text-muted-foreground'
                                         }`}
                                       >
-                                        {notification.title || notification.message}
+                                        {notification.title ||
+                                          notification.message}
                                       </p>
                                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                        {notification.message || notification.content}
+                                        {notification.message ||
+                                          notification.content}
                                       </p>
                                       <p className="text-xs text-muted-foreground mt-2">
                                         {dayjs(
@@ -250,7 +268,10 @@ const MentorLayout = () => {
                         <div className="p-3 border-t border-white/10">
                           <button
                             onClick={() => {
-                              navigate(PATH_NAME.MENTOR_NOTIFICATIONS || PATH_NAME.STUDENT_NOTIFICATIONS);
+                              navigate(
+                                PATH_NAME.MENTOR_NOTIFICATIONS ||
+                                  PATH_NAME.STUDENT_NOTIFICATIONS,
+                              );
                               setIsNotificationOpen(false);
                             }}
                             className="w-full text-center text-sm text-green-400 hover:text-green-300 transition-colors"
@@ -312,7 +333,10 @@ const MentorLayout = () => {
                       <div className="py-2">
                         <button
                           onClick={() => {
-                            handleNavigate(PATH_NAME.MENTOR_PROFILE || PATH_NAME.STUDENT_PROFILE);
+                            handleNavigate(
+                              PATH_NAME.MENTOR_PROFILE ||
+                                PATH_NAME.STUDENT_PROFILE,
+                            );
                             setIsDropdownOpen(false);
                           }}
                           className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
@@ -488,8 +512,3 @@ const MentorLayout = () => {
 };
 
 export default MentorLayout;
-
-
-
-
-
