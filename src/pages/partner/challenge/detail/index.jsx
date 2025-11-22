@@ -142,10 +142,10 @@ const ChallengeDetail = () => {
         model={model}
         data={challenge || {}}
         onBack={() =>
-          navigate(PATH_NAME.ADMIN_CHALLENGES || '/admin/challenges')
+          navigate(PATH_NAME.PARTNER_CHALLENGES)
         }
         onEdit={(rec) =>
-          navigate(`${PATH_NAME.ADMIN_CHALLENGES}/edit/${rec.challengeId}`)
+          navigate(`${PATH_NAME.PARTNER_CHALLENGES}/edit/${rec.challengeId}`)
         }
         showEdit
       />
