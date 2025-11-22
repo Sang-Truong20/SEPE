@@ -55,9 +55,9 @@ const Challenges = () => {
           type: 'status',
           transform: (val) => val?.toLowerCase(), // Chuẩn hóa
           statusMap: {
-            Pending: { text: 'Đang chờ', color: 'warning' },
-            Cancel: { text: 'Đã hủy', color: 'error' },
-            Complete: { text: 'Hoàn thành', color: 'success' },
+            pending: { text: 'Đang chờ', color: 'warning' },
+            cancel: { text: 'Đã hủy', color: 'error' },
+            complete: { text: 'Hoàn thành', color: 'success' },
           },
         },
         {
@@ -96,9 +96,9 @@ const Challenges = () => {
   };
 
   const handlers = {
-    onView: (record) => navigate(`/partner/challenges/${record.challengeId}`),
+    onView: (record) => navigate(`${PATH_NAME.PARTNER_CHALLENGES}/${record.challengeId}`),
     onEdit: (record) =>
-      navigate(`/partner/challenges/edit/${record.challengeId}`),
+      navigate(`${PATH_NAME.PARTNER_CHALLENGES}/edit/${record.challengeId}`),
     onDelete: (record) => handleDeleteConfirm(record.challengeId),
     isDeleting: (record) => deletingId === record.challengeId,
   };
