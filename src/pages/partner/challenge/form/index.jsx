@@ -2,23 +2,19 @@ import { ConfigProvider, theme } from 'antd';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useMemo } from 'react';
 import CreateEditForm from '../../../../components/ui/CreateEditForm.jsx';
-import { usePrizes } from '../../../../hooks/admin/prizes/usePrizes';
+import { useChallenges } from '../../../../hooks/admin/challanges/useChallenges.js';
 import { PATH_NAME } from '../../../../constants';
 
-const PrizeForm = ({ mode = 'create' }) => {
+const ChallangeForm = ({ mode = 'create' }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const hackathonId = searchParams.get('hackathonId');
 
-  const { fetchPrizes, createPrize, updatePrize } = usePrizes();
+  const { fetchChallenge, createChallenge, updateChallenge } = useChallenges();
 
-  // For edit mode, get the prize from the list
-  const { data: prizes = [], isLoading } =
-    mode === 'edit' ? fetchPrizes(hackathonId) : { data: [], isLoading: false };
-
-  const prize =
-    mode === 'edit' ? prizes.find((p) => p.prizeId === parseInt(id)) : null;
+  const { data: challenge = [], isLoading } =
+    mode === 'edit' ? fetchChallenge(id) : { data: [], isLoading: false };
 
   // Định nghĩa model
   const model = useMemo(
@@ -64,41 +60,31 @@ const PrizeForm = ({ mode = 'create' }) => {
   );
 
   // Initial values cho edit
-  const initialValues = useMemo(() => {
-    if (mode === 'edit' && prize) {
-      return {
-        prizeName: prize.prizeName,
-        prizeType: prize.prizeType,
-        rank: prize.rank,
-        reward: prize.reward,
-      };
-    }
-    return {};
-  }, [prize, mode]);
+  const initialValues =
+    mode === 'edit' && challenge
+      ? {
+          title: challenge.title,
+          seasonName: challenge.seasonName,
+          userName: challenge.userName,
+          status: challenge.status,
+        }
+      : {};
 
   // Submit
   const handleSubmit = async (values) => {
     try {
       if (mode === 'create') {
-        const payload = {
-          ...values,
-          hackathonId: parseInt(hackathonId),
-          rank: parseInt(values.rank),
-        };
-        await createPrize.mutateAsync(payload);
+        await createChallenge.mutateAsync(values);
       } else {
-        const payload = {
-          prizeId: parseInt(id),
-          prizeName: values.prizeName,
-          prizeType: values.prizeType,
-          rank: parseInt(values.rank),
-          reward: values.reward,
-        };
-        await updatePrize.mutateAsync(payload);
+        await updateChallenge.mutateAsync({
+          id,
+          payload: values,
+        });
       }
-      navigate(`${PATH_NAME.PARTNER_CHALLENGES}`);
-    } catch (e) {
-      console.error(e);
+
+      navigate(PATH_NAME.PARTNER_CHALLENGES);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -131,7 +117,7 @@ const PrizeForm = ({ mode = 'create' }) => {
         model={model}
         initialValues={initialValues}
         onSubmit={handleSubmit}
-        submitting={createPrize.isPending || updatePrize.isPending}
+        submitting={createChallenge.isPending || updateChallenge.isPending}
         submitText={mode === 'create' ? 'Tạo mới' : 'Cập nhật'}
         cancelText="Hủy"
         onCancel={() => navigate(`${PATH_NAME.PARTNER_CHALLENGES}`)}
@@ -141,4 +127,4 @@ const PrizeForm = ({ mode = 'create' }) => {
   );
 };
 
-export default PrizeForm;
+export default ChallangeForm;
