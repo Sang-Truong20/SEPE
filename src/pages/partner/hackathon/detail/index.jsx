@@ -116,7 +116,7 @@ const HackathonDetail = () => {
         entityName="Hackathon"
         model={model}
         data={hackathon || {}}
-        onBack={() => navigate(PATH_NAME.ADMIN_HACKATHONS)}
+        onBack={() => navigate(PATH_NAME.PARTNER_HACKATHONS)}
         showEdit={false}
         valueRenders={valueRenders}
       />
