@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   TeamOutlined,
   SearchOutlined,
@@ -24,9 +24,11 @@ import {
   Avatar,
   Space,
   Modal,
+  Spin,
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../../constants';
+import { useGetChapterTeams } from '../../../hooks/chapter/useChapterTeams';
 
 const ChapterTeamsList = () => {
   const navigate = useNavigate();
@@ -36,204 +38,13 @@ const ChapterTeamsList = () => {
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  // Mock data - danh sách các team từ trường
-  const mockTeams = [
-    {
-      id: '1',
-      name: 'Tech Innovators FPT',
-      hackathon: 'SEAL Hackathon 2024 - Ho Chi Minh',
-      hackathonStatus: 'ongoing',
-      leader: {
-        id: '1',
-        name: 'Nguyễn Văn An',
-        email: 'annv@fpt.edu.vn',
-        role: 'leader',
-        studentId: 'SE123456',
-        verified: true,
-        avatar: undefined,
-      },
-      members: [
-        {
-          id: '1',
-          name: 'Nguyễn Văn An',
-          email: 'annv@fpt.edu.vn',
-          role: 'leader',
-          studentId: 'SE123456',
-          verified: true,
-        },
-        {
-          id: '2',
-          name: 'Trần Thị Bình',
-          email: 'binhtt@fpt.edu.vn',
-          role: 'member',
-          studentId: 'SE123457',
-          verified: true,
-        },
-        {
-          id: '3',
-          name: 'Lê Văn Cường',
-          email: 'cuonglv@fpt.edu.vn',
-          role: 'member',
-          studentId: 'SE123458',
-          verified: true,
-        },
-        {
-          id: '4',
-          name: 'Phạm Thị Dung',
-          email: 'dungpt@fpt.edu.vn',
-          role: 'member',
-          studentId: 'SE123459',
-          verified: true,
-        },
-      ],
-      createdAt: '2024-01-15',
-      status: 'active',
-      university: 'FPT University - Ho Chi Minh',
-      score: 8.5,
-      rank: 3,
-    },
-    {
-      id: '2',
-      name: 'Code Masters',
-      hackathon: 'SEAL Hackathon 2024 - Ho Chi Minh',
-      hackathonStatus: 'ongoing',
-      leader: {
-        id: '5',
-        name: 'Hoàng Văn Em',
-        email: 'emhv@fpt.edu.vn',
-        role: 'leader',
-        studentId: 'SE123460',
-        verified: true,
-      },
-      members: [
-        {
-          id: '5',
-          name: 'Hoàng Văn Em',
-          email: 'emhv@fpt.edu.vn',
-          role: 'leader',
-          studentId: 'SE123460',
-          verified: true,
-        },
-        {
-          id: '6',
-          name: 'Đỗ Thị Phương',
-          email: 'phuongdt@fpt.edu.vn',
-          role: 'member',
-          studentId: 'SE123461',
-          verified: false,
-        },
-        {
-          id: '7',
-          name: 'Vũ Văn Giang',
-          email: 'giangvv@fpt.edu.vn',
-          role: 'member',
-          studentId: 'SE123462',
-          verified: true,
-        },
-      ],
-      createdAt: '2024-01-18',
-      status: 'active',
-      university: 'FPT University - Ho Chi Minh',
-      score: 7.8,
-      rank: 7,
-    },
-    {
-      id: '3',
-      name: 'AI Warriors',
-      hackathon: 'Tech Challenge 2024',
-      hackathonStatus: 'completed',
-      leader: {
-        id: '8',
-        name: 'Bùi Văn Hải',
-        email: 'haibv@fpt.edu.vn',
-        role: 'leader',
-        studentId: 'SE123463',
-        verified: true,
-      },
-      members: [
-        {
-          id: '8',
-          name: 'Bùi Văn Hải',
-          email: 'haibv@fpt.edu.vn',
-          role: 'leader',
-          studentId: 'SE123463',
-          verified: true,
-        },
-        {
-          id: '9',
-          name: 'Ngô Thị Lan',
-          email: 'lannt@fpt.edu.vn',
-          role: 'member',
-          studentId: 'SE123464',
-          verified: true,
-        },
-        {
-          id: '10',
-          name: 'Trịnh Văn Minh',
-          email: 'minhtv@fpt.edu.vn',
-          role: 'member',
-          studentId: 'SE123465',
-          verified: true,
-        },
-        {
-          id: '11',
-          name: 'Lý Thị Ngọc',
-          email: 'ngoclt@fpt.edu.vn',
-          role: 'member',
-          studentId: 'SE123466',
-          verified: true,
-        },
-        {
-          id: '12',
-          name: 'Phan Văn Oanh',
-          email: 'oanhpv@fpt.edu.vn',
-          role: 'member',
-          studentId: 'SE123467',
-          verified: true,
-        },
-      ],
-      createdAt: '2023-11-20',
-      status: 'active',
-      university: 'FPT University - Ho Chi Minh',
-      score: 9.2,
-      rank: 1,
-    },
-    {
-      id: '4',
-      name: 'Blockchain Pioneers',
-      hackathon: 'Fintech Innovation 2024',
-      hackathonStatus: 'upcoming',
-      leader: {
-        id: '13',
-        name: 'Đinh Văn Phúc',
-        email: 'phucdv@fpt.edu.vn',
-        role: 'leader',
-        studentId: 'SE123468',
-        verified: true,
-      },
-      members: [
-        {
-          id: '13',
-          name: 'Đinh Văn Phúc',
-          email: 'phucdv@fpt.edu.vn',
-          role: 'leader',
-          studentId: 'SE123468',
-          verified: true,
-        },
-        {
-          id: '14',
-          name: 'Mai Thị Quỳnh',
-          email: 'quynhmt@fpt.edu.vn',
-          role: 'member',
-          studentId: 'SE123469',
-          verified: true,
-        },
-      ],
-      createdAt: '2024-02-01',
-      status: 'pending',
-      university: 'FPT University - Ho Chi Minh',
-    },
-  ];
+  const { data: teamsData, isLoading } = useGetChapterTeams();
+  
+  // Get teams from API
+  const mockTeams = useMemo(() => {
+    if (!teamsData) return [];
+    return Array.isArray(teamsData) ? teamsData : teamsData?.data || [];
+  }, [teamsData]);
 
   const hackathons = Array.from(new Set(mockTeams.map((t) => t.hackathon)));
 
@@ -400,8 +211,15 @@ const ChapterTeamsList = () => {
       </Card>
 
       {/* Teams List */}
-      <div className="grid grid-cols-1 gap-4">
-        {filteredTeams.map((team) => (
+      {isLoading ? (
+        <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+          <div className="flex justify-center py-8">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {filteredTeams.map((team) => (
           <Card
             key={team.id}
             className="bg-white/5 border-white/10 backdrop-blur-xl hover:bg-white/10 transition-all cursor-pointer"
@@ -453,19 +271,20 @@ const ChapterTeamsList = () => {
               </div>
             </div>
           </Card>
-        ))}
+          ))}
 
-        {filteredTeams.length === 0 && (
-          <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
-            <div className="text-center py-12">
-              <TeamOutlined className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-400">
-                Không tìm thấy đội thi nào phù hợp với tiêu chí lọc
-              </p>
-            </div>
-          </Card>
-        )}
-      </div>
+          {filteredTeams.length === 0 && (
+            <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+              <div className="text-center py-12">
+                <TeamOutlined className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-400">
+                  Không tìm thấy đội thi nào phù hợp với tiêu chí lọc
+                </p>
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Team Detail Modal */}
       <Modal

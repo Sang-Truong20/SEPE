@@ -33,6 +33,8 @@ const PATH_NAME = {
   CHAPTER_VERIFY_STUDENTS: '/chapter/verify-students',
   CHAPTER_MENTOR_MANAGEMENT: '/chapter/mentor-management',
   CHAPTER_TEAMS: '/chapter/teams',
+  CHAPTER_RESULTS: '/chapter/results',
+  CHAPTER_TEAM_HACKATHON_APPROVAL: '/chapter/team-hackathon-approval',
   CHAPTER_NOTIFICATIONS: '/chapter/notifications',
   MENTOR: '/mentor',
   MENTOR_DASHBOARD: '/mentor/dashboard',

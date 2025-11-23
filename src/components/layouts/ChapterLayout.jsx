@@ -1,8 +1,4 @@
-import React, { useMemo, useState } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { PATH_NAME } from '../../constants';
-import { useUserData } from '../../hooks/useUserData.js';
-import { useLogout } from '../../hooks/useLogout.js';
+import { CheckCircleOutlined, TrophyOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import {
@@ -12,10 +8,14 @@ import {
   GraduationCap,
   Home,
   LogOut,
-  Mail,
-  Users,
   UserCheck,
+  Users,
 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { PATH_NAME } from '../../constants';
+import { useLogout } from '../../hooks/useLogout.js';
+import { useUserData } from '../../hooks/useUserData.js';
 
 dayjs.extend(relativeTime);
 
@@ -53,11 +53,37 @@ const ChapterLayout = ({ children }) => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, path: PATH_NAME.CHAPTER_DASHBOARD },
-    { id: 'verify', label: 'Duyệt sinh viên', icon: UserCheck, path: PATH_NAME.CHAPTER_VERIFY_STUDENTS },
-    { id: 'mentor', label: 'Mentor', icon: GraduationCap, path: PATH_NAME.CHAPTER_MENTOR_MANAGEMENT },
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: Home,
+      path: PATH_NAME.CHAPTER_DASHBOARD,
+    },
+    {
+      id: 'verify',
+      label: 'Duyệt sinh viên',
+      icon: UserCheck,
+      path: PATH_NAME.CHAPTER_VERIFY_STUDENTS,
+    },
+    {
+      id: 'mentor',
+      label: 'Mentor',
+      icon: GraduationCap,
+      path: PATH_NAME.CHAPTER_MENTOR_MANAGEMENT,
+    },
     { id: 'teams', label: 'Teams', icon: Users, path: PATH_NAME.CHAPTER_TEAMS },
-    { id: 'notifications', label: 'Thông báo', icon: Mail, path: PATH_NAME.CHAPTER_NOTIFICATIONS },
+    {
+      id: 'results',
+      label: 'Kết quả',
+      icon: TrophyOutlined,
+      path: PATH_NAME.CHAPTER_RESULTS,
+    },
+    {
+      id: 'approval',
+      label: 'Duyệt Hackathon',
+      icon: CheckCircleOutlined,
+      path: PATH_NAME.CHAPTER_TEAM_HACKATHON_APPROVAL,
+    },
   ];
 
   const notifications = mockNotifications;
@@ -134,11 +160,16 @@ const ChapterLayout = ({ children }) => {
 
                 {isNotificationOpen && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setIsNotificationOpen(false)} />
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsNotificationOpen(false)}
+                    />
 
                     <div className="absolute right-0 top-full mt-2 w-96 bg-dark-secondary/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 max-h-[600px] flex flex-col">
                       <div className="p-4 border-b border-white/10 flex items-center justify-between">
-                        <h3 className="text-white font-semibold text-lg">Thông báo</h3>
+                        <h3 className="text-white font-semibold text-lg">
+                          Thông báo
+                        </h3>
                         <button
                           onClick={() => {
                             handleNavigate(PATH_NAME.CHAPTER_NOTIFICATIONS);
@@ -165,9 +196,13 @@ const ChapterLayout = ({ children }) => {
                               }}
                             >
                               <div className="flex items-start space-x-3">
-                                {isUnread && <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0" />}
+                                {isUnread && (
+                                  <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0" />
+                                )}
                                 <div className="flex-1 min-w-0">
-                                  <p className={`text-sm font-medium truncate ${isUnread ? 'text-white' : 'text-muted-foreground'}`}>
+                                  <p
+                                    className={`text-sm font-medium truncate ${isUnread ? 'text-white' : 'text-muted-foreground'}`}
+                                  >
                                     {notification.title}
                                   </p>
                                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
@@ -204,12 +239,17 @@ const ChapterLayout = ({ children }) => {
                       .toUpperCase()}
                   </div>
 
-                  <ChevronDown className={`w-4 h-4 text-white transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    className={`w-4 h-4 text-white transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                  />
                 </button>
 
                 {isDropdownOpen && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsDropdownOpen(false)}
+                    />
 
                     <div className="absolute right-0 top-full mt-2 w-72 bg-dark-secondary/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50">
                       <div className="p-4 border-b border-white/10">
@@ -223,9 +263,15 @@ const ChapterLayout = ({ children }) => {
                               .toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-white font-medium truncate">{chapterUser.name}</p>
-                            <p className="text-muted-foreground text-sm truncate">{chapterUser.email}</p>
-                            <p className="text-green-400 text-xs font-medium">{chapterUser.role}</p>
+                            <p className="text-white font-medium truncate">
+                              {chapterUser.name}
+                            </p>
+                            <p className="text-muted-foreground text-sm truncate">
+                              {chapterUser.email}
+                            </p>
+                            <p className="text-green-400 text-xs font-medium">
+                              {chapterUser.role}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -233,7 +279,9 @@ const ChapterLayout = ({ children }) => {
                       <div className="py-2">
                         <button
                           onClick={() => {
-                            handleNavigate(PATH_NAME.CHAPTER_PROFILE || PATH_NAME.USER_INFO);
+                            handleNavigate(
+                              PATH_NAME.CHAPTER_PROFILE || PATH_NAME.USER_INFO,
+                            );
                             setIsDropdownOpen(false);
                           }}
                           className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
@@ -294,7 +342,8 @@ const ChapterLayout = ({ children }) => {
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Nền tảng phối hợp giữa trường và hệ thống SEPE để quản lý mentor, sinh viên, teams.
+                Nền tảng phối hợp giữa trường và hệ thống SEPE để quản lý
+                mentor, sinh viên, teams.
               </p>
             </div>
 
@@ -379,7 +428,8 @@ const ChapterLayout = ({ children }) => {
 
           <div className="border-t border-white/10 mt-8 pt-8 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} SEPE Chapter Portal. All rights reserved.
+              © {new Date().getFullYear()} SEPE Chapter Portal. All rights
+              reserved.
             </p>
           </div>
         </div>
@@ -389,4 +439,3 @@ const ChapterLayout = ({ children }) => {
 };
 
 export default ChapterLayout;
-
