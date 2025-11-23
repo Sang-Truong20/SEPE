@@ -111,7 +111,7 @@ const ChapterLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-dark-secondary/80 border-b border-white/5">
+      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-darkv2-secondary/80 border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3 lg:gap-4 shrink-0">
@@ -165,7 +165,7 @@ const ChapterLayout = ({ children }) => {
                       onClick={() => setIsNotificationOpen(false)}
                     />
 
-                    <div className="absolute right-0 top-full mt-2 w-96 bg-dark-secondary/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 max-h-[600px] flex flex-col">
+                    <div className="absolute right-0 top-full mt-2 w-96 bg-darkv2-secondary/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 max-h-[600px] flex flex-col">
                       <div className="p-4 border-b border-white/10 flex items-center justify-between">
                         <h3 className="text-white font-semibold text-lg">
                           Thông báo
@@ -251,7 +251,7 @@ const ChapterLayout = ({ children }) => {
                       onClick={() => setIsDropdownOpen(false)}
                     />
 
-                    <div className="absolute right-0 top-full mt-2 w-72 bg-dark-secondary/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50">
+                    <div className="absolute right-0 top-full mt-2 w-72 bg-darkv2-secondary/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50">
                       <div className="p-4 border-b border-white/10">
                         <div className="flex items-center space-x-3">
                           <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center text-white text-xl font-semibold">
@@ -328,7 +328,7 @@ const ChapterLayout = ({ children }) => {
 
       <main className="pt-6">{children || <Outlet />}</main>
 
-      <footer className="mt-16 border-t border-white/5 bg-dark-secondary/60 backdrop-blur-xl">
+      <footer className="mt-16 border-t border-white/5 bg-darkv2-secondary/60 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>

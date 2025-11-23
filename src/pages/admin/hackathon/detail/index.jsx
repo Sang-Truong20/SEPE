@@ -156,15 +156,6 @@ const HackathonDetail = () => {
           )}
         </Card>
       </div>
-      <EntityDetail
-        entityName="Hackathon"
-        model={model}
-        data={hackathon || {}}
-        onBack={() => navigate(PATH_NAME.ADMIN_HACKATHONS)}
-        onEdit={(rec) => navigate(`${PATH_NAME.ADMIN_HACKATHONS}/edit/${rec.hackathonId}`)}
-        showEdit
-        valueRenders={valueRenders}
-      />
     </ConfigProvider>
   );
 };

@@ -9,6 +9,12 @@ module.exports = {
         secondary: '#00994D',
         tertiary: '#66CC99',
         dark: {
+          primary: '#0A1F1C',
+          secondary: '#1A2928',
+          tertiary: '#203937',
+          accent: '#2A4A47',
+        },
+        darkv2: {
           primary: '#0a0f1a',
           secondary: '#111827',
           tertiary: '#1a2332',
