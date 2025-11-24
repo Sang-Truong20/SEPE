@@ -14,6 +14,7 @@ import React, { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 import { useGetNotifications, useGetUnreadCount, useMarkAsRead } from '../../hooks/student/notification';
+import { useUserData } from '../../hooks/useUserData';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -87,14 +88,16 @@ const StudentLayout = () => {
   const { data: unreadCountData = { count: mockNotifications.filter((n) => !n.isRead).length } } = useGetUnreadCount();
   const unreadCount = unreadCountData?.count || mockNotifications.filter((n) => !n.isRead).length;
   const markAsRead = useMarkAsRead();
+  const { userInfo: authUser } = useUserData();
 
   const recentNotifications = notifications.slice(0, 5);
 
   const userData = {
-    name: 'Nguyễn Văn A',
-    email: 'nguyenvana@fpt.edu.vn',
-    avatar: null,
-    role: 'Sinh viên',
+    name: authUser?.fullName || authUser?.name || '',
+    email: authUser?.email || '',
+    avatar: authUser?.avatarUrl || authUser?.avatar || null,
+    role: authUser?.roleName || authUser?.role || '',
+    isVerified: authUser?.isVerified,
   };
 
   const navItems = [
@@ -341,9 +344,22 @@ const StudentLayout = () => {
                             <p className="text-muted-foreground text-sm truncate">
                               {userData.email}
                             </p>
-                            <p className="text-green-400 text-xs font-medium">
-                              {userData.role}
-                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-green-400 text-xs font-medium">
+                                {userData.role || '—'}
+                              </span>
+                              {userData.isVerified !== undefined && (
+                                <span
+                                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                    userData.isVerified
+                                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                                      : 'bg-red-500/20 text-red-300 border border-red-400/30'
+                                  }`}
+                                >
+                                  {userData.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>

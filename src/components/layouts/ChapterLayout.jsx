@@ -46,7 +46,7 @@ const mockNotifications = [
 const ChapterLayout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { userInfo } = useUserData();
+  const { userInfo: authUser } = useUserData();
   const mutationLogout = useLogout();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -91,11 +91,11 @@ const ChapterLayout = ({ children }) => {
 
   const chapterUser = useMemo(
     () => ({
-      name: userInfo?.fullName || 'Chapter Admin',
-      email: userInfo?.email || 'chapter@sepe.edu.vn',
-      role: 'Chapter Lead',
+      name: authUser?.fullName || authUser?.name || '',
+      email: authUser?.email || '',
+      role: authUser?.role || '',
     }),
-    [userInfo],
+    [authUser],
   );
 
   const handleNavigate = (path) => {

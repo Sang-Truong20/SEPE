@@ -19,6 +19,7 @@ import {
   useGetUnreadCount,
   useMarkAsRead,
 } from '../../hooks/student/notification';
+import { useUserData } from '../../hooks/useUserData';
 
 dayjs.extend(relativeTime);
 
@@ -75,14 +76,15 @@ const MentorLayout = () => {
   const unreadCount =
     unreadCountData?.count || mockNotifications.filter((n) => !n.isRead).length;
   const markAsRead = useMarkAsRead();
+  const { userInfo: authUser } = useUserData();
 
   const recentNotifications = notifications.slice(0, 5);
 
   const userData = {
-    name: 'Nguyễn Văn Mentor',
-    email: 'mentor@fpt.edu.vn',
-    avatar: null,
-    role: 'Mentor',
+    name: authUser?.fullName || authUser?.name || '',
+    email: authUser?.email || '',
+    avatar: authUser?.avatarUrl || authUser?.avatar || null,
+    role: authUser?.role || '',
   };
 
   const navItems = [
