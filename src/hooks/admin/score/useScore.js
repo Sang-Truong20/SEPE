@@ -8,7 +8,7 @@ import axiosClient from "../../../configs/axiosClient";
 export const scoreQueryKeys = {
   all: ["Scores"],
   lists: () => [...scoreQueryKeys.all, "list"],
-  list: (filters) => [...scoreQueryKeys.lists(), filters ?? "all"], // Có thể mở rộng filter sau (ví dụ: groupId hoặc phaseId)
+  list: (filters) => [...scoreQueryKeys.lists(), { ...filters }], // filters như { groupId, phaseId }
   details: () => [...scoreQueryKeys.all, "detail"],
   detail: (id) => [...scoreQueryKeys.details(), id],
 };
@@ -25,18 +25,18 @@ export const useScores = () => {
       queryKey: scoreQueryKeys.list({ groupId }),
       queryFn: async () => {
         const response = await axiosClient.get(`/Score/group/${groupId}/team-scores`);
-        return response.data;
+        return response.data; // Array of team score objects
       },
       enabled: !!groupId,
     });
 
-  // 2. Lấy my scores grouped theo phaseId
+  // 2. Lấy my scores grouped theo phaseId (dựa trên schema bạn cung cấp)
   const fetchMyScoresGrouped = (phaseId) =>
     useQuery({
       queryKey: scoreQueryKeys.list({ phaseId }),
       queryFn: async () => {
         const response = await axiosClient.get(`/Score/myscores/grouped/${phaseId}`);
-        return response.data;
+        return response.data; // Array: [{ submissionId, submissionName, totalScore, scores: [{ scoreId, criteriaName, scoreValue, comment, scoredAt }] }]
       },
       enabled: !!phaseId,
     });
@@ -45,7 +45,9 @@ export const useScores = () => {
   const createScore = useMutation({
     mutationFn: (payload) => axiosClient.post("/Score/score", payload),
     onSuccess: (_, variables) => {
-      // Invalidate dựa trên submissionId hoặc liên quan (nếu biết group/phase, thêm invalidate cụ thể)
+      // Invalidate lists liên quan đến submission hoặc phase/group (giả sử dựa trên submissionId)
+      const submissionId = variables.submissionId;
+      // Có thể cần thêm logic lấy phaseId/groupId từ context nếu biết
       queryClient.invalidateQueries({ queryKey: scoreQueryKeys.all });
       message.success("Score created successfully!");
     },
@@ -59,7 +61,7 @@ export const useScores = () => {
   const updateScore = useMutation({
     mutationFn: (payload) => axiosClient.put("/Score/score", payload),
     onSuccess: (_, variables) => {
-      // Invalidate dựa trên submissionId hoặc liên quan
+      const submissionId = variables.submissionId;
       queryClient.invalidateQueries({ queryKey: scoreQueryKeys.all });
       message.success("Score updated successfully!");
     },
