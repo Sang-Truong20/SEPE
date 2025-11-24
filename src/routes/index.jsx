@@ -40,6 +40,10 @@ const PHackathons = lazy(() => import('../pages/partner/hackathon'));
 import PHackathonDetail from '../pages/partner/hackathon/detail/index.jsx';
 import PChallengeDetail from '../pages/partner/challenge/detail/index.jsx';
 import PChallengeForm from '../pages/partner/challenge/form/index.jsx';
+const PSHackathons = lazy(() => import('../pages/partner/score/hackathon'));
+const PSHackathonPhases = lazy(() => import('../pages/partner/score/hackathon-phase'));
+const PScore = lazy(() => import('../pages/partner/score'));
+import PScoreDetail from '../pages/partner/score/detail/index.jsx';
 
 import JudgeRoutes from './JudgeRoutes.jsx';
 const JHackathons = lazy(() => import('../pages/judge/hackathon'));
@@ -246,10 +250,21 @@ const router = createBrowserRouter([
               },
             ],
           },
-          // {
-          //   path: 'hackathons/:hackathonId/scores',
-          //   element: withSuspense(PartnerTeamScores),
-          // },
+          {
+            path: 'score',
+            children: [
+              { index: true, element: withSuspense(PScore) },
+              {
+                path:  'phase',
+                element: withSuspense(PSHackathonPhases)
+              },
+              {
+                path:  'hackathon',
+                element: withSuspense(PSHackathons)
+              },
+              { path: ':id', element: withSuspense(PScoreDetail) },
+            ],
+          },
         ],
       },
     ],
