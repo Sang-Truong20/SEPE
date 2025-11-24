@@ -4,7 +4,6 @@ import { ArrowLeftOutlined, TrophyOutlined, UserOutlined } from '@ant-design/ico
 import { useMemo } from 'react';
 import { useScores } from '../../../../hooks/admin/score/useScore.js';
 import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
-import { PATH_NAME } from '../../../../constants/index.js';
 
 const ScoreDetail = () => {
   const [searchParams] = useSearchParams();
@@ -92,12 +91,20 @@ const ScoreDetail = () => {
       }}
     >
       <div className="min-h-screen bg-dark-secondary p-6">
+        <Button
+          onClick={() => navigate(-1)}
+          type="link"
+          icon={<ArrowLeftOutlined />}
+          className="mb-6 !text-light-primary hover:!text-primary"
+        >
+          Quay lại bảng điểm
+        </Button>
 
         <EntityDetail
           entityName="Chi tiết điểm số"
           model={detailModel}
           data={submissionScore}
-          onBack={() =>  navigate(`${PATH_NAME.JUDGE_TEAM_SCORES}/?phaseId=${phaseId}&hackathonId=${hackathonId}`)}
+          onBack={() => navigate(-1)}
           showEdit={false}
         >
           <Card

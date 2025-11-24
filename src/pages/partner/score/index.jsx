@@ -1,4 +1,4 @@
-// components/judge/scores/PhaseScores.jsx
+// components/partner/scores/PhaseScores.jsx
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfigProvider, theme, Button, Card, Tag, Modal, Form, InputNumber, Input, Space } from 'antd';
 import { ArrowLeftOutlined, TrophyOutlined, EyeOutlined, EditOutlined } from '@ant-design/icons';
@@ -75,7 +75,7 @@ const PhaseScores = () => {
   const handlers = {
     onView: (record) => {
       navigate(
-        `${PATH_NAME.JUDGE_TEAM_SCORES}/${record.submissionId}?submissionId=${record.submissionId}&phaseId=${phaseId}&hackathonId=${hackathonId}`
+        `${PATH_NAME.PARTNER_TEAM_SCORES}/${record.submissionId}?submissionId=${record.submissionId}&phaseId=${phaseId}&hackathonId=${hackathonId}`
       );
     },
     onEdit: (record) => {
