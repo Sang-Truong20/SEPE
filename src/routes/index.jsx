@@ -40,7 +40,12 @@ const PHackathons = lazy(() => import('../pages/partner/hackathon'));
 import PHackathonDetail from '../pages/partner/hackathon/detail/index.jsx';
 import PChallengeDetail from '../pages/partner/challenge/detail/index.jsx';
 import PChallengeForm from '../pages/partner/challenge/form/index.jsx';
+
 import JudgeRoutes from './JudgeRoutes.jsx';
+const JHackathons = lazy(() => import('../pages/judge/hackathon'));
+const JHackathonPhases = lazy(() => import('../pages/judge/hackathon-phase'));
+const JScore = lazy(() => import('../pages/judge/score'));
+import JScoreDetail from '../pages/judge/score/detail/index.jsx';
 
 const withSuspense = (Component) => (
   <Suspense
@@ -253,11 +258,22 @@ const router = createBrowserRouter([
     element: <JudgeRoutes />,
     children: [
       {
-        path: PATH_NAME.PARTNER,
+        path: PATH_NAME.JUDGE,
         children: [
           {
-            path: 'hackathons',
-            children: [{ index: true, element: withSuspense(Hackathons) }],
+            path: 'score',
+            children: [
+              { index: true, element: withSuspense(JScore) },
+              {
+                path:  'phase',
+                element: withSuspense(JHackathonPhases)
+              },
+              {
+                path:  'hackathon',
+                element: withSuspense(JHackathons)
+              },
+              { path: ':id', element: withSuspense(JScoreDetail) },
+            ],
           },
         ],
       },
