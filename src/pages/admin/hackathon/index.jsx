@@ -70,14 +70,14 @@ const Hackathons = () => {
               className="text-xs bg-blue-600/30 text-blue-300 border-blue-600/50 hover:bg-blue-600/50"
               onClick={() => navigate(`${PATH_NAME.ADMIN_HACKATHON_PHASES}?hackathonId=${record.hackathonId}`)}
             >
-              Phases
+              Giai đoạn
             </Button>
             <Button
               size="small"
               className="text-xs bg-yellow-600/30 text-yellow-300 border-yellow-600/50 hover:bg-yellow-600/50"
               onClick={() => navigate(`${PATH_NAME.ADMIN_PRIZES}?hackathonId=${record.hackathonId}`)}
             >
-              Prizes
+              Giải thưởng
             </Button>
           </div>
         )

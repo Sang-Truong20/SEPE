@@ -11,6 +11,8 @@ import {
   InputNumber,
   Select,
   message,
+  Space,
+  Tag,
 } from 'antd';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -36,14 +38,15 @@ const HackathonPhaseDetail = () => {
   const { fetchHackathonPhase } = useHackathonPhases();
   const { deleteTrack, fetchTracks, assignRandomChallenge } = useTracks();
   const { fetchChallenges } = useChallenges();
+
   const {
     data: phase,
     isLoading: phaseLoading,
     error: phaseError,
   } = fetchHackathonPhase(id);
   const { data: allTracks, isLoading: tracksLoading } = fetchTracks;
-  const { data: allChallenges = [], isLoading: challengesLoading } =
-    fetchChallenges;
+  const { data: allChallenges = [], isLoading: challengesLoading } = fetchChallenges;
+
   const phaseTracks =
     allTracks?.filter((track) => track.phaseId === parseInt(id)) || [];
 
@@ -109,19 +112,32 @@ const HackathonPhaseDetail = () => {
       },
       {
         title: 'Thử thách',
-        dataIndex: 'challengeId',
-        key: 'challengeId',
+        key: 'challenges',
         type: 'custom',
-        render: (value, record) => (
-          <Button
-            size="small"
-            className="text-xs bg-blue-600/30 text-blue-300 border-blue-600/50 hover:bg-blue-600/50"
-            onClick={() => navigate(`${PATH_NAME.ADMIN_CHALLENGES}/${value}`)}
-            disabled={!value}
-          >
-            {challengeMap[value] || value || '--'}
-          </Button>
-        ),
+        render: (_, record) => {
+          const challenges = record.challenges || [];
+          if (challenges.length === 0) {
+            return <Tag color="default">Chưa có thử thách</Tag>;
+          }
+          return (
+            <Space wrap>
+              {challenges.map((ch) => (
+                <Button
+                  key={ch.challengeId}
+                  size="small"
+                  type="primary"
+                  ghost
+                  className="text-xs"
+                  onClick={() =>
+                    navigate(`${PATH_NAME.ADMIN_CHALLENGES}/${ch.challengeId}`)
+                  }
+                >
+                  {ch.title}
+                </Button>
+              ))}
+            </Space>
+          );
+        },
       },
     ],
     actions: {
@@ -145,7 +161,7 @@ const HackathonPhaseDetail = () => {
   const handleAssignRandomClick = (record) => {
     setAssignModal({ open: true, track: record });
     assignForm.setFieldsValue({
-      quantity: 5,
+      quantity: 1,
       challengeIds: [],
     });
   };
@@ -155,7 +171,7 @@ const HackathonPhaseDetail = () => {
       assignRandomChallenge.mutate(
         {
           trackId: assignModal.track.trackId,
-          quantity: 1,
+          quantity: values.quantity,
           challengeIds:
             values.challengeIds.length > 0 ? values.challengeIds : null,
         },
@@ -284,6 +300,8 @@ const HackathonPhaseDetail = () => {
           />
         </Card>
       </EntityDetail>
+
+      {/* Modal Gán thử thách ngẫu nhiên - ĐÃ HOÀN THIỆN */}
       <Modal
         title={
           <>
@@ -306,6 +324,13 @@ const HackathonPhaseDetail = () => {
           Track: <span className="text-primary">{assignModal.track?.name}</span>
         </div>
         <Form form={assignForm} layout="vertical">
+          <Form.Item
+            name="quantity"
+            label="Số lượng entity nhận thử thách"
+            rules={[{ required: true, message: 'Vui lòng nhập số lượng!' }]}
+          >
+            <InputNumber min={1} max={1000} style={{ width: '100%' }} />
+          </Form.Item>
           <Form.Item name="challengeIds" label="Chọn thử thách">
             <Select
               mode="multiple"
