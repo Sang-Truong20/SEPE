@@ -134,7 +134,7 @@ const StudentLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-darkv2-primary via-darkv2-secondary to-darkv2-primary text-gray-100">
       {/* Navigation - Top bar similar to Hackathon Management Web App UI */}
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-darkv2-secondary/80 border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
