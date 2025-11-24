@@ -110,7 +110,7 @@ const ChapterLayout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen ">
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-darkv2-secondary/80 border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -326,7 +326,7 @@ const ChapterLayout = ({ children }) => {
         </div>
       </nav>
 
-      <main className="pt-6">{children || <Outlet />}</main>
+      <main >{children || <Outlet />}</main>
 
       <footer className="mt-16 border-t border-white/5 bg-darkv2-secondary/60 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

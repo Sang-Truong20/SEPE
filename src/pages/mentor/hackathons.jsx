@@ -50,6 +50,7 @@ const MentorHackathons = () => {
   }, [hackathonsData, statusFilter, hackathonSearchQuery]);
 
   const handleHackathonClick = (hackathonId) => {
+    if (!hackathonId) return;
     navigate(`${PATH_NAME.MENTOR_HACKATHONS}/${hackathonId}`);
   };
 
@@ -60,6 +61,8 @@ const MentorHackathons = () => {
       case 'pending':
       case 'upcoming':
         return <Tag color="orange">SẮP DIỄN RA</Tag>;
+      case 'inprogress':
+        return <Tag color="blue">ĐANG TIẾN HÀNH</Tag>;
       default:
         return <Tag>{status?.toUpperCase() || 'UNKNOWN'}</Tag>;
     }
@@ -143,51 +146,53 @@ const MentorHackathons = () => {
         </Card>
       ) : filteredHackathons.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredHackathons.map((hackathon) => (
-            <Card
-              key={hackathon.id}
-              className="border-0 bg-gradient-to-br from-white/5 to-white/5 backdrop-blur-xl hover:from-white/10 hover:to-green-500/10 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:shadow-xl"
-              onClick={() => handleHackathonClick(hackathon.id)}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h3 className="text-xl text-white mb-2">
-                    {hackathon.name || hackathon.title}
-                  </h3>
-                  {getStatusBadge(hackathon.status)}
+          {filteredHackathons.map((hackathon) => {
+            const hackathonId = hackathon.hackathonId ?? hackathon.id;
+            return (
+              <Card
+                key={hackathonId || hackathon.name}
+                className="border-0 bg-gradient-to-br from-white/5 to-white/5 backdrop-blur-xl hover:from-white/10 hover:to-green-500/10 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:shadow-xl"
+                onClick={() => handleHackathonClick(hackathonId)}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="text-xl text-white mb-2">
+                      {hackathon.name || hackathon.title}
+                    </h3>
+                    {getStatusBadge(hackathon.status)}
+                  </div>
+                  <TrophyOutlined className="text-2xl text-green-400/50" />
                 </div>
-                <TrophyOutlined className="text-2xl text-green-400/50" />
-              </div>
 
-              {hackathon.description && (
-                <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                  {hackathon.description}
-                </p>
-              )}
+                {hackathon.description && (
+                  <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                    {hackathon.description}
+                  </p>
+                )}
 
-              <div className="space-y-2 text-sm">
-                {hackathon.startDate && (
-                  <div className="flex items-center gap-2 text-gray-400">
-                    <CalendarOutlined />
-                    <span>Bắt đầu: {formatDate(hackathon.startDate)}</span>
-                  </div>
-                )}
-                {hackathon.endDate && (
-                  <div className="flex items-center gap-2 text-gray-400">
-                    <CalendarOutlined />
-                    <span>Kết thúc: {formatDate(hackathon.endDate)}</span>
-                  </div>
-                )}
-                {hackathon.participantCount !== undefined && (
-                  <div className="flex items-center gap-2 text-gray-400">
-                    <UserOutlined />
-                    <span>{hackathon.participantCount} người tham gia</span>
-                  </div>
-                )}
-              </div>
-
-            </Card>
-          ))}
+                <div className="space-y-2 text-sm">
+                  {hackathon.startDate && (
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <CalendarOutlined />
+                      <span>Bắt đầu: {formatDate(hackathon.startDate)}</span>
+                    </div>
+                  )}
+                  {hackathon.endDate && (
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <CalendarOutlined />
+                      <span>Kết thúc: {formatDate(hackathon.endDate)}</span>
+                    </div>
+                  )}
+                  {hackathon.participantCount !== undefined && (
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <UserOutlined />
+                      <span>{hackathon.participantCount} người tham gia</span>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
         </div>
       ) : (
         <Card className="border-0 bg-white/5 backdrop-blur-xl">
