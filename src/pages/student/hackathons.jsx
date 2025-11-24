@@ -1,15 +1,9 @@
 import {
-  TrophyOutlined,
-  TeamOutlined,
-  CalendarOutlined,
-  DollarOutlined,
-  UserOutlined,
   PlusOutlined,
   SearchOutlined,
-  FilterOutlined,
-  LoadingOutlined,
+  TrophyOutlined
 } from '@ant-design/icons';
-import { Button, Card, Col, Input, Row, Tag, Avatar, Space, Select, Badge, Spin, Alert } from 'antd';
+import { Alert, Button, Card, Input, Select, Spin, Tag } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 import { useGetHackathons } from '../../hooks/student/hackathon';
@@ -20,12 +14,6 @@ const { Option } = Select;
 const StudentHackathons = () => {
   const navigate = useNavigate();
   const { data: hackathons, isLoading, error } = useGetHackathons();
-
-  const handleJoinHackathon = (hackathonId) => {
-    console.log('Joining hackathon:', hackathonId);
-    // Navigate to team creation or joining
-    navigate(PATH_NAME.STUDENT_TEAMS);
-  };
 
   const handleViewDetails = (hackathonId) => {
     navigate(`/student/hackathons/${hackathonId}`);
@@ -57,18 +45,7 @@ const StudentHackathons = () => {
     }
   };
 
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case 'Beginner':
-        return 'green';
-      case 'Intermediate':
-        return 'orange';
-      case 'Advanced':
-        return 'red';
-      default:
-        return 'default';
-    }
-  };
+
 
   const filteredHackathons = hackathons?.filter(h => h.status?.toLowerCase() !== 'completed') || [];
 
@@ -146,68 +123,56 @@ const StudentHackathons = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {filteredHackathons.map((hackathon) => (
-          <Card key={hackathon.hackathonId} className="bg-card-background border border-card-border backdrop-blur-xl">
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-xl font-semibold text-text-primary">
-                      {hackathon.name}
-                    </h3>
-                    <Tag color={getStatusColor(hackathon.status)}>
-                      {getStatusText(hackathon.status)}
-                    </Tag>
-                  </div>
+          <Card
+            key={hackathon.hackathonId}
+            className="bg-darkv2-tertiary/70 border border-white/10 rounded-2xl shadow shadow-black/10"
+          >
+            <div className="p-5 space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-gray-400">
+                    {hackathon.seasonName || 'Hackathon'}
+                  </p>
+                  <h3 className="text-2xl font-semibold text-white">
+                    {hackathon.name}
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    {hackathon.theme || 'Chưa cập nhật chủ đề'}
+                  </p>
+                </div>
+                <Tag
+                  color={getStatusColor(hackathon.status)}
+                  className="px-3 py-1 rounded-full text-xs font-semibold"
+                >
+                  {getStatusText(hackathon.status)}
+                </Tag>
+              </div>
 
-                  <div className="flex items-center gap-4 text-muted-foreground mb-4">
-                    <span>Mùa: {hackathon.seasonName}</span>
-                    <span>•</span>
-                    <span>Chủ đề: {hackathon.theme}</span>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-primary" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Bắt đầu</p>
-                        <span className="text-sm text-gray-400">
-                          {hackathon.startDate}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-primary" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Kết thúc</p>
-                        <span className="text-sm text-gray-400">
-                          {hackathon.endDate}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+              <div className="grid grid-cols-2 gap-3 text-sm text-gray-300">
+                <div className="flex flex-col">
+                  <span className="text-xs uppercase tracking-wide text-gray-500">
+                    Bắt đầu
+                  </span>
+                  {hackathon.startDate}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs uppercase tracking-wide text-gray-500">
+                    Kết thúc
+                  </span>
+                  {hackathon.endDate}
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-between items-center">
-                <Space>
-                  <Button
-                    type="text"
-                    className="text-white hover:text-primary"
-                    icon={<TrophyOutlined />}
-                    onClick={() => handleViewDetails(hackathon.hackathonId)}
-                  >
-                    Chi tiết
-                  </Button>
-                </Space>
-
+              <div className="flex w-full">
                 <Button
-                  className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
-                  onClick={() => handleJoinHackathon(hackathon.hackathonId)}
-                  disabled={hackathon.status?.toLowerCase() === 'completed'}
+
+       
+                  size="large"
+                  variant='outlined'
+                  className="bg-green-400 hover:bg-green-500 text-white border-0 flex-1 font-semibold shadow-lg shadow-emerald-500/20"
+                  onClick={() => handleViewDetails(hackathon.hackathonId)}
                 >
-                  {hackathon.status?.toLowerCase() === 'completed' ? 'Đã kết thúc' : 'Tham gia ngay'}
+                  Xem chi tiết
                 </Button>
               </div>
             </div>
