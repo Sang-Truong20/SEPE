@@ -31,7 +31,7 @@ const items = [
     <TrophyOutlined />,
   ),
   getItem(
-    <Link to={PATH_NAME.PARTNER_TEAM_SCORES}>Điểm nhóm</Link>,
+    <Link to={`${PATH_NAME.PARTNER_TEAM_SCORES}/hackathon`}>Điểm nhóm</Link>,
     PATH_NAME.PARTNER_TEAM_SCORES,
     <TeamOutlined />,
   ),

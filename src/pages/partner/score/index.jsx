@@ -117,7 +117,7 @@ const PhaseScores = () => {
   };
 
   if (!phaseId) {
-    return <div className="text-center py-16 text-gray-400">Vui lòng chọn phase để xem điểm số</div>;
+    return <div className="text-center py-16 text-gray-400">Vui lòng chọn giai đoạn để xem điểm số</div>;
   }
 
   return (
@@ -140,14 +140,14 @@ const PhaseScores = () => {
             icon={<ArrowLeftOutlined />}
             className="mb-4 !text-light-primary hover:!text-primary"
           >
-            Quay lại danh sách phases
+            Quay lại danh sách giai đoạn
           </Button>
 
           <Card className="bg-neutral-900 border border-neutral-700 mb-6">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-white mb-2">
-                  Bảng điểm Phase
+                  Bảng điểm theo giai đoạn
                 </h2>
                 <p className="text-gray-400">
                   Phase ID: <Tag color="cyan">{phaseId}</Tag> • {scoresData.length} submission
