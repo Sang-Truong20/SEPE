@@ -1,12 +1,15 @@
 import { Spin } from 'antd';
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Outlet } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import LandingLayout from '../components/layouts/LandingLayout';
 import { PATH_NAME } from '../constants';
 import NotFound from '../pages/notfound';
 import AdminRoutes from './AdminRoutes';
 import PartnerRoutes from './PartnerRoutes';
 import MemberRoutes from './MemberRoutes';
+import ChapterRoutes from './ChapterRoutes';
+import MentorRoutes from './MentorRoutes';
+import StudentRoutes from './StudentRoutes';
 import HackathonForm from '../pages/admin/hackathon/form/index.jsx';
 import HackathonDetail from '../pages/admin/hackathon/detail/index.jsx';
 import HackathonPhaseForm from '../pages/admin/hackathon-phase/hackathon-phase-form';
@@ -41,6 +44,28 @@ import PHackathonDetail from '../pages/partner/hackathon/detail/index.jsx';
 import PChallengeDetail from '../pages/partner/challenge/detail/index.jsx';
 import PChallengeForm from '../pages/partner/challenge/form/index.jsx';
 import JudgeRoutes from './JudgeRoutes.jsx';
+
+const StudentDashboardPage = lazy(() => import('../pages/student/dashboard'));
+const StudentHackathonsPage = lazy(() => import('../pages/student/hackathons'));
+const StudentHackathonDetailPage = lazy(() => import('../pages/student/hackathon-detail'));
+const StudentTeamsPage = lazy(() => import('../pages/student/teams'));
+const StudentMyTeamPage = lazy(() => import('../pages/student/my-team'));
+const StudentSubmissionsPage = lazy(() => import('../pages/student/submissions'));
+const StudentProfilePage = lazy(() => import('../pages/student/profile'));
+const StudentLeaderboardPage = lazy(() => import('../pages/student/leaderboard'));
+const StudentNotificationsPage = lazy(() => import('../pages/student/notifications'));
+
+const ChapterDashboardPage = lazy(() => import('../pages/chapter/dashboard'));
+const ChapterVerifyStudentsPage = lazy(() => import('../pages/chapter/verify-students'));
+const ChapterMentorManagementPage = lazy(() => import('../pages/chapter/mentor-management'));
+const ChapterTeamsPage = lazy(() => import('../pages/chapter/teams'));
+const ChapterResultsPage = lazy(() => import('../pages/chapter/results'));
+const ChapterTeamHackathonApprovalPage = lazy(() => import('../pages/chapter/team-hackathon-approval'));
+
+const MentorDashboardPage = lazy(() => import('../pages/mentor/dashboard'));
+const MentorHackathonsPage = lazy(() => import('../pages/mentor/hackathons'));
+const MentorHackathonDetailPage = lazy(() => import('../pages/mentor/hackathon-detail'));
+const MentorResourcesPage = lazy(() => import('../pages/mentor/resources'));
 
 const withSuspense = (Component) => (
   <Suspense
@@ -259,6 +284,73 @@ const router = createBrowserRouter([
             path: 'hackathons',
             children: [{ index: true, element: withSuspense(Hackathons) }],
           },
+        ],
+      },
+    ],
+  },
+  {
+    element: <StudentRoutes />,
+    children: [
+      {
+        path: PATH_NAME.STUDENT,
+        children: [
+          { index: true, element: <Navigate to="dashboard" replace /> },
+          { path: 'dashboard', element: withSuspense(StudentDashboardPage) },
+          { path: 'hackathons', element: withSuspense(StudentHackathonsPage) },
+          {
+            path: 'hackathons/:id',
+            element: withSuspense(StudentHackathonDetailPage),
+          },
+          { path: 'teams', element: withSuspense(StudentTeamsPage) },
+          { path: 'teams/:id', element: withSuspense(StudentMyTeamPage) },
+          {
+            path: 'submissions',
+            element: withSuspense(StudentSubmissionsPage),
+          },
+          { path: 'profile', element: withSuspense(StudentProfilePage) },
+          {
+            path: 'leaderboard',
+            element: withSuspense(StudentLeaderboardPage),
+          },
+          {
+            path: 'notifications',
+            element: withSuspense(StudentNotificationsPage),
+          },
+        ],
+      },
+    ],
+  },
+  {
+    element: <ChapterRoutes />,
+    children: [
+      {
+        path: PATH_NAME.CHAPTER,
+        children: [
+          { index: true, element: <Navigate to="dashboard" replace /> },
+          { path: 'dashboard', element: withSuspense(ChapterDashboardPage) },
+          { path: 'verify-students', element: withSuspense(ChapterVerifyStudentsPage) },
+          { path: 'mentor-management', element: withSuspense(ChapterMentorManagementPage) },
+          { path: 'teams', element: withSuspense(ChapterTeamsPage) },
+          { path: 'results', element: withSuspense(ChapterResultsPage) },
+          { path: 'team-hackathon-approval', element: withSuspense(ChapterTeamHackathonApprovalPage) },
+        ],
+      },
+    ],
+  },
+  {
+    element: <MentorRoutes />,
+    children: [
+      {
+        path: PATH_NAME.MENTOR,
+        children: [
+          { index: true, element: <Navigate to="dashboard" replace /> },
+          { path: 'dashboard', element: withSuspense(MentorDashboardPage) },
+          { path: 'hackathons', element: withSuspense(MentorHackathonsPage) },
+          {
+            path: 'hackathons/:hackathonId',
+            element: withSuspense(MentorHackathonDetailPage),
+          },
+          { path: 'resources', element: withSuspense(MentorResourcesPage) },
         ],
       },
     ],
