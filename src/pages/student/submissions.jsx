@@ -374,25 +374,6 @@ const StudentSubmissions = () => {
             />
           </Form.Item>
 
-          <Form.Item
-            label="Files dự án"
-            name="files"
-          >
-            <Upload.Dragger
-              multiple
-              className="[&_.ant-upload]:bg-dark-accent [&_.ant-upload]:border-dark-accent [&_.ant-upload]:text-text-primary hover:[&_.ant-upload]:border-primary"
-            >
-              <p className="ant-upload-drag-icon">
-                <UploadOutlined className="text-2xl text-primary" />
-              </p>
-              <p className="ant-upload-text text-text-primary">
-                Nhấp hoặc kéo thả files vào đây
-              </p>
-              <p className="ant-upload-hint text-gray-400">
-                Hỗ trợ: ZIP, PDF, Video, Image files
-              </p>
-            </Upload.Dragger>
-          </Form.Item>
 
           <Form.Item>
             <div className="flex justify-end gap-2">

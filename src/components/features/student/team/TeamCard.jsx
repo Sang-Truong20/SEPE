@@ -2,15 +2,15 @@ import {
   CrownOutlined,
   MessageOutlined,
   SettingOutlined,
-  LoadingOutlined,
 } from '@ant-design/icons';
-import { Avatar, Button, Card, Space, Spin, Tag } from 'antd';
+import dayjs from 'dayjs';
+import { Avatar, Button, Card, Space, Spin } from 'antd';
 
 const TeamCard = ({
   team,
   onViewTeam,
   onLeaveTeam,
-  onJoinTeam,
+  onJoinTeam, 
   selectedTeam,
   teamLoading,
   membersLoading,
@@ -18,110 +18,127 @@ const TeamCard = ({
   isMyTeam = false,
   isAvailableTeam = false,
   leaveTeamMutation,
-  getStatusColor,
 }) => {
+  const teamIdentifier = team.id ?? team.teamId ?? team.teamID ?? team.team?.id;
+  const leaderName =
+    team.teamLeaderName ||
+    team.leaderName ||
+    team.leader?.name ||
+    team.createdByName;
+  const memberCount = team.memberCount ?? team.members?.length ?? 0;
+  const maxMembers = team.maxMembers ?? team.maxMember ?? 5;
+  const progress = team.progress ?? team.progressPercent ?? 0;
+  const createdAt = team.createdAt
+    ? dayjs(team.createdAt).format('DD/MM/YYYY')
+    : null;
   const handleLeaveTeam = () => {
     if (onLeaveTeam) {
-      onLeaveTeam(team.id);
+      onLeaveTeam(teamIdentifier);
     }
   };
 
   const handleJoinTeam = () => {
     if (onJoinTeam) {
-      onJoinTeam(team.id);
+      onJoinTeam(teamIdentifier);
     }
   };
 
   const handleViewTeam = () => {
     if (onViewTeam) {
-      onViewTeam(team.id);
+      onViewTeam(teamIdentifier);
     }
   };
 
   return (
-    <Card className="border-0 hover:shadow-lg transition-all duration-200">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
+    <Card className="bg-darkv2-tertiary/60 border border-white/5 hover:border-green-500/40 rounded-2xl transition-all duration-200 shadow-lg/20">
+      <div className="p-6 space-y-4">
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-xl text-white">{team.teamName || team.name}</h3>
-            <p className="text-gray-400">
-              {team.hackathonName || team.hackathon || 'Hackathon'}
+            <p className="text-xs uppercase tracking-[0.3em] text-gray-400">
+              {team.hackathonName || team.hackathon || 'Chưa có hackathon'}
             </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Tag color={getStatusColor(team.status || team.teamStatus)}>
-              {(team.status || team.teamStatus || 'unknown')?.toUpperCase()}
-            </Tag>
-            {(team.isLeader || team.role === 'leader') && (
-              <CrownOutlined className="text-yellow-400" />
+            <h3 className="text-2xl font-semibold text-white">
+              {team.teamName || team.name || 'Đội chưa đặt tên'}
+            </h3>
+            {leaderName && (
+              <p className="text-sm text-gray-400 mt-1">
+                Leader:{' '}
+                <span className="text-white font-medium">{leaderName}</span>
+              </p>
+            )}
+            {createdAt && (
+              <p className="text-xs text-gray-500">Tạo ngày {createdAt}</p>
             )}
           </div>
         </div>
 
-        <div className="space-y-3 mb-4">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400">Thành viên:</span>
-            <span className="text-white">
-              {team.memberCount || team.members?.length || 0}/
-              {team.maxMembers || 5}
-            </span>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+            <p className="text-[11px] uppercase tracking-widest text-gray-400">
+              Thành viên
+            </p>
+            <p className="text-lg font-semibold text-white">
+              {memberCount}/{maxMembers}
+            </p>
+          </div>
+          <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+            <p className="text-[11px] uppercase tracking-widest text-gray-400">
+              Tiến độ
+            </p>
+            <p className="text-lg font-semibold text-white">{progress}%</p>
           </div>
           {(team.projectName || team.project) && (
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">Dự án:</span>
-              <span className="text-white">
+            <div className="bg-white/5 rounded-xl p-3 border border-white/10 md:col-span-1">
+              <p className="text-[11px] uppercase tracking-widest text-gray-400">
+                Dự án
+              </p>
+              <p className="text-sm font-medium text-white truncate">
                 {team.projectName || team.project}
-              </span>
+              </p>
             </div>
           )}
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400">Tiến độ:</span>
-            <span className="text-white">{team.progress || 0}%</span>
-          </div>
         </div>
 
-        <div className="w-full bg-gray-700/50 rounded-full h-2 mb-4 overflow-hidden">
+        <div className="w-full bg-gray-700/40 rounded-full h-2 overflow-hidden">
           <div
-            className="bg-gradient-to-r from-green-400 to-emerald-400 h-2 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${team.progress || 0}%` }}
-          ></div>
+            className="bg-gradient-to-r from-green-400 to-emerald-500 h-full transition-all duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          />
         </div>
 
-        {/* Team Members - Show loading if fetching members */}
-        {selectedTeam === team.id && membersLoading ? (
-          <div className="flex items-center justify-center mb-4">
+        {selectedTeam === teamIdentifier && membersLoading ? (
+          <div className="flex items-center justify-center py-4 text-gray-400">
             <Spin size="small" />
-            <span className="ml-2 text-gray-400">Đang tải thành viên...</span>
+            <span className="ml-2">Đang tải thành viên...</span>
           </div>
         ) : (
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between">
             <div className="flex -space-x-2">
-              {teamMembersData?.slice(0, 3).map((member) => (
+              {teamMembersData?.slice(0, 4).map((member) => (
                 <Avatar
                   key={member.id}
                   size="small"
-                  className={`border-2 border-card-background ${
+                  className={`border-2 border-darkv2-tertiary ${
                     member.status === 'active' ? '' : 'opacity-50'
                   }`}
                 >
                   {member.fullName?.charAt(0) || member.name?.charAt(0) || '?'}
                 </Avatar>
               ))}
-              {teamMembersData && teamMembersData.length > 3 && (
+              {teamMembersData && teamMembersData.length > 4 && (
                 <Avatar
                   size="small"
-                  className="border-2 border-card-background bg-primary"
+                  className="border-2 border-darkv2-tertiary bg-primary text-white"
                 >
-                  +{teamMembersData.length - 3}
+                  +{teamMembersData.length - 4}
                 </Avatar>
               )}
             </div>
-
-            <Space>
+            <Space size="small">
               <Button
                 type="text"
                 size="small"
-                className="text-white hover:text-primary"
+                className="text-gray-300 hover:text-white"
                 icon={<MessageOutlined />}
               >
                 Chat
@@ -129,36 +146,31 @@ const TeamCard = ({
               <Button
                 type="text"
                 size="small"
-                className="text-white hover:text-primary"
+                className="text-gray-300 hover:text-white"
                 icon={<SettingOutlined />}
               >
                 Cài đặt
               </Button>
+              {(team.isLeader || team.role === 'leader') && (
+                <CrownOutlined className="text-yellow-400" />
+              )}
             </Space>
           </div>
         )}
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-3 pt-2">
           <Button
-            size="small"
-            className="bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 text-white border-0"
+            size="large"
+            className="bg-green-400 hover:bg-green-500 text-white border-0 flex-1 font-semibold shadow-lg shadow-emerald-500/20"
             onClick={handleViewTeam}
-            loading={selectedTeam === team.id && teamLoading}
+            loading={selectedTeam === teamIdentifier && teamLoading}
           >
             Xem chi tiết
           </Button>
-          <Button
-            size="small"
-            variant="outline"
-            className="border-white/20 bg-white/5 hover:bg-white/10"
-          >
-            Chỉnh sửa
-          </Button>
           {isMyTeam && !team.isLeader && (
             <Button
-              size="small"
-              variant="outline"
-              className="border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-400"
+              size="middle"
+              className="border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20"
               onClick={handleLeaveTeam}
               loading={leaveTeamMutation?.isPending}
             >
@@ -167,8 +179,8 @@ const TeamCard = ({
           )}
           {isAvailableTeam && (
             <Button
-              size="small"
-              className="bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 text-white border-0"
+              size="middle"
+              className="border border-white/10 text-white hover:border-green-400/40 hover:bg-white/5"
               onClick={handleJoinTeam}
             >
               Xin gia nhập

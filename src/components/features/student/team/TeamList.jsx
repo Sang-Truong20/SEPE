@@ -14,7 +14,6 @@ const TeamList = ({
   membersLoading,
   teamMembersData,
   leaveTeamMutation,
-  getStatusColor,
   isMyTeam = false,
   isAvailableTeam = false,
   showCreateButton = false,
@@ -45,23 +44,25 @@ const TeamList = ({
             )}
           </div>
         ) : (
-          teams.map((team) => (
-            <TeamCard
-              key={team.id}
-              team={team}
-              onViewTeam={onViewTeam}
-              onLeaveTeam={onLeaveTeam}
-              onJoinTeam={onJoinTeam}
-              selectedTeam={selectedTeam}
-              teamLoading={teamLoading}
-              membersLoading={membersLoading}
-              teamMembersData={teamMembersData}
-              isMyTeam={isMyTeam}
-              isAvailableTeam={isAvailableTeam}
-              leaveTeamMutation={leaveTeamMutation}
-              getStatusColor={getStatusColor}
-            />
-          ))
+          teams.map((team) => {
+            const key = team.id ?? team.teamId ?? team.teamID ?? team.team?.id;
+            return (
+              <TeamCard
+                key={key || team.teamName}
+                team={team}
+                onViewTeam={onViewTeam}
+                onLeaveTeam={onLeaveTeam}
+                onJoinTeam={onJoinTeam}
+                selectedTeam={selectedTeam}
+                teamLoading={teamLoading}
+                membersLoading={membersLoading}
+                teamMembersData={teamMembersData}
+                isMyTeam={isMyTeam}
+                isAvailableTeam={isAvailableTeam}
+                leaveTeamMutation={leaveTeamMutation}
+              />
+            );
+          })
         )}
       </div>
     </div>

@@ -93,7 +93,11 @@ const StudentTeams = () => {
   };
 
   const handleViewTeam = (teamId) => {
-    // Navigate to team detail page
+    if (!teamId) {
+      message.error('Không xác định được đội. Vui lòng thử lại.');
+      return;
+    }
+    setSelectedTeam(teamId);
     navigate(`/student/teams/${teamId}`);
   };
 
@@ -114,19 +118,6 @@ const StudentTeams = () => {
       } else {
         message.error('Có lỗi xảy ra khi rời đội. Vui lòng thử lại.');
       }
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active':
-        return 'green';
-      case 'forming':
-        return 'blue';
-      case 'completed':
-        return 'default';
-      default:
-        return 'default';
     }
   };
 
@@ -167,7 +158,7 @@ const StudentTeams = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -197,41 +188,41 @@ const StudentTeams = () => {
         </div>
       </div>
 
-      {/* My Teams */}
-      <TeamList
-        teams={myTeams}
-        title=""
-        emptyMessage="Bạn chưa tham gia đội nào"
-        onViewTeam={handleViewTeam}
-        onLeaveTeam={handleLeaveTeam}
-        onJoinTeam={handleJoinTeam}
-        selectedTeam={selectedTeam}
-        teamLoading={teamLoading}
-        membersLoading={membersLoading}
-        teamMembersData={teamMembersData}
-        isMyTeam={true}
-        leaveTeamMutation={leaveTeamMutation}
-        getStatusColor={getStatusColor}
-        showCreateButton={true}
-        onCreateTeam={() => setIsCreateModalVisible(true)}
-      />
+      <section className="space-y-4">
+        <TeamList
+          teams={myTeams}
+          title=""
+          emptyMessage="Bạn chưa tham gia đội nào"
+          onViewTeam={handleViewTeam}
+          onLeaveTeam={handleLeaveTeam}
+          onJoinTeam={handleJoinTeam}
+          selectedTeam={selectedTeam}
+          teamLoading={teamLoading}
+          membersLoading={membersLoading}
+          teamMembersData={teamMembersData}
+          isMyTeam={true}
+          leaveTeamMutation={leaveTeamMutation}
+          showCreateButton={true}
+          onCreateTeam={() => setIsCreateModalVisible(true)}
+        />
+      </section>
 
-      {/* Available Teams */}
-      <TeamList
-        teams={availableTeams}
-        title="Đội đang tìm thành viên"
-        emptyMessage="Không có đội nào đang tìm thành viên"
-        onViewTeam={handleViewTeam}
-        onLeaveTeam={handleLeaveTeam}
-        onJoinTeam={handleJoinTeam}
-        selectedTeam={selectedTeam}
-        teamLoading={teamLoading}
-        membersLoading={membersLoading}
-        teamMembersData={teamMembersData}
-        isAvailableTeam={true}
-        leaveTeamMutation={leaveTeamMutation}
-        getStatusColor={getStatusColor}
-      />
+      <section className="space-y-4 border-t border-white/5 pt-8">
+        <TeamList
+          teams={availableTeams}
+          title="Đội đang tìm thành viên"
+          emptyMessage="Không có đội nào đang tìm thành viên"
+          onViewTeam={handleViewTeam}
+          onLeaveTeam={handleLeaveTeam}
+          onJoinTeam={handleJoinTeam}
+          selectedTeam={selectedTeam}
+          teamLoading={teamLoading}
+          membersLoading={membersLoading}
+          teamMembersData={teamMembersData}
+          isAvailableTeam={true}
+          leaveTeamMutation={leaveTeamMutation}
+        />
+      </section>
 
       {/* Create Team Modal */}
       <CreateTeamModal
