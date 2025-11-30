@@ -1,13 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axiosClient from '../../configs/axiosClient';
-
+import { message } from 'antd';
 
 export const submissionQueryKeys = {
     origin: ['student', 'submission'],
     createDraft: () => [...submissionQueryKeys.origin, 'create-draft'],
     setFinal: () => [...submissionQueryKeys.origin, 'set-final'],
     submissions: (teamId, phaseChallengeId) => [...submissionQueryKeys.origin, 'submissions', teamId, phaseChallengeId],
-
 };
 
 // Create draft submission
@@ -31,12 +30,10 @@ export const useCreateDraftSubmission = () => {
         onSuccess: (data, variables) => {
             // Invalidate and refetch submissions after creating draft
             queryClient.invalidateQueries({ queryKey: submissionQueryKeys.origin });
-
-            // Optionally cache the draft submission
-            queryClient.setQueryData(
-                submissionQueryKeys.draft(variables.teamId, variables.challengeId),
-                data
-            );
+            message.success('Đã tạo bản nháp bài nộp thành công');
+        },
+        onError: (error) => {
+            message.error(error?.response?.data?.message || 'Không thể tạo bài nộp');
         },
     });
 };
@@ -57,6 +54,10 @@ export const useSetFinalSubmission = () => {
         onSuccess: () => {
             // Invalidate and refetch all submissions after setting final
             queryClient.invalidateQueries({ queryKey: submissionQueryKeys.origin });
+            message.success('Đã nộp bài thành công');
+        },
+        onError: (error) => {
+            message.error(error?.response?.data?.message || 'Không thể nộp bài');
         },
     });
 };

@@ -1,28 +1,26 @@
 import {
-  TrophyOutlined,
-  TeamOutlined,
-  CalendarOutlined,
-  DollarOutlined,
-  UserOutlined,
-  PlusOutlined,
   ArrowLeftOutlined,
-  LoadingOutlined,
+  CalendarOutlined,
   CheckCircleOutlined,
-  CloseCircleOutlined,
   ClockCircleOutlined,
+  CloseCircleOutlined,
   SelectOutlined,
+  TeamOutlined,
+  TrophyOutlined,
+  UserOutlined
 } from '@ant-design/icons';
-import { Button, Card, Spin, Tag, Avatar, Space, Divider, Alert, Empty, Select, Modal, Form, Table, message } from 'antd';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useState } from 'react';
+import { Alert, Button, Card, Divider, Form, Modal, Select, Space, Spin, Table, Tag, message } from 'antd';
 import dayjs from 'dayjs';
-import { useGetHackathon } from '../../hooks/student/hackathon';
-import { useGetHackathonPhases } from '../../hooks/student/hackathon-phase';
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
+import { useGetHackathon } from '../../hooks/student/hackathon';
 import { useGetTeamHackathonRegistration, useRegisterTeamForHackathon, useSelectHackathonPhase, useSelectHackathonTrack } from '../../hooks/student/hackathon-registration';
-import { useGetTrackRanking } from '../../hooks/student/team-ranking';
 import { useGetTeams } from '../../hooks/student/team';
+import { useGetTrackRanking } from '../../hooks/student/team-ranking';
 import { useUserData } from '../../hooks/useUserData';
+import PrizeList from '../../components/features/student/PrizeList';
+import HackathonPhases from '../../components/features/student/HackathonPhases';
 
 const { Option } = Select;
 
@@ -30,7 +28,6 @@ const StudentHackathonDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { data: hackathon, isLoading, error } = useGetHackathon(id);
-  const { data: phases = [], isLoading: phasesLoading } = useGetHackathonPhases(id);
   const { userInfo } = useUserData();
   const { data: teamsData } = useGetTeams();
   
@@ -40,7 +37,7 @@ const StudentHackathonDetail = () => {
     : null;
   const teamId = userTeam?.id || 'team-1'; // Fallback to mock team
   
-  const { data: registration, isLoading: registrationLoading } = useGetTeamHackathonRegistration(teamId, id);
+  const { data: registration } = useGetTeamHackathonRegistration(teamId, id);
   const registerMutation = useRegisterTeamForHackathon();
   const selectPhaseMutation = useSelectHackathonPhase();
   const selectTrackMutation = useSelectHackathonTrack();
@@ -153,6 +150,7 @@ const StudentHackathonDetail = () => {
         return status?.toUpperCase() || 'UNKNOWN';
     }
   };
+
 
   if (isLoading) {
     return (
@@ -283,72 +281,9 @@ const StudentHackathonDetail = () => {
           </Card>
 
           {/* Hackathon Phases */}
-          <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">
-              Các giai đoạn của Hackathon
-            </h3>
-            {phasesLoading ? (
-              <div className="flex justify-center py-8">
-                <Spin />
-              </div>
-            ) : phases && phases.length > 0 ? (
-              <div className="space-y-3">
-                {phases.map((phase) => (
-                  <Card
-                    key={phase.phaseId}
-                    className="bg-card-background/50 border border-card-border/50"
-                    size="small"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="text-text-primary font-medium mb-2">
-                          {phase.phaseName}
-                        </h4>
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <Tag color="green" icon={<CalendarOutlined />}>
-                            Bắt đầu: {dayjs(phase.startDate).format('DD/MM/YYYY HH:mm')}
-                          </Tag>
-                          <Tag color="blue" icon={<CalendarOutlined />}>
-                            Kết thúc: {dayjs(phase.endDate).format('DD/MM/YYYY HH:mm')}
-                          </Tag>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Empty description="Chưa có giai đoạn nào" />
-            )}
-          </Card>
+          <HackathonPhases hackathonId={id} />
 
-          {/* Rules & Guidelines */}
-          <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">
-              Quy tắc & Hướng dẫn
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium text-text-primary mb-2">Điều kiện tham gia</h4>
-                <p className="text-muted-foreground">
-                  Mở cho sinh viên, chuyên gia và những người đam mê trên toàn thế giới.
-                  Nhóm từ 2-5 thành viên.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-medium text-text-primary mb-2">Thời gian</h4>
-                <p className="text-muted-foreground">
-                  Thời gian phát triển sẽ được thông báo cụ thể sau khi đăng ký thành công.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-medium text-text-primary mb-2">Tiêu chí chấm điểm</h4>
-                <p className="text-muted-foreground">
-                  Sáng tạo (30%), Triển khai kỹ thuật (25%), Thiết kế (20%), Thuyết trình (25%)
-                </p>
-              </div>
-            </div>
-          </Card>
+       
         </div>
 
         {/* Sidebar */}
@@ -452,6 +387,14 @@ const StudentHackathonDetail = () => {
                 Thêm vào lịch
               </Button>
             </Space>
+          </Card>
+
+          {/* Prizes Card */}
+          <Card className="bg-card-background border border-card-border backdrop-blur-xl">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">
+              Giải thưởng
+            </h3>
+            <PrizeList hackathonId={id} />
           </Card>
 
           {/* Sponsors/Partners Card */}

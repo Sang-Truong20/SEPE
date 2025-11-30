@@ -82,15 +82,16 @@ const StudentLayout = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   // Use mock data for UI preview - comment out when API is ready
-  const { data: notifications = mockNotifications, isLoading: notificationsLoading } = useGetNotifications();
+  const { data: notificationsData, isLoading: notificationsLoading } = useGetNotifications();
   // Uncomment below and remove mockNotifications when API is ready:
   // const { data: notifications = [], isLoading: notificationsLoading } = useGetNotifications();
+  const notifications = Array.isArray(notificationsData) ? notificationsData : mockNotifications;
   const { data: unreadCountData = { count: mockNotifications.filter((n) => !n.isRead).length } } = useGetUnreadCount();
   const unreadCount = unreadCountData?.count || mockNotifications.filter((n) => !n.isRead).length;
   const markAsRead = useMarkAsRead();
   const { userInfo: authUser } = useUserData();
 
-  const recentNotifications = notifications.slice(0, 5);
+  const recentNotifications = Array.isArray(notifications) ? notifications.slice(0, 5) : [];
 
   const userData = {
     name: authUser?.fullName || authUser?.name || '',
