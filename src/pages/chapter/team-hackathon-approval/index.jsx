@@ -1,36 +1,29 @@
 import {
-  TeamOutlined,
-  SearchOutlined,
-  TrophyOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-  MailOutlined,
   ArrowLeftOutlined,
-  EyeOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CloseCircleOutlined,
+  SearchOutlined,
+  TeamOutlined
 } from '@ant-design/icons';
 import {
-  Card,
-  Button,
-  Input,
-  Select,
-  Badge,
-  Tag,
   Avatar,
-  Modal,
-  Table,
-  Space,
+  Button,
+  Card,
+  Input,
   message,
+  Modal,
+  Space,
   Spin,
-  Empty,
+  Table,
+  Tag
 } from 'antd';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../../constants';
 import {
-  useGetPendingTeamHackathonApprovals,
   useApproveTeamHackathon,
+  useGetPendingTeamHackathonApprovals,
   useRejectTeamHackathon,
 } from '../../../hooks/chapter/useTeamHackathonApproval';
 

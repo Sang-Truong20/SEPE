@@ -37,6 +37,7 @@ import { useGetTeamPenalties, useAppealTeamPenalty } from '../../hooks/student/t
 import { useUserData } from '../../hooks/useUserData';
 import { useGetSubmissionsByTeam } from '../../hooks/student/submission';
 import { useInviteTeamMember } from '../../hooks/student/team-invitation';
+import { useGetTeamMembers } from '../../hooks/student/team-member';
 import { Table, Tooltip, Button as AntButton } from 'antd';
 import { EyeOutlined, DownloadOutlined, FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -54,7 +55,6 @@ const mapApiTeamToView = (apiTeam) => {
     leaderName: apiTeam.teamLeaderName || apiTeam.leaderName,
     chapterName: apiTeam.chapterName,
     createdAt: apiTeam.createdAt,
-    members: apiTeam.members || [],
     tasks: apiTeam.tasks || [],
   };
 };
@@ -77,6 +77,30 @@ const MyTeamPage = () => {
   
   // Invite team member hook
   const inviteMemberMutation = useInviteTeamMember();
+  
+  // Get team members from API
+  const { data: teamMembersResponse, isLoading: membersLoading } = useGetTeamMembers(id, {
+    enabled: !!id,
+  });
+  
+  // Extract members array from API response
+  const apiMembers = Array.isArray(teamMembersResponse?.data) 
+    ? teamMembersResponse.data 
+    : Array.isArray(teamMembersResponse)
+      ? teamMembersResponse
+      : [];
+  
+  // Map API members to component format
+  const members = apiMembers.map((member) => ({
+    id: member.userId,
+    userId: member.userId,
+    name: member.userName || member.name,
+    email: member.email,
+    role: member.roleInTeam === 'TeamLeader' ? 'Trưởng nhóm' : 'Thành viên',
+    isLeader: member.roleInTeam === 'TeamLeader',
+    status: 'confirmed', // API doesn't provide status, assume confirmed
+    avatar: (member.userName || member.name || member.email || 'U').charAt(0).toUpperCase(),
+  }));
 
   useEffect(() => {
     if (apiTeam) {
@@ -89,8 +113,13 @@ const MyTeamPage = () => {
 
   // Get current user from auth context
   const { userInfo } = useUserData();
-  const currentUserId = userInfo?.id || userInfo?.userId || 'user-1';
-  const isLeader = teamData?.leaderId === currentUserId;
+  const currentUserId = userInfo?.id || userInfo?.userId;
+  const currentUserName = userInfo?.name || userInfo?.fullName || userInfo?.userName;
+  // Check if user is leader by comparing userId or userName with members
+  const isLeader = members.some(m => 
+    (m.userId === currentUserId || m.id === currentUserId) && m.isLeader
+  ) || (teamData?.leaderId === currentUserId) || 
+  (teamData?.leaderName && currentUserName && teamData.leaderName === currentUserName);
 
   // Member approval hooks
   const { data: pendingMembers = [] } = useGetPendingMembers(id, {
@@ -353,7 +382,7 @@ const MyTeamPage = () => {
     );
   }
 
-  const members = teamData.members || [];
+  // Members are now fetched separately via useGetTeamMembers hook above
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -524,8 +553,14 @@ const MyTeamPage = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {members.map((member) => {
+            {membersLoading ? (
+              <div className="text-center py-8">
+                <Spin size="large" />
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {members.map((member) => {
                 const isMemberLeader =
                   member.isLeader ||
                   member.id === teamData.leaderId ||
@@ -653,13 +688,15 @@ const MyTeamPage = () => {
                   </Card>
                 );
               })}
-            </div>
+                </div>
 
-            {members.length === 0 && (
-              <div className="text-center py-12">
-                <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">Chưa có thành viên nào</p>
-              </div>
+                {members.length === 0 && (
+                  <div className="text-center py-12">
+                    <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400">Chưa có thành viên nào</p>
+                  </div>
+                )}
+              </>
             )}
           </Card>
         </TabPane>
