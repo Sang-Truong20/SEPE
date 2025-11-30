@@ -1,4 +1,5 @@
-import { Button, Form, Input, Modal, Select } from 'antd';
+import { Button, Form, Input, Modal, Select, Spin } from 'antd';
+import { useGetChapters } from '../../../../hooks/student/chapter';
 
 const { Option } = Select;
 
@@ -9,6 +10,8 @@ const CreateTeamModal = ({
   loading = false,
   form,
 }) => {
+  const { data: chapters = [], isLoading: chaptersLoading } = useGetChapters();
+
   return (
     <Modal
       title="Tạo đội mới"
@@ -19,48 +22,31 @@ const CreateTeamModal = ({
     >
       <Form form={form} onFinish={onSubmit} layout="vertical">
         <Form.Item
-          label="Tên đội"
-          name="name"
+          label={<span className="text-white">Tên đội</span>}
+          name="teamName"
           rules={[{ required: true, message: 'Vui lòng nhập tên đội!' }]}
         >
           <Input placeholder="Nhập tên đội của bạn" />
         </Form.Item>
 
         <Form.Item
-          label="Hackathon"
-          name="hackathon"
-          rules={[{ required: true, message: 'Vui lòng chọn hackathon!' }]}
+          label={<span className="text-white">Chapter</span>}
+          name="chapterId"
+          rules={[{ required: true, message: 'Vui lòng chọn chapter!' }]}
         >
-          <Select placeholder="Chọn hackathon">
-            <Option value="ai-revolution">AI Revolution 2024</Option>
-            <Option value="web3-hackathon">Web3 Future Hackathon</Option>
-            <Option value="green-tech">Green Tech Challenge</Option>
-          </Select>
-        </Form.Item>
-
-        <Form.Item label="Mô tả đội" name="description">
-          <Input.TextArea
-            rows={3}
-            placeholder="Mô tả về đội và dự án của bạn..."
-          />
-        </Form.Item>
-
-        <Form.Item label="Kỹ năng cần thiết" name="skills">
-          <Select
-            mode="multiple"
-            placeholder="Chọn các kỹ năng cần thiết"
-            style={{ width: '100%' }}
+          <Select 
+            placeholder="Chọn chapter"
+            loading={chaptersLoading}
+            notFoundContent={chaptersLoading ? <Spin size="small" /> : 'Không có chapter nào'}
           >
-            <Option value="python">Python</Option>
-            <Option value="javascript">JavaScript</Option>
-            <Option value="react">React</Option>
-            <Option value="nodejs">Node.js</Option>
-            <Option value="machine-learning">Machine Learning</Option>
-            <Option value="blockchain">Blockchain</Option>
-            <Option value="mobile">Mobile Development</Option>
-            <Option value="ui/ux">UI/UX Design</Option>
+            {chapters.map((chapter) => (
+              <Option key={chapter.chapterId || chapter.id} value={chapter.chapterId || chapter.id}>
+                {chapter.chapterName || chapter.name}
+              </Option>
+            ))}
           </Select>
         </Form.Item>
+
 
         <Form.Item>
           <div className="flex justify-end gap-2">

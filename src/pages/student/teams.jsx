@@ -55,9 +55,8 @@ const StudentTeams = () => {
   const handleCreateTeam = async (values) => {
     try {
       await createTeamMutation.mutateAsync({
-        teamName: values.name,
-        chapterId: values.hackathon, // Assuming hackathon ID is used as chapterId
-        leaderId: 'current-user-id', // This should come from auth context
+        teamName: values.teamName,
+        chapterId: values.chapterId,
       });
       message.success('Đội đã được tạo thành công!');
       setIsCreateModalVisible(false);
