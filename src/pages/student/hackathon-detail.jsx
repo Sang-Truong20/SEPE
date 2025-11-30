@@ -4,25 +4,21 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
-  SelectOutlined,
   TeamOutlined,
   TrophyOutlined,
   UserOutlined
 } from '@ant-design/icons';
-import { Alert, Button, Card, Divider, Form, Modal, Select, Space, Spin, Table, Tag, message } from 'antd';
-import dayjs from 'dayjs';
+import { Alert, Button, Card, Divider, Modal, Space, Spin, Table, Tag } from 'antd';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import HackathonPhases from '../../components/features/student/HackathonPhases';
+import PrizeList from '../../components/features/student/PrizeList';
 import { PATH_NAME } from '../../constants';
 import { useGetHackathon } from '../../hooks/student/hackathon';
-import { useGetTeamHackathonRegistration, useRegisterTeamForHackathon, useSelectHackathonPhase, useSelectHackathonTrack } from '../../hooks/student/hackathon-registration';
+import { useGetTeamHackathonRegistration, useRegisterHackathon } from '../../hooks/student/hackathon-registration';
 import { useGetTeams } from '../../hooks/student/team';
 import { useGetTrackRanking } from '../../hooks/student/team-ranking';
 import { useUserData } from '../../hooks/useUserData';
-import PrizeList from '../../components/features/student/PrizeList';
-import HackathonPhases from '../../components/features/student/HackathonPhases';
-
-const { Option } = Select;
 
 const StudentHackathonDetail = () => {
   const navigate = useNavigate();
@@ -31,21 +27,19 @@ const StudentHackathonDetail = () => {
   const { userInfo } = useUserData();
   const { data: teamsData } = useGetTeams();
   
-  // Get user's team (assuming user is leader of one team)
   const userTeam = teamsData && Array.isArray(teamsData) 
-    ? teamsData.find(t => t.leaderId === (userInfo?.id || userInfo?.userId))
+    ? teamsData.find(t => {
+        const teamLeaderName = t.teamLeaderName || t.leaderName || t.leader?.name;
+        const userName = userInfo?.name || userInfo?.fullName || userInfo?.userName;
+        return teamLeaderName && userName && teamLeaderName === userName;
+      })
     : null;
-  const teamId = userTeam?.id || 'team-1'; // Fallback to mock team
   
-  const { data: registration } = useGetTeamHackathonRegistration(teamId, id);
-  const registerMutation = useRegisterTeamForHackathon();
-  const selectPhaseMutation = useSelectHackathonPhase();
-  const selectTrackMutation = useSelectHackathonTrack();
+  const { data: registration } = useGetTeamHackathonRegistration(id);
+  const registerMutation = useRegisterHackathon();
   
-  const [phaseTrackModalVisible, setPhaseTrackModalVisible] = useState(false);
   const [rankingModalVisible, setRankingModalVisible] = useState(false);
   const [selectedPhaseId, setSelectedPhaseId] = useState(null);
-  const [form] = Form.useForm();
   
   // Get ranking data when phase is selected
   const { data: rankingData = [] } = useGetTrackRanking(
@@ -55,46 +49,20 @@ const StudentHackathonDetail = () => {
     { enabled: !!registration?.selectedTrackId && (!!selectedPhaseId || !!registration?.selectedPhaseId) }
   );
 
-  const handleJoinHackathon = async () => {
-    if (!userTeam) {
-      message.warning('Bạn cần tạo đội trước khi đăng ký hackathon');
-      navigate(PATH_NAME.STUDENT_TEAMS);
-      return;
-    }
-    
-    if (registration?.status === 'approved') {
-      message.info('Đội đã được duyệt tham gia hackathon này');
-      return;
-    }
-    
-    if (registration?.status === 'pending') {
-      message.info('Đang chờ chapter duyệt đăng ký');
-      return;
-    }
-    
-    try {
-      await registerMutation.mutateAsync({ teamId, hackathonId: id });
-    } catch (error) {
-      console.error('Register hackathon error:', error);
-    }
-  };
-
   const handleBack = () => {
     navigate(PATH_NAME.STUDENT_HACKATHONS);
   };
 
-  const handleSelectPhaseTrack = async (values) => {
+  const handleRegisterHackathon = async () => {
+
+    
     try {
-      if (values.phaseId) {
-        await selectPhaseMutation.mutateAsync({ teamId, hackathonId: id, phaseId: values.phaseId });
-      }
-      if (values.trackId) {
-        await selectTrackMutation.mutateAsync({ teamId, hackathonId: id, trackId: values.trackId });
-      }
-      setPhaseTrackModalVisible(false);
-      form.resetFields();
+      await registerMutation.mutateAsync({ 
+        hackathonId: parseInt(id), 
+        link: '' // Có thể thêm input cho link nếu cần
+      });
     } catch (error) {
-      console.error('Select phase/track error:', error);
+      console.error('Register hackathon error:', error);
     }
   };
 
@@ -305,12 +273,12 @@ const StudentHackathonDetail = () => {
                 </div>
               )}
               
-              {(!registration || registration.status !== 'approved') && (
+              {/* {(!registration || registration.status !== 'approved') && userTeam && ( */}
                 <Button
                   type="primary"
                   size="large"
                   icon={<TeamOutlined />}
-                  onClick={handleJoinHackathon}
+                  onClick={handleRegisterHackathon}
                   className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
                   disabled={hackathon.status?.toLowerCase() === 'completed' || registerMutation.isPending}
                   loading={registerMutation.isPending}
@@ -321,49 +289,29 @@ const StudentHackathonDetail = () => {
                     ? 'Đã kết thúc' 
                     : 'Đăng ký Hackathon'}
                 </Button>
-              )}
+              {/* )} */}
 
-              {registration?.status === 'approved' && userTeam && (
+              {registration?.status === 'approved' && registration.selectedPhaseId && registration.selectedTrackId && (
                 <>
                   <Button
-                    type="primary"
                     size="large"
-                    icon={<SelectOutlined />}
+                    icon={<TrophyOutlined />}
                     onClick={() => {
-                      form.setFieldsValue({
-                        phaseId: registration.selectedPhaseId,
-                        trackId: registration.selectedTrackId,
-                      });
-                      setPhaseTrackModalVisible(true);
+                      setSelectedPhaseId(registration.selectedPhaseId);
+                      setRankingModalVisible(true);
                     }}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 text-white border-0"
+                    className="w-full"
                   >
-                    Chọn Phase & Track
+                    Xem bảng xếp hạng
                   </Button>
-                  
-                  {registration.selectedPhaseId && registration.selectedTrackId && (
-                    <>
-                      <Button
-                        size="large"
-                        icon={<TrophyOutlined />}
-                        onClick={() => {
-                          setSelectedPhaseId(registration.selectedPhaseId);
-                          setRankingModalVisible(true);
-                        }}
-                        className="w-full"
-                      >
-                        Xem bảng xếp hạng
-                      </Button>
-                      <Button
-                        size="large"
-                        icon={<UserOutlined />}
-                        onClick={() => navigate(`/student/hackathons/${id}/mentor-registration`)}
-                        className="w-full"
-                      >
-                        Đăng ký Mentor
-                      </Button>
-                    </>
-                  )}
+                  <Button
+                    size="large"
+                    icon={<UserOutlined />}
+                    onClick={() => navigate(`/student/hackathons/${id}/mentor-registration`)}
+                    className="w-full"
+                  >
+                    Đăng ký Mentor
+                  </Button>
                 </>
               )}
 
@@ -379,13 +327,7 @@ const StudentHackathonDetail = () => {
                 </Button>
               )}
 
-              <Button
-                size="large"
-                className="w-full"
-                disabled={hackathon.status?.toLowerCase() === 'completed'}
-              >
-                Thêm vào lịch
-              </Button>
+             
             </Space>
           </Card>
 
@@ -416,67 +358,6 @@ const StudentHackathonDetail = () => {
           </Card>
         </div>
       </div>
-
-      {/* Phase & Track Selection Modal */}
-      <Modal
-        title="Chọn Phase và Track"
-        open={phaseTrackModalVisible}
-        onCancel={() => {
-          setPhaseTrackModalVisible(false);
-          form.resetFields();
-        }}
-        footer={null}
-        className="[&_.ant-modal-content]:bg-gray-900/95 [&_.ant-modal-content]:backdrop-blur-xl [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white [&_.ant-modal-mask]:bg-black/50"
-      >
-        <Form form={form} onFinish={handleSelectPhaseTrack} layout="vertical">
-          <Form.Item
-            label={<span className="text-white">Chọn Phase</span>}
-            name="phaseId"
-            rules={[{ required: true, message: 'Vui lòng chọn phase!' }]}
-          >
-            <Select placeholder="Chọn phase">
-              {registration?.phases?.map((phase) => (
-                <Option key={phase.id} value={phase.id}>
-                  {phase.name} ({dayjs(phase.startDate).format('DD/MM/YYYY')} - {dayjs(phase.endDate).format('DD/MM/YYYY')})
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            label={<span className="text-white">Chọn Track</span>}
-            name="trackId"
-            rules={[{ required: true, message: 'Vui lòng chọn track!' }]}
-          >
-            <Select placeholder="Chọn track">
-              {registration?.tracks?.map((track) => (
-                <Option key={track.id} value={track.id}>
-                  {track.name} - {track.description}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item>
-            <div className="flex justify-end gap-2">
-              <Button onClick={() => {
-                setPhaseTrackModalVisible(false);
-                form.resetFields();
-              }}>
-                Hủy
-              </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={selectPhaseMutation.isPending || selectTrackMutation.isPending}
-                className="bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 border-0"
-              >
-                Xác nhận
-              </Button>
-            </div>
-          </Form.Item>
-        </Form>
-      </Modal>
 
       {/* Ranking Modal */}
       <Modal

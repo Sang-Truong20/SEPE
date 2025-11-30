@@ -1,18 +1,16 @@
 import {
-  UserOutlined,
   ArrowLeftOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
-  SearchOutlined,
-  TrophyOutlined,
+  UserOutlined
 } from '@ant-design/icons';
-import { Button, Card, Spin, Tag, Avatar, Space, Divider, Alert, Empty, Select, Form, Input, message, Table } from 'antd';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Alert, Avatar, Button, Card, Empty, Form, Input, Select, Spin, Table, Tag } from 'antd';
 import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
-import { useGetTeamMentor, useGetAvailableMentors, useRegisterMentor } from '../../hooks/student/mentor-registration';
 import { useGetTeamHackathonRegistration } from '../../hooks/student/hackathon-registration';
+import { useGetAvailableMentors, useGetTeamMentor, useRegisterMentor } from '../../hooks/student/mentor-registration';
 import { useGetTeams } from '../../hooks/student/team';
 import { useUserData } from '../../hooks/useUserData';
 
@@ -31,8 +29,8 @@ const MentorRegistration = () => {
     : null;
   const teamId = userTeam?.id || 'team-1';
   
-  const { data: registration } = useGetTeamHackathonRegistration(teamId, hackathonId);
-  const { data: teamMentor, isLoading: mentorLoading } = useGetTeamMentor(teamId, hackathonId);
+  const { data: registration } = useGetTeamHackathonRegistration(hackathonId);
+  const { data: teamMentor } = useGetTeamMentor(teamId, hackathonId);
   const { data: availableMentors = [], isLoading: mentorsLoading } = useGetAvailableMentors(hackathonId);
   const registerMentorMutation = useRegisterMentor();
   

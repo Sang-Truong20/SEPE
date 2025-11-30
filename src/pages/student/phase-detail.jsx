@@ -10,7 +10,7 @@ import {
 } from '../../components/features/student/phase-detail';
 import { useGetHackathon } from '../../hooks/student/hackathon';
 import { useGetHackathonPhases } from '../../hooks/student/hackathon-phase';
-import { useGetTeamHackathonRegistration, useSelectHackathonPhase } from '../../hooks/student/hackathon-registration';
+import { useGetTeamHackathonRegistration } from '../../hooks/student/hackathon-registration';
 import { useGetTeams } from '../../hooks/student/team';
 import { useSelectTeamTrack } from '../../hooks/student/team-track';
 import { useGetTracks } from '../../hooks/student/track';
@@ -32,7 +32,7 @@ const StudentPhaseDetail = () => {
     : null;
   const teamId = userTeam?.id || 'team-1';
   
-  const { data: registration } = useGetTeamHackathonRegistration(teamId, hackathonId);
+  const { data: registration } = useGetTeamHackathonRegistration(hackathonId);
   const { data: allTracks = [], isLoading: tracksLoading } = useGetTracks();
   // Filter tracks by phaseId - ensure both are numbers for comparison
   const currentPhaseId = parseInt(phaseId);
@@ -40,7 +40,6 @@ const StudentPhaseDetail = () => {
     const trackPhaseId = typeof track.phaseId === 'string' ? parseInt(track.phaseId) : track.phaseId;
     return trackPhaseId === currentPhaseId;
   });
-  const selectPhaseMutation = useSelectHackathonPhase();
   const selectTeamTrackMutation = useSelectTeamTrack();
   
   const [form] = Form.useForm();
@@ -63,9 +62,6 @@ const StudentPhaseDetail = () => {
 
   const handleSelectTrack = async (values) => {
     try {
-      if (phaseId && !registration?.selectedPhaseId) {
-        await selectPhaseMutation.mutateAsync({ teamId, hackathonId, phaseId: parseInt(phaseId) });
-      }
       if (values.trackId) {
         await selectTeamTrackMutation.mutateAsync({ 
           teamId, 

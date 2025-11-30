@@ -4,115 +4,51 @@ import { message } from 'antd';
 
 export const hackathonRegistrationQueryKeys = {
     origin: ['student', 'hackathon-registration'],
-    teamRegistration: (teamId, hackathonId) => [
+    registration: (hackathonId) => [
         ...hackathonRegistrationQueryKeys.origin, 
-        'team', 
-        teamId, 
         'hackathon', 
         hackathonId
     ],
     register: () => [...hackathonRegistrationQueryKeys.origin, 'register'],
-    selectPhase: () => [...hackathonRegistrationQueryKeys.origin, 'select-phase'],
-    selectTrack: () => [...hackathonRegistrationQueryKeys.origin, 'select-track'],
 };
 
-// Get team hackathon registration
-export const useGetTeamHackathonRegistration = (teamId, hackathonId, options = {}) => {
+// Get hackathon registration
+export const useGetTeamHackathonRegistration = (hackathonId) => {
     return useQuery({
-        queryKey: hackathonRegistrationQueryKeys.teamRegistration(teamId, hackathonId),
+        queryKey: hackathonRegistrationQueryKeys.registration(hackathonId),
         queryFn: async () => {
-            const response = await axiosClient.get(`/TeamHackathonRegistration/team/${teamId}/hackathon/${hackathonId}`);
+            const response = await axiosClient.get(`/HackathonRegistration/${hackathonId}`);
             return response.data;
         },
-        enabled: !!teamId && !!hackathonId && (options.enabled !== false),
+        enabled: !!hackathonId,
         staleTime: 2 * 60 * 1000, // 2 minutes
-        ...options,
     });
 };
 
-// Register team for hackathon
-export const useRegisterTeamForHackathon = () => {
+// Register for hackathon
+export const useRegisterHackathon = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationKey: hackathonRegistrationQueryKeys.register(),
-        mutationFn: async ({ teamId, hackathonId }) => {
-            const response = await axiosClient.post('/TeamHackathonRegistration', {
-                teamId,
+        mutationFn: async ({ hackathonId, link }) => {
+            const response = await axiosClient.post('/HackathonRegistration/register', {
                 hackathonId,
+                link,
             });
             return response.data;
         },
-        onSuccess: (data, variables) => {
-            queryClient.invalidateQueries({ 
-                queryKey: hackathonRegistrationQueryKeys.teamRegistration(
-                    variables.teamId, 
-                    variables.hackathonId
-                ) 
-            });
-            message.success('Đã đăng ký hackathon thành công. Đang chờ chapter duyệt.');
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: hackathonRegistrationQueryKeys.origin });
+            message.success('Đăng ký hackathon thành công!');
         },
         onError: (error) => {
-            message.error(error?.response?.data?.message || 'Không thể đăng ký hackathon');
+            message.error(error?.response?.data?.message || 'Không thể đăng ký hackathon. Vui lòng thử lại.');
         },
     });
 };
 
-// Select phase for team
-export const useSelectHackathonPhase = () => {
-    const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationKey: hackathonRegistrationQueryKeys.selectPhase(),
-        mutationFn: async ({ teamId, hackathonId, phaseId }) => {
-            const response = await axiosClient.post(`/TeamHackathonRegistration/select-phase`, {
-                teamId,
-                hackathonId,
-                phaseId,
-            });
-            return response.data;
-        },
-        onSuccess: (data, variables) => {
-            queryClient.invalidateQueries({ 
-                queryKey: hackathonRegistrationQueryKeys.teamRegistration(
-                    variables.teamId, 
-                    variables.hackathonId
-                ) 
-            });
-            message.success('Đã chọn giai đoạn thành công');
-        },
-        onError: (error) => {
-            message.error(error?.response?.data?.message || 'Không thể chọn giai đoạn');
-        },
-    });
-};
 
-// Select track for team
-export const useSelectHackathonTrack = () => {
-    const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationKey: hackathonRegistrationQueryKeys.selectTrack(),
-        mutationFn: async ({ teamId, hackathonId, trackId }) => {
-            const response = await axiosClient.post(`/TeamHackathonRegistration/select-track`, {
-                teamId,
-                hackathonId,
-                trackId,
-            });
-            return response.data;
-        },
-        onSuccess: (data, variables) => {
-            queryClient.invalidateQueries({ 
-                queryKey: hackathonRegistrationQueryKeys.teamRegistration(
-                    variables.teamId, 
-                    variables.hackathonId
-                ) 
-            });
-            message.success('Đã chọn track thành công');
-        },
-        onError: (error) => {
-            message.error(error?.response?.data?.message || 'Không thể chọn track');
-        },
-    });
-};
 
