@@ -20,6 +20,7 @@ const PATH_NAME = {
   STUDENT_PROFILE: '/student/profile',
   STUDENT_LEADERBOARD: '/student/leaderboard',
   STUDENT_NOTIFICATIONS: '/student/notifications',
+  STUDENT_PHASE_DETAIL: '/student/hackathons/:hackathonId/phases/:phaseId',
   USER_INFO: '/user/profile',
   ADMIN_CHALLENGES: '/admin/challenges',
   ADMIN_TRACKS: '/admin/tracks',

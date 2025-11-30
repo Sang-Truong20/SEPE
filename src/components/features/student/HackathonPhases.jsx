@@ -1,9 +1,11 @@
 import { CalendarOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { Card, Empty, Spin, Tag } from 'antd';
 import dayjs from 'dayjs';
+import { useNavigate } from 'react-router-dom';
 import { useGetHackathonPhases } from '../../../hooks/student/hackathon-phase';
 
 const HackathonPhases = ({ hackathonId }) => {
+  const navigate = useNavigate();
   const { data: phases = [], isLoading: phasesLoading } = useGetHackathonPhases(hackathonId);
 
   const getPhaseStatus = (phase) => {
@@ -20,6 +22,14 @@ const HackathonPhases = ({ hackathonId }) => {
     }
   };
 
+  const handlePhaseClick = (phase) => {
+    const phaseStatus = getPhaseStatus(phase);
+    // Chỉ cho phép click vào phase đang diễn ra
+    if (phaseStatus.status === 'active') {
+      navigate(`/student/hackathons/${hackathonId}/phases/${phase.phaseId}`);
+    }
+  };
+
   return (
     <Card className="bg-card-background border border-card-border backdrop-blur-xl">
       <h3 className="text-lg font-semibold text-text-primary mb-4">
@@ -33,11 +43,15 @@ const HackathonPhases = ({ hackathonId }) => {
         <div className="space-y-3">
           {phases.map((phase) => {
             const phaseStatus = getPhaseStatus(phase);
+            const isActive = phaseStatus.status === 'active';
             return (
               <Card
                 key={phase.phaseId}
-                className="bg-card-background/50 border border-card-border/50"
+                className={`bg-card-background/50 border border-card-border/50 ${
+                  isActive ? 'cursor-pointer hover:bg-card-background/70 hover:border-primary/50 transition-all' : 'opacity-60'
+                }`}
                 size="small"
+                onClick={() => handlePhaseClick(phase)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">

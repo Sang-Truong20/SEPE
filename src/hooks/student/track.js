@@ -4,6 +4,7 @@ import { useGetChallenge } from './challenge';
 
 export const trackQueryKeys = {
     origin: ['student', 'track'],
+    tracks: () => [...trackQueryKeys.origin, 'list'],
     track: (trackId) => [...trackQueryKeys.origin, 'detail', trackId],
     trackCriteria: (trackId, phaseId) => [...trackQueryKeys.origin, 'criteria', trackId, phaseId],
 };
@@ -62,4 +63,14 @@ export const useGetTrackWithDetails = (trackId, phaseId, options = {}) => {
         criteria,
         isLoading: trackLoading || challengeLoading || criteriaLoading,
     };
+};
+
+export const useGetTracks = () => {
+    return useQuery({
+        queryKey: trackQueryKeys.tracks(),
+        queryFn: async () => {
+            const response = await axiosClient.get('/Track');
+            return response.data;
+        },
+    });
 };

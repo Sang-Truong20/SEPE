@@ -55,6 +55,7 @@ const StudentProfilePage = lazy(() => import('../pages/student/profile'));
 const StudentLeaderboardPage = lazy(() => import('../pages/student/leaderboard'));
 const StudentNotificationsPage = lazy(() => import('../pages/student/notifications'));
 const StudentMentorRegistrationPage = lazy(() => import('../pages/student/mentor-registration'));
+const StudentPhaseDetailPage = lazy(() => import('../pages/student/phase-detail'));
 
 const ChapterDashboardPage = lazy(() => import('../pages/chapter/dashboard'));
 const ChapterVerifyStudentsPage = lazy(() => import('../pages/chapter/verify-students'));
@@ -305,6 +306,10 @@ const router = createBrowserRouter([
           {
             path: 'hackathons/:hackathonId/mentor-registration',
             element: withSuspense(StudentMentorRegistrationPage),
+          },
+          {
+            path: 'hackathons/:hackathonId/phases/:phaseId',
+            element: withSuspense(StudentPhaseDetailPage),
           },
           { path: 'teams', element: withSuspense(StudentTeamsPage) },
           { path: 'teams/:id', element: withSuspense(StudentMyTeamPage) },
