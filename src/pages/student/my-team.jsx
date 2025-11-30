@@ -23,7 +23,6 @@ import {
   XCircle,
   CheckCircle,
   Clock,
-  Code,
   Users,
   AlertTriangle,
   X,
@@ -36,193 +35,12 @@ import { useGetTeam } from '../../hooks/student/team';
 import { useGetPendingMembers, useApproveTeamMember, useRejectTeamMember } from '../../hooks/student/team-member-approval';
 import { useGetTeamPenalties, useAppealTeamPenalty } from '../../hooks/student/team-penalty';
 import { useUserData } from '../../hooks/useUserData';
+import { useGetSubmissionsByTeam } from '../../hooks/student/submission';
+import { Table, Tooltip, Button as AntButton } from 'antd';
+import { EyeOutlined, DownloadOutlined, FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 
 const { TabPane } = Tabs;
-
-// ============================================
-// MOCK DATA - NO API CALLS
-// This page uses mock data for testing purposes
-// Replace getTeamById() and mock functions with real API calls when backend is ready
-// ============================================
-
-// Mock data - multiple teams for testing
-const mockTeamsData = {
-  'team-1': {
-    id: 'team-1',
-    teamName: 'Chiến binh Code',
-    description: 'Đội thi chuyên về phát triển ứng dụng AI và Machine Learning',
-    hackathon: 'Cuộc Cách mạng AI 2024',
-    leaderId: 'user-1',
-    members: [
-      {
-        id: 1,
-        userId: 'user-1',
-        name: 'Nguyễn Việt Anh',
-        email: 'anh@example.com',
-        role: 'Trưởng nhóm',
-        skills: ['React', 'Node.js', 'AI/ML'],
-        avatar: 'NVA',
-        status: 'confirmed',
-        github: 'https://github.com/nguyenvietanh',
-        linkedin: 'https://linkedin.com/in/nguyenvietanh',
-        isLeader: true,
-        penalty: null,
-      },
-      {
-        id: 2,
-        userId: 'user-2',
-        name: 'Trần Thị Lan',
-        email: 'lan@example.com',
-        role: 'Thiết kế UI/UX',
-        skills: ['Figma', 'CSS', 'Design Systems'],
-        avatar: 'TTL',
-        status: 'confirmed',
-        github: 'https://github.com/tranthilan',
-        linkedin: 'https://linkedin.com/in/tranthilan',
-        isLeader: false,
-        penalty: null,
-      },
-      {
-        id: 3,
-        userId: 'user-3',
-        name: 'Lê Minh Đức',
-        email: 'duc@example.com',
-        role: 'Lập trình Backend',
-        skills: ['Python', 'FastAPI', 'PostgreSQL'],
-        avatar: 'LMD',
-        status: 'pending',
-        github: 'https://github.com/leminhduc',
-        linkedin: 'https://linkedin.com/in/leminhduc',
-        isLeader: false,
-        penalty: null,
-      },
-      {
-        id: 4,
-        userId: 'user-4',
-        name: 'Phạm Văn Hải',
-        email: 'hai@example.com',
-        role: 'Lập trình Frontend',
-        skills: ['Vue.js', 'TypeScript'],
-        avatar: 'PVH',
-        status: 'confirmed',
-        github: 'https://github.com/phamvanhai',
-        linkedin: 'https://linkedin.com/in/phamvanhai',
-        isLeader: false,
-        penalty: {
-          type: 'abandonment',
-          reason: 'Bỏ thi giữa chừng trong hackathon trước',
-          date: '2024-10-15',
-          severity: 'medium',
-        },
-      },
-    ],
-    tasks: [
-      {
-        id: 1,
-        title: 'Thiết lập repository dự án',
-        assignee: 'Nguyễn Việt Anh',
-        status: 'completed',
-        priority: 'high',
-      },
-      {
-        id: 2,
-        title: 'Thiết kế mockup giao diện người dùng',
-        assignee: 'Trần Thị Lan',
-        status: 'in-progress',
-        priority: 'high',
-      },
-      {
-        id: 3,
-        title: 'Triển khai hệ thống xác thực',
-        assignee: 'Lê Minh Đức',
-        status: 'todo',
-        priority: 'medium',
-      },
-      {
-        id: 4,
-        title: 'Tích hợp API mô hình AI',
-        assignee: 'Nguyễn Việt Anh',
-        status: 'todo',
-        priority: 'high',
-      },
-      {
-        id: 5,
-        title: 'Tạo slide thuyết trình',
-        assignee: 'Trần Thị Lan',
-        status: 'todo',
-        priority: 'low',
-      },
-    ],
-  },
-  'team-2': {
-    id: 'team-2',
-    teamName: 'Tech Innovators',
-    description: 'Phát triển ứng dụng AI cho giáo dục',
-    hackathon: 'Blockchain Hackathon Vietnam',
-    leaderId: 'user-5',
-    members: [
-      {
-        id: 5,
-        userId: 'user-5',
-        name: 'Nguyễn Văn Hùng',
-        email: 'hung@example.com',
-        role: 'Trưởng nhóm',
-        skills: ['React', 'Node.js'],
-        avatar: 'NVH',
-        status: 'confirmed',
-        github: 'https://github.com/nguyenvanhung',
-        linkedin: 'https://linkedin.com/in/nguyenvanhung',
-        isLeader: true,
-        penalty: null,
-      },
-      {
-        id: 6,
-        userId: 'user-6',
-        name: 'Lê Thị Mai',
-        email: 'mai@example.com',
-        role: 'Full Stack Developer',
-        skills: ['Vue.js', 'Express', 'MongoDB'],
-        avatar: 'LTM',
-        status: 'confirmed',
-        github: 'https://github.com/lethimai',
-        linkedin: 'https://linkedin.com/in/lethimai',
-        isLeader: false,
-        penalty: null,
-      },
-    ],
-    tasks: [],
-  },
-};
-
-// Function to get team data by ID
-const getTeamById = (teamId) => {
-  return mockTeamsData[teamId] || null;
-};
-
-const mockTeamPenalties = {
-  default: [
-    {
-      id: 'penalty-1',
-      type: 'late_submission',
-      reason: 'Nộp bài muộn 2 giờ trong vòng loại',
-      points: -5,
-      date: '2024-10-15',
-      hackathonPhase: 'Vòng loại',
-      status: 'active',
-      canAppeal: true,
-    },
-    {
-      id: 'penalty-2',
-      type: 'rule_violation',
-      reason: 'Vi phạm quy tắc sử dụng thư viện bên ngoài',
-      points: -10,
-      date: '2024-10-10',
-      hackathonPhase: 'Vòng chung kết',
-      status: 'active',
-      canAppeal: true,
-    },
-  ],
-};
 
 const mapApiTeamToView = (apiTeam) => {
   if (!apiTeam) return null;
@@ -254,21 +72,17 @@ const MyTeamPage = () => {
     enabled: !!id,
   });
 
-  const [teamData, setTeamData] = useState(() => getTeamById(id));
+  const [teamData, setTeamData] = useState(null);
   const [isInviting, setIsInviting] = useState(false);
 
-  // Update team data when ID changes
   useEffect(() => {
     if (apiTeam) {
       setTeamData(mapApiTeamToView(apiTeam));
-    } else if (id) {
-      const mockTeam = getTeamById(id);
-      setTeamData(mockTeam);
     } else {
       setTeamData(null);
     }
     setActiveTab('members');
-  }, [apiTeam, id]);
+  }, [apiTeam]);
 
   // Get current user from auth context
   const { userInfo } = useUserData();
@@ -290,10 +104,108 @@ const MyTeamPage = () => {
   const [appealModalVisible, setAppealModalVisible] = useState(false);
   const [selectedPenalty, setSelectedPenalty] = useState(null);
   const [appealForm] = Form.useForm();
-  const displayPenalties =
-    teamPenalties && teamPenalties.length > 0
-      ? teamPenalties
-      : mockTeamPenalties[id] || mockTeamPenalties.default || [];
+  const displayPenalties = teamPenalties || [];
+
+  // Submissions hooks
+  const {
+    data: submissionsData = [],
+    isLoading: submissionsLoading,
+  } = useGetSubmissionsByTeam(id, {
+    enabled: !!id,
+  });
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+
+  const getSubmissionStatusColor = (isFinal) => {
+    return isFinal ? 'green' : 'default';
+  };
+
+  const getSubmissionStatusIcon = (isFinal) => {
+    return isFinal ? <CheckCircleOutlined /> : <ClockCircleOutlined />;
+  };
+
+  const getSubmissionStatusText = (isFinal) => {
+    return isFinal ? 'Đã nộp' : 'Bản nháp';
+  };
+
+  const handleDownloadFile = (filePath) => {
+    if (filePath) {
+      window.open(filePath, '_blank');
+    } else {
+      message.warning('Không có file để tải xuống');
+    }
+  };
+
+  const submissionColumns = [
+    {
+      title: 'Tiêu đề',
+      dataIndex: 'title',
+      key: 'title',
+      render: (text) => (
+        <span className="font-medium text-white">{text || 'Chưa có tiêu đề'}</span>
+      ),
+    },
+    {
+      title: 'Phase',
+      dataIndex: 'phaseName',
+      key: 'phaseName',
+      render: (text) => <span className="text-gray-300">{text || 'N/A'}</span>,
+    },
+    {
+      title: 'Track',
+      dataIndex: 'trackName',
+      key: 'trackName',
+      render: (text) => <span className="text-gray-300">{text || 'N/A'}</span>,
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'isFinal',
+      key: 'isFinal',
+      render: (isFinal) => (
+        <Tag
+          color={getSubmissionStatusColor(isFinal)}
+          icon={getSubmissionStatusIcon(isFinal)}
+        >
+          {getSubmissionStatusText(isFinal)}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Đã nộp',
+      dataIndex: 'submittedAt',
+      key: 'submittedAt',
+      render: (date) => (
+        <span className="text-gray-400">
+          {date ? dayjs(date).format('DD/MM/YYYY HH:mm') : 'Chưa nộp'}
+        </span>
+      ),
+    },
+    {
+      title: 'Thao tác',
+      key: 'actions',
+      render: (_, record) => (
+        <Space size="middle">
+          <Tooltip title="Xem chi tiết">
+            <AntButton
+              type="text"
+              className="text-white hover:text-green-400"
+              icon={<EyeOutlined />}
+              onClick={() => setSelectedSubmission(record)}
+            />
+          </Tooltip>
+          {record.filePath && (
+            <Tooltip title="Tải xuống file">
+              <AntButton
+                type="text"
+                className="text-white hover:text-green-400"
+                icon={<DownloadOutlined />}
+                onClick={() => handleDownloadFile(record.filePath)}
+              />
+            </Tooltip>
+          )}
+        </Space>
+      ),
+    },
+  ];
 
   const handleInvite = async (values) => {
     setIsInviting(true);
@@ -472,7 +384,7 @@ const MyTeamPage = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="backdrop-blur-xl bg-white/5 border-white/10">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
@@ -514,19 +426,7 @@ const MyTeamPage = () => {
               </p>
               <p className="text-sm text-gray-400">Chờ xác nhận</p>
             </div>
-          </div>
-        </Card>
-
-        <Card className="backdrop-blur-xl bg-white/5 border-white/10">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-              <Code className="w-6 h-6 text-purple-400" />
-            </div>
-            <div>
-              <p className="text-2xl text-white">20%</p>
-              <p className="text-sm text-gray-400">Tiến độ</p>
-            </div>
-          </div>
+      </div>
         </Card>
       </div>
 
@@ -849,28 +749,33 @@ const MyTeamPage = () => {
             )}
           </Card>
         </TabPane>
-        <TabPane tab="Thông tin đội" key="info">
+
+        <TabPane tab="Nộp bài" key="submissions">
           <Card className="backdrop-blur-xl bg-white/5 border-white/10">
-            <Space direction="vertical" size="large" className="w-full">
-              <div>
-                <h4 className="text-gray-400 text-sm mb-2">Tên đội</h4>
-                <p className="text-white text-lg">{teamData.teamName}</p>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl text-white">
+                Bài nộp của đội ({submissionsData.length})
+              </h3>
+            </div>
+            {submissionsLoading ? (
+              <div className="text-center py-8">
+                <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2 animate-spin" />
+                <p className="text-gray-400">Đang tải...</p>
               </div>
-
-              {teamData.description && (
-                <div>
-                  <h4 className="text-gray-400 text-sm mb-2">Mô tả</h4>
-                  <p className="text-white">{teamData.description}</p>
-                </div>
-              )}
-
-              {teamData.hackathon && (
-                <div>
-                  <h4 className="text-gray-400 text-sm mb-2">Hackathon</h4>
-                  <p className="text-white">{teamData.hackathon}</p>
-                </div>
-              )}
-            </Space>
+            ) : submissionsData.length > 0 ? (
+              <Table
+                columns={submissionColumns}
+                dataSource={submissionsData}
+                rowKey="submissionId"
+                pagination={false}
+                className="[&_.ant-table]:bg-transparent [&_th]:!bg-white/5 [&_th]:!text-white [&_td]:!text-gray-300 [&_td]:border-white/10 [&_th]:border-white/10 [&_tr:hover_td]:!bg-white/10"
+              />
+            ) : (
+              <div className="text-center py-12">
+                <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400">Chưa có bài nộp nào</p>
+              </div>
+            )}
           </Card>
         </TabPane>
       </Tabs>
@@ -998,6 +903,82 @@ const MyTeamPage = () => {
             </div>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Submission Details Modal */}
+      <Modal
+        title={
+          selectedSubmission && (
+            <span className="text-xl font-semibold text-white">
+              Chi tiết bài nộp: {selectedSubmission.title || 'Chưa có tiêu đề'}
+            </span>
+          )
+        }
+        open={!!selectedSubmission}
+        onCancel={() => setSelectedSubmission(null)}
+        footer={null}
+        width={800}
+        className="[&_.ant-modal-content]:bg-gray-900/95 [&_.ant-modal-content]:backdrop-blur-xl [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white [&_.ant-modal-mask]:bg-black/50"
+      >
+        {selectedSubmission && (
+          <div className="space-y-6">
+            {/* Project Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-gray-400 mb-1">Phase</label>
+                <p className="text-white">{selectedSubmission.phaseName || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="block text-gray-400 mb-1">Track</label>
+                <p className="text-white">{selectedSubmission.trackName || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="block text-gray-400 mb-1">Đội</label>
+                <p className="text-white">{selectedSubmission.teamName || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="block text-gray-400 mb-1">Trạng thái</label>
+                <Tag color={getSubmissionStatusColor(selectedSubmission.isFinal)}>
+                  {getSubmissionStatusText(selectedSubmission.isFinal)}
+                </Tag>
+              </div>
+              <div>
+                <label className="block text-gray-400 mb-1">Đã nộp</label>
+                <p className="text-white">
+                  {selectedSubmission.submittedAt 
+                    ? dayjs(selectedSubmission.submittedAt).format('DD/MM/YYYY HH:mm')
+                    : 'Chưa nộp'}
+                </p>
+              </div>
+            </div>
+
+            {/* File */}
+            {selectedSubmission.filePath && (
+              <div>
+                <label className="block text-gray-400 mb-2">File đã nộp</label>
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <FileTextOutlined className="text-green-400 text-lg" />
+                    <div>
+                      <p className="text-white m-0">
+                        {selectedSubmission.filePath.split('/').pop() || 'File'}
+                      </p>
+                      <p className="text-gray-400 text-sm m-0">
+                        {selectedSubmission.filePath}
+                      </p>
+                    </div>
+                  </div>
+                  <AntButton
+                    type="text"
+                    className="text-white hover:text-green-400"
+                    icon={<DownloadOutlined />}
+                    onClick={() => handleDownloadFile(selectedSubmission.filePath)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );

@@ -1,20 +1,12 @@
-import {
-  CrownOutlined,
-  MessageOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
-import dayjs from 'dayjs';
-import { Avatar, Button, Card, Space, Spin } from 'antd';
+import { Crown, ExternalLink, MapPin, Shield, Terminal } from 'lucide-react';
 
 const TeamCard = ({
   team,
   onViewTeam,
   onLeaveTeam,
-  onJoinTeam, 
+  onJoinTeam,
   selectedTeam,
   teamLoading,
-  membersLoading,
-  teamMembersData,
   isMyTeam = false,
   isAvailableTeam = false,
   leaveTeamMutation,
@@ -25,12 +17,16 @@ const TeamCard = ({
     team.leaderName ||
     team.leader?.name ||
     team.createdByName;
-  const memberCount = team.memberCount ?? team.members?.length ?? 0;
-  const maxMembers = team.maxMembers ?? team.maxMember ?? 5;
-  const progress = team.progress ?? team.progressPercent ?? 0;
-  const createdAt = team.createdAt
-    ? dayjs(team.createdAt).format('DD/MM/YYYY')
-    : null;
+  const chapterName = team.chapterName || team.chapter?.name || 'N/A';
+  const hackathonName = team.hackathonName || team.hackathon || null;
+  const isJoinedHackathon = team.hackathonId !== null || hackathonName !== null;
+
+  const handleViewTeam = () => {
+    if (onViewTeam) {
+      onViewTeam(teamIdentifier);
+    }
+  };
+
   const handleLeaveTeam = () => {
     if (onLeaveTeam) {
       onLeaveTeam(teamIdentifier);
@@ -43,152 +39,147 @@ const TeamCard = ({
     }
   };
 
-  const handleViewTeam = () => {
-    if (onViewTeam) {
-      onViewTeam(teamIdentifier);
-    }
+  // Simple Avatar component
+  const TeamAvatar = ({ name }) => {
+    const initials = name
+      ? name
+          .split(' ')
+          .map((n) => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2)
+      : 'TM';
+    
+    return (
+      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm">
+        {initials}
+      </div>
+    );
   };
 
   return (
-    <Card className="bg-darkv2-tertiary/60 border border-white/5 hover:border-green-500/40 rounded-2xl transition-all duration-200 shadow-lg/20">
-      <div className="p-6 space-y-4">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-gray-400">
-              {team.hackathonName || team.hackathon || 'Chưa có hackathon'}
-            </p>
-            <h3 className="text-2xl font-semibold text-white">
-              {team.teamName || team.name || 'Đội chưa đặt tên'}
-            </h3>
-            {leaderName && (
-              <p className="text-sm text-gray-400 mt-1">
-                Leader:{' '}
-                <span className="text-white font-medium">{leaderName}</span>
-              </p>
-            )}
-            {createdAt && (
-              <p className="text-xs text-gray-500">Tạo ngày {createdAt}</p>
-            )}
-          </div>
+    <div className="group relative bg-card-background border border-card-border hover:border-green-500/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:shadow-green-500/10 flex flex-col h-full backdrop-blur-xl">
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 p-4 opacity-[0.02] group-hover:opacity-10 transition-opacity text-green-500">
+        <Shield size={120} />
+      </div>
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5 z-10">
+        <div className="flex items-center gap-3">
+          <TeamAvatar name={team.teamName || team.name} />
+          <h3 className="text-lg font-bold text-text-primary group-hover:text-green-400 transition-colors">
+            {team.teamName || team.name || 'Đội chưa đặt tên'}
+          </h3>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-            <p className="text-[11px] uppercase tracking-widest text-gray-400">
-              Thành viên
-            </p>
-            <p className="text-lg font-semibold text-white">
-              {memberCount}/{maxMembers}
-            </p>
-          </div>
-          <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-            <p className="text-[11px] uppercase tracking-widest text-gray-400">
-              Tiến độ
-            </p>
-            <p className="text-lg font-semibold text-white">{progress}%</p>
-          </div>
-          {(team.projectName || team.project) && (
-            <div className="bg-white/5 rounded-xl p-3 border border-white/10 md:col-span-1">
-              <p className="text-[11px] uppercase tracking-widest text-gray-400">
-                Dự án
-              </p>
-              <p className="text-sm font-medium text-white truncate">
-                {team.projectName || team.project}
+        {/* Status Badge */}
+        <div
+          className={`w-2 h-2 rounded-full ${
+            isJoinedHackathon
+              ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]'
+              : 'bg-gray-600'
+          }`}
+          title={isJoinedHackathon ? 'Active' : 'Inactive'}
+        ></div>
+      </div>
+
+      {/* Body */}
+      <div className="space-y-4 flex-1 z-10">
+        {/* Dòng 1: Chapter & Leader cùng 1 hàng (Grid 2 cột) */}
+        <div className="grid grid-cols-2 gap-4 pb-4 border-b border-card-border/50">
+          {/* Chapter */}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1.5">
+              <MapPin size={14} className="text-muted-foreground" />
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                Chapter
               </p>
             </div>
-          )}
+            <p
+              className="text-sm text-text-secondary truncate font-medium"
+              title={chapterName}
+            >
+              {chapterName}
+            </p>
+          </div>
+
+          {/* Leader */}
+          <div className="flex flex-col gap-1 pl-4 border-l border-card-border/50">
+            <div className="flex items-center gap-1.5">
+              <Crown size={14} className="text-amber-500/80" />
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                Leader
+              </p>
+            </div>
+            <p
+              className="text-sm text-text-secondary truncate font-medium"
+              title={leaderName}
+            >
+              {leaderName || 'N/A'}
+            </p>
+          </div>
         </div>
 
-        <div className="w-full bg-gray-700/40 rounded-full h-2 overflow-hidden">
-          <div
-            className="bg-gradient-to-r from-green-400 to-emerald-500 h-full transition-all duration-500 ease-out"
-            style={{ width: `${progress}%` }}
+        {/* Dòng 2: Hackathon - Làm nổi bật nếu có tham gia */}
+        <div className="flex items-start gap-3 pt-1">
+          <Terminal
+            size={16}
+            className={`mt-0.5 shrink-0 ${
+              isJoinedHackathon ? 'text-green-500' : 'text-muted-foreground'
+            }`}
           />
-        </div>
-
-        {selectedTeam === teamIdentifier && membersLoading ? (
-          <div className="flex items-center justify-center py-4 text-gray-400">
-            <Spin size="small" />
-            <span className="ml-2">Đang tải thành viên...</span>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between">
-            <div className="flex -space-x-2">
-              {teamMembersData?.slice(0, 4).map((member) => (
-                <Avatar
-                  key={member.id}
-                  size="small"
-                  className={`border-2 border-darkv2-tertiary ${
-                    member.status === 'active' ? '' : 'opacity-50'
-                  }`}
-                >
-                  {member.fullName?.charAt(0) || member.name?.charAt(0) || '?'}
-                </Avatar>
-              ))}
-              {teamMembersData && teamMembersData.length > 4 && (
-                <Avatar
-                  size="small"
-                  className="border-2 border-darkv2-tertiary bg-primary text-white"
-                >
-                  +{teamMembersData.length - 4}
-                </Avatar>
-              )}
-            </div>
-            <Space size="small">
-              <Button
-                type="text"
-                size="small"
-                className="text-gray-300 hover:text-white"
-                icon={<MessageOutlined />}
-              >
-                Chat
-              </Button>
-              <Button
-                type="text"
-                size="small"
-                className="text-gray-300 hover:text-white"
-                icon={<SettingOutlined />}
-              >
-                Cài đặt
-              </Button>
-              {(team.isLeader || team.role === 'leader') && (
-                <CrownOutlined className="text-yellow-400" />
-              )}
-            </Space>
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-3 pt-2">
-          <Button
-            size="large"
-            className="bg-green-400 hover:bg-green-500 text-white border-0 flex-1 font-semibold shadow-lg shadow-emerald-500/20"
-            onClick={handleViewTeam}
-            loading={selectedTeam === teamIdentifier && teamLoading}
-          >
-            Xem chi tiết
-          </Button>
-          {isMyTeam && !team.isLeader && (
-            <Button
-              size="middle"
-              className="border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20"
-              onClick={handleLeaveTeam}
-              loading={leaveTeamMutation?.isPending}
+          <div>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+              Hackathon
+            </p>
+            <p
+              className={`text-sm font-medium ${
+                isJoinedHackathon
+                  ? 'text-green-400'
+                  : 'text-muted-foreground italic'
+              }`}
             >
-              Rời đội
-            </Button>
-          )}
-          {isAvailableTeam && (
-            <Button
-              size="middle"
-              className="border border-white/10 text-white hover:border-green-400/40 hover:bg-white/5"
-              onClick={handleJoinTeam}
-            >
-              Xin gia nhập
-            </Button>
-          )}
+              {isJoinedHackathon ? hackathonName : 'Chưa tham gia'}
+            </p>
+          </div>
         </div>
       </div>
-    </Card>
+
+      {/* Footer */}
+      <div className="mt-4 pt-3 border-t border-card-border/50 flex justify-between items-center z-10">
+        <div className="flex gap-2">
+          {isMyTeam && !team.isLeader && (
+            <button
+              onClick={handleLeaveTeam}
+              disabled={leaveTeamMutation?.isPending}
+              className="text-xs font-medium text-red-500 hover:text-red-400 flex items-center gap-1 transition-colors"
+            >
+              Rời đội
+            </button>
+          )}
+          {isAvailableTeam && (
+            <button
+              onClick={handleJoinTeam}
+              className="text-xs font-medium text-blue-500 hover:text-blue-400 flex items-center gap-1 transition-colors"
+            >
+              Xin gia nhập
+            </button>
+          )}
+        </div>
+        <button
+          onClick={handleViewTeam}
+          disabled={selectedTeam === teamIdentifier && teamLoading}
+          className="text-xs font-medium text-green-500 hover:text-green-400 flex items-center gap-1 transition-colors group/btn"
+        >
+          Xem chi tiết
+          <ExternalLink
+            size={12}
+            className="group-hover/btn:translate-x-0.5 transition-transform"
+          />
+        </button>
+      </div>
+    </div>
   );
 };
 

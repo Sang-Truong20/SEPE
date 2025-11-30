@@ -1,7 +1,14 @@
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
-import { Alert, Button, message, Spin } from 'antd';
+import {
+  LoadingOutlined,
+  PlusOutlined,
+} from '@ant-design/icons';
+import { Alert, Button, Spin, message } from 'antd';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  CreateTeamModal,
+  TeamList,
+} from '../../components/features/student/team';
 import {
   useCreateTeam,
   useGetTeam,
@@ -11,10 +18,6 @@ import {
   useGetTeamMembers,
   useLeaveTeam,
 } from '../../hooks/student/team-member';
-import {
-  TeamList,
-  CreateTeamModal,
-} from '../../components/features/student/team';
 
 const StudentTeams = () => {
   const navigate = useNavigate();
@@ -34,6 +37,7 @@ const StudentTeams = () => {
 
   const leaveTeamMutation = useLeaveTeam();
 
+
   // Filter teams to separate user's teams from available teams
   // Handle different possible API response formats
   const teamsArray = Array.isArray(teamsData)
@@ -43,9 +47,6 @@ const StudentTeams = () => {
       : teamsData?.teams
         ? teamsData.teams
         : [];
-
-  console.log('Teams data structure:', teamsData);
-  console.log('Teams array:', teamsArray);
 
   // For now, show all teams as "my teams" until we understand the API structure
   // If API fails, show empty arrays
@@ -156,37 +157,8 @@ const StudentTeams = () => {
     );
   }
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl lg:text-4xl bg-gradient-to-r from-white via-blue-100 to-cyan-300 bg-clip-text text-transparent">
-            Đội của tôi
-          </h1>
-          <p className="text-gray-400 mt-2">
-            Quản lý đội và tìm đội mới để tham gia
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <Button
-            icon={
-              createTeamMutation.isPending ? (
-                <LoadingOutlined />
-              ) : (
-                <PlusOutlined />
-              )
-            }
-            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all"
-            onClick={() => setIsCreateModalVisible(true)}
-            loading={createTeamMutation.isPending}
-          >
-            Tạo đội mới
-          </Button>
-        </div>
-      </div>
-
+  const renderTeamsTab = () => (
+    <div className="space-y-12">
       <section className="space-y-4">
         <TeamList
           teams={myTeams}
@@ -222,6 +194,43 @@ const StudentTeams = () => {
           leaveTeamMutation={leaveTeamMutation}
         />
       </section>
+    </div>
+  );
+
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl lg:text-4xl bg-gradient-to-r from-white via-blue-100 to-cyan-300 bg-clip-text text-transparent">
+            Đội của tôi
+          </h1>
+          <p className="text-gray-400 mt-2">
+            Quản lý đội và bài nộp dự án
+          </p>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <Button
+            icon={
+              createTeamMutation.isPending ? (
+                <LoadingOutlined />
+              ) : (
+                <PlusOutlined />
+              )
+            }
+            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all"
+            onClick={() => setIsCreateModalVisible(true)}
+            loading={createTeamMutation.isPending}
+          >
+            Tạo đội mới
+          </Button>
+        </div>
+      </div>
+
+      {/* Teams Content */}
+      {renderTeamsTab()}
 
       {/* Create Team Modal */}
       <CreateTeamModal
@@ -230,6 +239,7 @@ const StudentTeams = () => {
         onSubmit={handleCreateTeam}
         loading={createTeamMutation.isPending}
       />
+
     </div>
   );
 };

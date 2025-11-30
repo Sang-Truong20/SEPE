@@ -1,16 +1,16 @@
 import {
   FileTextOutlined,
-  UploadOutlined,
   EyeOutlined,
   DownloadOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
-  ExclamationCircleOutlined,
   PlusOutlined,
   SearchOutlined,
 } from '@ant-design/icons';
-import { Button, Card, Col, Input, Row, Tag, Table, Space, Tooltip, Upload, Modal, Form, Select, Progress } from 'antd';
+import { Button, Card, Input, Tag, Table, Space, Tooltip, Modal, Form, Select, Spin, Alert, message } from 'antd';
 import { useState } from 'react';
+import { useGetAllSubmissions } from '../../hooks/student/submission';
+import dayjs from 'dayjs';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -19,56 +19,23 @@ const StudentSubmissions = () => {
   const [isSubmitModalVisible, setIsSubmitModalVisible] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
 
-  const submissions = [
-    {
-      id: '1',
-      projectName: 'AI-Powered Code Assistant',
-      hackathon: 'AI Revolution 2024',
-      team: 'Code Crusaders',
-      submittedAt: '2024-03-16 14:30',
-      status: 'submitted',
-      score: '92.3/100',
-      feedback: 'Excellent work! The AI integration is seamless and the code quality is outstanding.',
-      files: [
-        { name: 'source-code.zip', size: '2.3 MB', type: 'application/zip' },
-        { name: 'demo-video.mp4', size: '45.2 MB', type: 'video/mp4' },
-        { name: 'presentation.pdf', size: '1.8 MB', type: 'application/pdf' },
-      ],
-    },
-    {
-      id: '2',
-      projectName: 'Smart City Dashboard',
-      hackathon: 'AI Revolution 2024',
-      team: 'Code Crusaders',
-      submittedAt: '2024-03-15 18:45',
-      status: 'under_review',
-      score: null,
-      feedback: null,
-      files: [
-        { name: 'smart-city-app.zip', size: '5.1 MB', type: 'application/zip' },
-        { name: 'architecture-diagram.png', size: '890 KB', type: 'image/png' },
-      ],
-    },
-    {
-      id: '3',
-      projectName: 'Blockchain Voting System',
-      hackathon: 'Web3 Future Hackathon',
-      team: 'Blockchain Heroes',
-      submittedAt: null,
-      status: 'draft',
-      score: null,
-      feedback: null,
-      files: [],
-    },
-  ];
+  // Fetch all submissions
+  const {
+    data: submissionsData = [],
+    isLoading: submissionsLoading,
+    error: submissionsError,
+  } = useGetAllSubmissions();
 
   const handleViewSubmission = (submission) => {
     setSelectedSubmission(submission);
   };
 
-  const handleDownloadFile = (fileName) => {
-    console.log('Downloading file:', fileName);
-    // Handle file download
+  const handleDownloadFile = (filePath) => {
+    if (filePath) {
+      window.open(filePath, '_blank');
+    } else {
+      message.warning('Không có file để tải xuống');
+    }
   };
 
   const handleSubmitProject = (values) => {
@@ -77,79 +44,53 @@ const StudentSubmissions = () => {
     // Handle project submission
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'submitted':
-        return 'green';
-      case 'under_review':
-        return 'gold';
-      case 'draft':
-        return 'default';
-      case 'graded':
-        return 'blue';
-      default:
-        return 'default';
-    }
+  const getStatusColor = (isFinal) => {
+    return isFinal ? 'green' : 'default';
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'submitted':
-        return <CheckCircleOutlined />;
-      case 'under_review':
-        return <ClockCircleOutlined />;
-      case 'draft':
-        return <ExclamationCircleOutlined />;
-      case 'graded':
-        return <CheckCircleOutlined />;
-      default:
-        return <ExclamationCircleOutlined />;
-    }
+  const getStatusIcon = (isFinal) => {
+    return isFinal ? <CheckCircleOutlined /> : <ClockCircleOutlined />;
+  };
+
+  const getStatusText = (isFinal) => {
+    return isFinal ? 'Đã nộp' : 'Bản nháp';
   };
 
   const submissionColumns = [
     {
-      title: 'Dự án',
-      dataIndex: 'projectName',
-      key: 'projectName',
+      title: 'Tiêu đề',
+      dataIndex: 'title',
+      key: 'title',
       render: (text) => (
-        <span className="font-medium text-text-primary">{text}</span>
+        <span className="font-medium text-text-primary">{text || 'Chưa có tiêu đề'}</span>
       ),
     },
     {
-      title: 'Hackathon',
-      dataIndex: 'hackathon',
-      key: 'hackathon',
+      title: 'Phase',
+      dataIndex: 'phaseName',
+      key: 'phaseName',
+    },
+    {
+      title: 'Track',
+      dataIndex: 'trackName',
+      key: 'trackName',
     },
     {
       title: 'Đội',
-      dataIndex: 'team',
-      key: 'team',
+      dataIndex: 'teamName',
+      key: 'teamName',
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status, record) => (
+      dataIndex: 'isFinal',
+      key: 'isFinal',
+      render: (isFinal) => (
         <Tag
-          color={getStatusColor(status)}
-          icon={getStatusIcon(status)}
+          color={getStatusColor(isFinal)}
+          icon={getStatusIcon(isFinal)}
         >
-          {status === 'submitted' && 'Đã nộp'}
-          {status === 'under_review' && 'Đang đánh giá'}
-          {status === 'draft' && 'Bản nháp'}
-          {status === 'graded' && 'Đã chấm điểm'}
+          {getStatusText(isFinal)}
         </Tag>
-      ),
-    },
-    {
-      title: 'Điểm',
-      dataIndex: 'score',
-      key: 'score',
-      render: (score) => (
-        <span className={score ? 'text-primary' : 'text-gray-500'}>
-          {score || 'Chưa có điểm'}
-        </span>
       ),
     },
     {
@@ -158,7 +99,7 @@ const StudentSubmissions = () => {
       key: 'submittedAt',
       render: (date) => (
         <span className="text-gray-400">
-          {date || 'Chưa nộp'}
+          {date ? dayjs(date).format('DD/MM/YYYY HH:mm') : 'Chưa nộp'}
         </span>
       ),
     },
@@ -175,12 +116,13 @@ const StudentSubmissions = () => {
               onClick={() => handleViewSubmission(record)}
             />
           </Tooltip>
-          {record.files.length > 0 && (
-            <Tooltip title="Tải xuống tất cả files">
+          {record.filePath && (
+            <Tooltip title="Tải xuống file">
               <Button
                 type="text"
                 className="text-white hover:text-primary"
                 icon={<DownloadOutlined />}
+                onClick={() => handleDownloadFile(record.filePath)}
               />
             </Tooltip>
           )}
@@ -225,12 +167,30 @@ const StudentSubmissions = () => {
 
       {/* Submissions Table */}
       <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-        <Table
-          columns={submissionColumns}
-          dataSource={submissions}
-          pagination={false}
-          className="[&_.ant-table]:bg-transparent [&_th]:!bg-card-background [&_th]:!text-text-primary [&_td]:!text-text-secondary [&_td]:border-card-border [&_th]:border-card-border [&_tr:hover_td]:!bg-card-background/50"
-        />
+        {submissionsLoading ? (
+          <div className="flex justify-center py-8">
+            <Spin />
+          </div>
+        ) : submissionsError ? (
+          <Alert
+            message="Lỗi tải dữ liệu"
+            description="Không thể tải danh sách bài nộp. Vui lòng thử lại sau."
+            type="error"
+            showIcon
+          />
+        ) : submissionsData && submissionsData.length > 0 ? (
+          <Table
+            columns={submissionColumns}
+            dataSource={submissionsData}
+            rowKey="submissionId"
+            pagination={false}
+            className="[&_.ant-table]:bg-transparent [&_th]:!bg-card-background [&_th]:!text-text-primary [&_td]:!text-text-secondary [&_td]:border-card-border [&_th]:border-card-border [&_tr:hover_td]:!bg-card-background/50"
+          />
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-400">Chưa có bài nộp nào</p>
+          </div>
+        )}
       </Card>
 
       {/* Submission Details Modal */}
@@ -238,7 +198,7 @@ const StudentSubmissions = () => {
         title={
           selectedSubmission && (
             <span className="text-xl font-semibold text-text-primary">
-              Chi tiết bài nộp: {selectedSubmission.projectName}
+              Chi tiết bài nộp: {selectedSubmission.title || 'Chưa có tiêu đề'}
             </span>
           )
         }
@@ -253,82 +213,56 @@ const StudentSubmissions = () => {
             {/* Project Info */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-text-secondary mb-1">Hackathon</label>
-                <p className="text-text-primary">{selectedSubmission.hackathon}</p>
+                <label className="block text-text-secondary mb-1">Phase</label>
+                <p className="text-text-primary">{selectedSubmission.phaseName || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="block text-text-secondary mb-1">Track</label>
+                <p className="text-text-primary">{selectedSubmission.trackName || 'N/A'}</p>
               </div>
               <div>
                 <label className="block text-text-secondary mb-1">Đội</label>
-                <p className="text-text-primary">{selectedSubmission.team}</p>
+                <p className="text-text-primary">{selectedSubmission.teamName || 'N/A'}</p>
               </div>
               <div>
                 <label className="block text-text-secondary mb-1">Trạng thái</label>
-                <Tag color={getStatusColor(selectedSubmission.status)}>
-                  {selectedSubmission.status === 'submitted' && 'Đã nộp'}
-                  {selectedSubmission.status === 'under_review' && 'Đang đánh giá'}
-                  {selectedSubmission.status === 'draft' && 'Bản nháp'}
-                  {selectedSubmission.status === 'graded' && 'Đã chấm điểm'}
+                <Tag color={getStatusColor(selectedSubmission.isFinal)}>
+                  {getStatusText(selectedSubmission.isFinal)}
                 </Tag>
               </div>
               <div>
-                <label className="block text-text-secondary mb-1">Điểm</label>
-                <p className={selectedSubmission.score ? 'text-primary' : 'text-muted-foreground'}>
-                  {selectedSubmission.score || 'Chưa có điểm'}
+                <label className="block text-text-secondary mb-1">Đã nộp</label>
+                <p className="text-text-primary">
+                  {selectedSubmission.submittedAt 
+                    ? dayjs(selectedSubmission.submittedAt).format('DD/MM/YYYY HH:mm')
+                    : 'Chưa nộp'}
                 </p>
               </div>
             </div>
 
-            {/* Feedback */}
-            {selectedSubmission.feedback && (
+            {/* File */}
+            {selectedSubmission.filePath && (
               <div>
-                <label className="block text-text-secondary mb-2">Phản hồi từ ban giám khảo</label>
-                <div className="bg-card-background/50 p-4 rounded-lg border border-card-border">
-                  <p className="text-text-primary">{selectedSubmission.feedback}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Files */}
-            {selectedSubmission.files.length > 0 && (
-              <div>
-                <label className="block text-text-secondary mb-2">Files đã nộp</label>
-                <div className="space-y-2">
-                  {selectedSubmission.files.map((file, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-card-background/50 rounded-lg border border-card-border"
-                    >
-                      <div className="flex items-center gap-3">
-                        <FileTextOutlined className="text-primary text-lg" />
-                        <div>
-                          <p className="text-text-primary m-0">{file.name}</p>
-                          <p className="text-gray-400 text-sm m-0">{file.size}</p>
-                        </div>
-                      </div>
-                      <Button
-                        type="text"
-                        className="text-white hover:text-primary"
-                        icon={<DownloadOutlined />}
-                        onClick={() => handleDownloadFile(file.name)}
-                      />
+                <label className="block text-text-secondary mb-2">File đã nộp</label>
+                <div className="flex items-center justify-between p-3 bg-card-background/50 rounded-lg border border-card-border">
+                  <div className="flex items-center gap-3">
+                    <FileTextOutlined className="text-primary text-lg" />
+                    <div>
+                      <p className="text-text-primary m-0">
+                        {selectedSubmission.filePath.split('/').pop() || 'File'}
+                      </p>
+                      <p className="text-gray-400 text-sm m-0">
+                        {selectedSubmission.filePath}
+                      </p>
                     </div>
-                  ))}
+                  </div>
+                  <Button
+                    type="text"
+                    className="text-white hover:text-primary"
+                    icon={<DownloadOutlined />}
+                    onClick={() => handleDownloadFile(selectedSubmission.filePath)}
+                  />
                 </div>
-              </div>
-            )}
-
-            {/* Progress for draft submissions */}
-            {selectedSubmission.status === 'draft' && (
-              <div>
-                <label className="block text-text-secondary mb-2">Tiến độ hoàn thành</label>
-                <Progress
-                  percent={75}
-                  strokeColor="#1890ff"
-                  trailColor="#374151"
-                  className="[&_.ant-progress-bg]:bg-primary"
-                />
-                <p className="text-gray-400 text-sm mt-1">
-                  Hoàn thành 3/4 bước nộp bài
-                </p>
               </div>
             )}
           </div>

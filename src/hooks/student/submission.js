@@ -7,6 +7,8 @@ export const submissionQueryKeys = {
     createDraft: () => [...submissionQueryKeys.origin, 'create-draft'],
     setFinal: () => [...submissionQueryKeys.origin, 'set-final'],
     submissions: (teamId, phaseChallengeId) => [...submissionQueryKeys.origin, 'submissions', teamId, phaseChallengeId],
+    submissionsByTeam: (teamId) => [...submissionQueryKeys.origin, 'submissions-by-team', teamId],
+    allSubmissions: () => [...submissionQueryKeys.origin, 'all'],
 };
 
 // Create draft submission
@@ -27,7 +29,7 @@ export const useCreateDraftSubmission = () => {
 
             return response.data;
         },
-        onSuccess: (data, variables) => {
+        onSuccess: () => {
             // Invalidate and refetch submissions after creating draft
             queryClient.invalidateQueries({ queryKey: submissionQueryKeys.origin });
             message.success('Đã tạo bản nháp bài nộp thành công');
@@ -76,6 +78,33 @@ export const useGetSubmissions = (teamId, phaseChallengeId, options = {}) => {
             return response.data;
         },
         enabled: !!teamId && !!phaseChallengeId && (options.enabled !== false),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        ...options,
+    });
+};
+
+// Get submissions by team
+export const useGetSubmissionsByTeam = (teamId, options = {}) => {
+    return useQuery({
+        queryKey: submissionQueryKeys.submissionsByTeam(teamId),
+        queryFn: async () => {
+            const response = await axiosClient.get(`/Submission/team/${teamId}`);
+            return response.data;
+        },
+        enabled: !!teamId && (options.enabled !== false),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        ...options,
+    });
+};
+
+// Get all submissions for current user
+export const useGetAllSubmissions = (options = {}) => {
+    return useQuery({
+        queryKey: submissionQueryKeys.allSubmissions(),
+        queryFn: async () => {
+            const response = await axiosClient.get('/Submission');
+            return response.data;
+        },
         staleTime: 5 * 60 * 1000, // 5 minutes
         ...options,
     });
