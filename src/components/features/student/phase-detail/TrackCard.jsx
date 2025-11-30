@@ -1,22 +1,16 @@
 import {
-  CheckCircleOutlined,
   EnvironmentOutlined,
   ExclamationCircleOutlined,
   FileTextOutlined,
   TrophyOutlined
 } from '@ant-design/icons';
-import { Tag } from 'antd';
 
 const TrackCard = ({ track, isSelected, onSelect, onSubmit }) => {
   const hasChallenges = track.challenges && track.challenges.length > 0;
 
   return (
     <div
-      className={`flex flex-col h-full bg-slate-900 border rounded-xl overflow-hidden shadow-sm transition-all duration-300 cursor-pointer ${
-        isSelected
-          ? 'border-green-500/50 shadow-xl shadow-green-500/20 ring-2 ring-green-500/30'
-          : 'border-slate-800 hover:shadow-xl hover:shadow-green-500/10 hover:border-green-500/30'
-      }`}
+      className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl shadow-green-500/20 transition-all duration-300 cursor-pointer"
       onClick={onSelect}
     >
       {/* Card Header */}
@@ -26,17 +20,7 @@ const TrackCard = ({ track, isSelected, onSelect, onSubmit }) => {
         </div>
         <div className="flex justify-between items-start relative z-10">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              
-              {isSelected && (
-                <Tag color="green" icon={<CheckCircleOutlined />}>
-                  Đã chọn
-                </Tag>
-              )}
-            </div>
-            <h3 className={`text-lg font-bold mb-1 transition-colors ${
-              isSelected ? 'text-green-400' : 'text-white'
-            }`}>
+            <h3 className="text-lg font-bold mb-1 text-green-400 transition-colors">
               {track.name}
             </h3>
             {track.description && (
@@ -85,19 +69,19 @@ const TrackCard = ({ track, isSelected, onSelect, onSubmit }) => {
           <button
             type="button"
             className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-              hasChallenges && isSelected
+              hasChallenges
                 ? 'bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-500/20'
                 : 'bg-slate-800 text-slate-500 cursor-not-allowed'
             }`}
-            disabled={!hasChallenges || !isSelected || !onSubmit}
+            disabled={!hasChallenges || !onSubmit}
             onClick={(e) => {
               e.stopPropagation();
-              if (hasChallenges && isSelected && onSubmit) {
+              if (hasChallenges && onSubmit) {
                 onSubmit();
               }
             }}
           >
-            {hasChallenges ? (isSelected ? 'Bắt đầu ngay' : 'Chọn track để bắt đầu') : 'Sắp ra mắt'}
+            {hasChallenges ? 'Bắt đầu ngay' : 'Sắp ra mắt'}
           </button>
         </div>
       </div>

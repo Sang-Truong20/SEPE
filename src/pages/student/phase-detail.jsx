@@ -130,6 +130,7 @@ const StudentPhaseDetail = () => {
             onTrackSelect={handleTrackSelect}
             form={form}
             onFinish={handleSelectTrack}
+            phaseId={phaseId}
           />
         </div>
 

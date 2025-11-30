@@ -3,9 +3,11 @@ import {
   DownloadOutlined,
   FileTextOutlined,
   TrophyOutlined,
+  StarOutlined,
 } from '@ant-design/icons';
 import { Button, Modal, Spin, Tag } from 'antd';
 import { useGetChallenge } from '../../../../hooks/student/challenge';
+import { useGetCriteriaByPhase } from '../../../../hooks/student/criterion';
 
 const ChallengeItem = ({ challengeId, title }) => {
   const { data: challenge, isLoading } = useGetChallenge(challengeId);
@@ -71,8 +73,13 @@ const TrackDetailModal = ({
   visible, 
   onClose, 
   onSelectTrack,
-  isSelected 
+  isSelected,
+  phaseId
 }) => {
+  // Get criteria for this phase
+  const { data: criteria = [], isLoading: criteriaLoading } = useGetCriteriaByPhase(
+    phaseId ? parseInt(phaseId) : null
+  );
 
   return (
     <Modal
@@ -80,11 +87,6 @@ const TrackDetailModal = ({
         <div className="flex items-center gap-2">
           <TrophyOutlined className="text-green-400" />
           <span className="text-white font-semibold">{track?.name}</span>
-          {isSelected && (
-            <Tag color="green" icon={<CheckCircleOutlined />}>
-              Đã chọn
-            </Tag>
-          )}
         </div>
       }
       open={visible}
@@ -99,6 +101,53 @@ const TrackDetailModal = ({
           <div>
             <h4 className="text-sm font-semibold text-slate-400 mb-2">Mô tả</h4>
             <p className="text-white">{track.description}</p>
+          </div>
+        )}
+
+        {/* Criteria Section */}
+        {criteria && criteria.length > 0 && (
+          <div>
+            <h4 className="text-sm font-semibold text-slate-400 mb-4 flex items-center gap-2">
+              <StarOutlined />
+              Tiêu chí đánh giá ({criteria.length})
+            </h4>
+            {criteriaLoading ? (
+              <div className="flex justify-center py-4">
+                <Spin />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {criteria.map((criterion, index) => (
+                  <div
+                    key={criterion.criterionId || index}
+                    className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 hover:border-slate-600 transition-colors"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-xs font-bold text-green-400">
+                          {index + 1}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <h5 className="text-white font-semibold mb-1">
+                          {criterion.criterionName || criterion.name || `Tiêu chí ${index + 1}`}
+                        </h5>
+                        {criterion.description && (
+                          <p className="text-slate-300 text-sm">
+                            {criterion.description}
+                          </p>
+                        )}
+                        {criterion.weight && (
+                          <p className="text-slate-400 text-xs mt-2">
+                            Trọng số: {criterion.weight}%
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

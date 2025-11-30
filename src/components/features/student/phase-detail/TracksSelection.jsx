@@ -9,7 +9,8 @@ const TracksSelection = ({
   selectedTrackId, 
   onTrackSelect, 
   form,
-  onFinish
+  onFinish,
+  phaseId
 }) => {
   const [selectedTrackForModal, setSelectedTrackForModal] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -37,11 +38,17 @@ const TracksSelection = ({
                     track={track}
                     isSelected={isSelected}
                     onSelect={() => {
+                      // Chọn track và mở modal
+                      onTrackSelect(track.trackId);
+                      form.setFieldsValue({ trackId: track.trackId });
                       setSelectedTrackForModal(track);
                       setModalVisible(true);
                     }}
                     onSubmit={() => {
-                      form.submit();
+                      // Submit form với trackId đã chọn
+                      if (isSelected) {
+                        form.submit();
+                      }
                     }}
                   />
                 );
@@ -68,6 +75,7 @@ const TracksSelection = ({
           }
         }}
         isSelected={selectedTrackForModal?.trackId === selectedTrackId}
+        phaseId={phaseId}
       />
     </Card>
   );
