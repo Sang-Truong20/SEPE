@@ -23,11 +23,8 @@ const HackathonPhases = ({ hackathonId }) => {
   };
 
   const handlePhaseClick = (phase) => {
-    const phaseStatus = getPhaseStatus(phase);
-    // Chỉ cho phép click vào phase đang diễn ra
-    if (phaseStatus.status === 'active') {
-      navigate(`/student/hackathons/${hackathonId}/phases/${phase.phaseId}`);
-    }
+    // Cho phép click vào phase bất kỳ
+    navigate(`/student/hackathons/${hackathonId}/phases/${phase.phaseId}`);
   };
 
   return (
@@ -43,13 +40,10 @@ const HackathonPhases = ({ hackathonId }) => {
         <div className="space-y-3">
           {phases.map((phase) => {
             const phaseStatus = getPhaseStatus(phase);
-            const isActive = phaseStatus.status === 'active';
             return (
               <Card
                 key={phase.phaseId}
-                className={`bg-card-background/50 border border-card-border/50 ${
-                  isActive ? 'cursor-pointer hover:bg-card-background/70 hover:border-primary/50 transition-all' : 'opacity-60'
-                }`}
+                className="bg-card-background/50 border border-card-border/50 cursor-pointer hover:bg-card-background/70 hover:border-primary/50 transition-all"
                 size="small"
                 onClick={() => handlePhaseClick(phase)}
               >
