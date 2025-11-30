@@ -128,7 +128,16 @@ const StudentNotifications = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState('all');
   // Use mock data for UI preview - comment out when API is ready
-  const { data: notifications = mockNotifications, isLoading } = useGetNotifications();
+  const { data: notificationsData, isLoading } = useGetNotifications();
+  
+  // Ensure notifications is always an array
+  const notifications = Array.isArray(notificationsData)
+    ? notificationsData
+    : notificationsData?.data
+      ? notificationsData.data
+      : notificationsData?.notifications
+        ? notificationsData.notifications
+        : mockNotifications;
   // Uncomment below and remove mockNotifications when API is ready:
   // const { data: notifications = [], isLoading } = useGetNotifications();
   const markAsRead = useMarkAsRead();

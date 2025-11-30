@@ -36,6 +36,7 @@ import { useGetPendingMembers, useApproveTeamMember, useRejectTeamMember } from 
 import { useGetTeamPenalties, useAppealTeamPenalty } from '../../hooks/student/team-penalty';
 import { useUserData } from '../../hooks/useUserData';
 import { useGetSubmissionsByTeam } from '../../hooks/student/submission';
+import { useInviteTeamMember } from '../../hooks/student/team-invitation';
 import { Table, Tooltip, Button as AntButton } from 'antd';
 import { EyeOutlined, DownloadOutlined, FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -73,7 +74,9 @@ const MyTeamPage = () => {
   });
 
   const [teamData, setTeamData] = useState(null);
-  const [isInviting, setIsInviting] = useState(false);
+  
+  // Invite team member hook
+  const inviteMemberMutation = useInviteTeamMember();
 
   useEffect(() => {
     if (apiTeam) {
@@ -208,35 +211,18 @@ const MyTeamPage = () => {
   ];
 
   const handleInvite = async (values) => {
-    setIsInviting(true);
-    // Simulate API call
-    setTimeout(() => {
-      const currentMembers = teamData.members || [];
-      const newMember = {
-        id: currentMembers.length + 1,
-        userId: `user-${currentMembers.length + 1}`,
-        name: values.email.split('@')[0],
+    try {
+      await inviteMemberMutation.mutateAsync({
+        teamId: id,
         email: values.email,
-        role: 'Thành viên',
-        skills: [],
-        avatar: values.email.substring(0, 2).toUpperCase(),
-        status: 'pending',
-        github: '',
-        linkedin: '',
-        isLeader: false,
-        penalty: null,
-      };
-
-      setTeamData({
-        ...teamData,
-        members: [...currentMembers, newMember],
       });
-
       message.success('Lời mời đã được gửi thành công!');
       form.resetFields();
       setInviteModalVisible(false);
-      setIsInviting(false);
-    }, 1000);
+    } catch (error) {
+      console.error('Invite member error:', error);
+      // Error message đã được xử lý trong hook
+    }
   };
 
   const handleKickMember = (memberId) => {
@@ -822,10 +808,10 @@ const MyTeamPage = () => {
               <Button
                 type="primary"
                 htmlType="submit"
-                loading={isInviting}
+                loading={inviteMemberMutation.isPending}
                 className="bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 border-0"
               >
-                {isInviting ? 'Đang gửi...' : 'Gửi Lời Mời'}
+                {inviteMemberMutation.isPending ? 'Đang gửi...' : 'Gửi Lời Mời'}
               </Button>
             </div>
           </Form.Item>

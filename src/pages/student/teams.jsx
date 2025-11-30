@@ -1,8 +1,11 @@
 import {
   LoadingOutlined,
   PlusOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
-import { Alert, Button, Spin, message } from 'antd';
+import { Alert, Button, Spin, message, Tabs, Card, Tag, Space, Empty } from 'antd';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -18,11 +21,21 @@ import {
   useGetTeamMembers,
   useLeaveTeam,
 } from '../../hooks/student/team-member';
+import {
+  useGetMyTeamJoinRequests,
+} from '../../hooks/student/team-join-request';
+import {
+  useTeamInvitationStatus,
+  useAcceptTeamInvitation,
+  useRejectTeamInvitation,
+} from '../../hooks/student/team-invitation';
+import dayjs from 'dayjs';
 
 const StudentTeams = () => {
   const navigate = useNavigate();
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const [activeTab, setActiveTab] = useState('teams');
 
   // Hooks for team operations
   const createTeamMutation = useCreateTeam();
@@ -36,6 +49,12 @@ const StudentTeams = () => {
     useGetTeamMembers(selectedTeam);
 
   const leaveTeamMutation = useLeaveTeam();
+
+  // Invitations and join requests hooks
+  const { data: joinRequests = [], isLoading: joinRequestsLoading } = useGetMyTeamJoinRequests();
+  const { data: invitations = [], isLoading: invitationsLoading } = useTeamInvitationStatus();
+  const acceptInvitationMutation = useAcceptTeamInvitation();
+  const rejectInvitationMutation = useRejectTeamInvitation();
 
 
   // Filter teams to separate user's teams from available teams
@@ -157,6 +176,39 @@ const StudentTeams = () => {
     );
   }
 
+  const handleAcceptInvitation = async (code) => {
+    try {
+      await acceptInvitationMutation.mutateAsync({ code });
+      message.success('Đã chấp nhận lời mời thành công!');
+    } catch (error) {
+      console.error('Accept invitation error:', error);
+      message.error('Không thể chấp nhận lời mời. Vui lòng thử lại.');
+    }
+  };
+
+  const handleRejectInvitation = async (code) => {
+    try {
+      await rejectInvitationMutation.mutateAsync({ code });
+      message.success('Đã từ chối lời mời.');
+    } catch (error) {
+      console.error('Reject invitation error:', error);
+      message.error('Không thể từ chối lời mời. Vui lòng thử lại.');
+    }
+  };
+
+  const getJoinRequestStatusTag = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return <Tag icon={<ClockCircleOutlined />} color="orange">Đang chờ</Tag>;
+      case 'approved':
+        return <Tag icon={<CheckCircleOutlined />} color="green">Đã chấp nhận</Tag>;
+      case 'rejected':
+        return <Tag icon={<CloseCircleOutlined />} color="red">Đã từ chối</Tag>;
+      default:
+        return <Tag color="default">{status || 'Unknown'}</Tag>;
+    }
+  };
+
   const renderTeamsTab = () => (
     <div className="space-y-12">
       <section className="space-y-4">
@@ -197,6 +249,124 @@ const StudentTeams = () => {
     </div>
   );
 
+  const renderInvitationsTab = () => (
+    <div className="space-y-6">
+      {/* Team Join Requests */}
+      <Card className="bg-card-background border border-card-border backdrop-blur-xl">
+        <h3 className="text-lg font-semibold text-text-primary mb-4">
+          Yêu cầu tham gia đội
+        </h3>
+        {joinRequestsLoading ? (
+          <div className="flex justify-center py-8">
+            <Spin />
+          </div>
+        ) : joinRequests && joinRequests.length > 0 ? (
+          <div className="space-y-3">
+            {joinRequests.map((request) => (
+              <Card
+                key={request.requestId || request.id}
+                className="bg-card-background/50 border border-card-border"
+                size="small"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="text-text-primary font-medium">
+                        {request.teamName || 'Đội không xác định'}
+                      </h4>
+                      {getJoinRequestStatusTag(request.status)}
+                    </div>
+                    {request.message && (
+                      <p className="text-text-secondary text-sm mb-2">
+                        {request.message}
+                      </p>
+                    )}
+                    {request.createdAt && (
+                      <p className="text-muted-foreground text-xs">
+                        Gửi lúc: {dayjs(request.createdAt).format('DD/MM/YYYY HH:mm')}
+                      </p>
+                    )}
+                    {request.leaderResponse && (
+                      <p className="text-text-secondary text-sm mt-2">
+                        Phản hồi: {request.leaderResponse}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Empty description="Không có yêu cầu tham gia đội nào" />
+        )}
+      </Card>
+
+      {/* Team Invitations */}
+      <Card className="bg-card-background border border-card-border backdrop-blur-xl">
+        <h3 className="text-lg font-semibold text-text-primary mb-4">
+          Lời mời tham gia đội
+        </h3>
+        {invitationsLoading ? (
+          <div className="flex justify-center py-8">
+            <Spin />
+          </div>
+        ) : invitations && invitations.length > 0 ? (
+          <div className="space-y-3">
+            {invitations.map((invitation) => (
+              <Card
+                key={invitation.invitationId || invitation.id}
+                className="bg-card-background/50 border border-card-border"
+                size="small"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="text-text-primary font-medium">
+                        {invitation.teamName || 'Đội không xác định'}
+                      </h4>
+                      <Tag icon={<ClockCircleOutlined />} color="blue">Lời mời</Tag>
+                    </div>
+                    {invitation.invitedBy && (
+                      <p className="text-text-secondary text-sm mb-2">
+                        Được mời bởi: {invitation.invitedBy}
+                      </p>
+                    )}
+                    {invitation.createdAt && (
+                      <p className="text-muted-foreground text-xs">
+                        Gửi lúc: {dayjs(invitation.createdAt).format('DD/MM/YYYY HH:mm')}
+                      </p>
+                    )}
+                  </div>
+                  <Space>
+                    <Button
+                      type="primary"
+                      icon={<CheckCircleOutlined />}
+                      onClick={() => handleAcceptInvitation(invitation.code || invitation.invitationCode)}
+                      loading={acceptInvitationMutation.isPending}
+                      className="bg-green-500 hover:bg-green-600 border-0"
+                    >
+                      Chấp nhận
+                    </Button>
+                    <Button
+                      danger
+                      icon={<CloseCircleOutlined />}
+                      onClick={() => handleRejectInvitation(invitation.code || invitation.invitationCode)}
+                      loading={rejectInvitationMutation.isPending}
+                    >
+                      Từ chối
+                    </Button>
+                  </Space>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Empty description="Không có lời mời nào" />
+        )}
+      </Card>
+    </div>
+  );
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -230,7 +400,23 @@ const StudentTeams = () => {
       </div>
 
       {/* Teams Content */}
-      {renderTeamsTab()}
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={[
+          {
+            key: 'teams',
+            label: 'Đội của tôi',
+            children: renderTeamsTab(),
+          },
+          {
+            key: 'invitations',
+            label: 'Lời mời',
+            children: renderInvitationsTab(),
+          },
+        ]}
+        className="[&_.ant-tabs-tab]:text-text-secondary [&_.ant-tabs-tab-active]:text-primary [&_.ant-tabs-ink-bar]:bg-primary [&_.ant-tabs-content]:text-white"
+      />
 
       {/* Create Team Modal */}
       <CreateTeamModal
