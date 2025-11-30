@@ -38,8 +38,12 @@ export const useMarkAsRead = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (notificationId) => {
-            const response = await axiosClient.put(`/Notification/${notificationId}/read`);
+        mutationFn: async (notificationIds) => {
+            // Accept single ID or array of IDs
+            const ids = Array.isArray(notificationIds) ? notificationIds : [notificationIds];
+            const response = await axiosClient.put('/Notification/mark-read', {
+                notificationIds: ids,
+            });
             return response.data;
         },
         onSuccess: () => {
@@ -55,7 +59,7 @@ export const useMarkAllAsRead = () => {
 
     return useMutation({
         mutationFn: async () => {
-            const response = await axiosClient.put('/Notification/read-all');
+            const response = await axiosClient.put('/Notification/mark-all-read');
             return response.data;
         },
         onSuccess: () => {

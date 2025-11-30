@@ -28,7 +28,7 @@ const getDuration = (start, end) => {
 
 // Helper: Xác định trạng thái
 const getPhaseStatus = (start, end) => {
-  const now = dayjs();
+    const now = dayjs();
   const startTime = dayjs(start);
   const endTime = dayjs(end);
 
@@ -161,8 +161,8 @@ const HackathonPhases = ({ hackathonId }) => {
     <Card className="bg-card-background border border-card-border backdrop-blur-xl">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-text-primary mb-2">
-          Các giai đoạn của Hackathon
-        </h3>
+        Các giai đoạn của Hackathon
+      </h3>
         <p className="text-sm text-text-secondary">
           Theo dõi tiến độ các vòng thi
         </p>
@@ -180,7 +180,7 @@ const HackathonPhases = ({ hackathonId }) => {
           <div className="flex flex-col">
             {phases.map((phase, index) => (
               <PhaseItem 
-                key={phase.phaseId} 
+                key={phase.phaseId}
                 phase={phase} 
                 index={index} 
                 total={phases.length}
@@ -192,10 +192,10 @@ const HackathonPhases = ({ hackathonId }) => {
             <div className="flex gap-6 items-center opacity-30">
               <div className="w-12 flex justify-center">
                 <div className="w-3 h-3 bg-card-border rounded-full"></div>
-              </div>
+                    </div>
               <div className="text-sm text-text-secondary italic">Kết thúc giải đấu</div>
-            </div>
-          </div>
+                    </div>
+                  </div>
         </div>
       ) : (
         <Empty description="Chưa có giai đoạn nào" />
