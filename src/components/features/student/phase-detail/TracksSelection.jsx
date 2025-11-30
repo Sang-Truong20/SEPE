@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Card, Empty, Form, Spin } from 'antd';
 import TrackCard from './TrackCard';
+import TrackDetailModal from './TrackDetailModal';
 
 const TracksSelection = ({ 
   tracks, 
@@ -9,6 +11,8 @@ const TracksSelection = ({
   form,
   onFinish
 }) => {
+  const [selectedTrackForModal, setSelectedTrackForModal] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
   return (
     <Card className="bg-card-background border border-card-border backdrop-blur-xl">
       <h3 className="text-lg font-semibold text-text-primary mb-4">
@@ -33,7 +37,8 @@ const TracksSelection = ({
                     track={track}
                     isSelected={isSelected}
                     onSelect={() => {
-                      onTrackSelect(track.trackId);
+                      setSelectedTrackForModal(track);
+                      setModalVisible(true);
                     }}
                     onSubmit={() => {
                       form.submit();
@@ -47,6 +52,23 @@ const TracksSelection = ({
       ) : (
         <Empty description="Chưa có track nào cho phase này" />
       )}
+
+      <TrackDetailModal
+        track={selectedTrackForModal}
+        visible={modalVisible}
+        onClose={() => {
+          setModalVisible(false);
+          setSelectedTrackForModal(null);
+        }}
+        onSelectTrack={() => {
+          if (selectedTrackForModal) {
+            onTrackSelect(selectedTrackForModal.trackId);
+            form.setFieldsValue({ trackId: selectedTrackForModal.trackId });
+            form.submit();
+          }
+        }}
+        isSelected={selectedTrackForModal?.trackId === selectedTrackId}
+      />
     </Card>
   );
 };
