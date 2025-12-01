@@ -14,8 +14,7 @@ import {
 } from '../../components/features/student/team';
 import {
   useCreateTeam,
-  useGetTeam,
-  useGetTeams,
+  useGetMyTeams,
 } from '../../hooks/student/team';
 import {
   useGetTeamMembers,
@@ -28,6 +27,7 @@ import {
   useTeamInvitationStatus,
   useAcceptTeamInvitation,
   useRejectTeamInvitation,
+  useGetTeamInvitationsByTeam,
 } from '../../hooks/student/team-invitation';
 import dayjs from 'dayjs';
 
@@ -40,11 +40,10 @@ const StudentTeams = () => {
   // Hooks for team operations
   const createTeamMutation = useCreateTeam();
   const {
-    data: teamsData,
-    isLoading: teamsLoading,
-    error: teamsError,
-  } = useGetTeams();
-  const { isLoading: teamLoading } = useGetTeam(selectedTeam);
+    data: myTeamsData,
+    isLoading: myTeamsLoading,
+    error: myTeamsError,
+  } = useGetMyTeams();
   const { data: teamMembersData, isLoading: membersLoading } =
     useGetTeamMembers(selectedTeam);
 
@@ -53,23 +52,24 @@ const StudentTeams = () => {
   // Invitations and join requests hooks
   const { data: joinRequests = [], isLoading: joinRequestsLoading } = useGetMyTeamJoinRequests();
   const { data: invitations = [], isLoading: invitationsLoading } = useTeamInvitationStatus();
+  const {
+    data: teamInvitationsByTeam = [],
+    isLoading: teamInvitationsByTeamLoading,
+  } = useGetTeamInvitationsByTeam(selectedTeam, { enabled: !!selectedTeam });
   const acceptInvitationMutation = useAcceptTeamInvitation();
   const rejectInvitationMutation = useRejectTeamInvitation();
 
 
-  // Filter teams to separate user's teams from available teams
-  // Handle different possible API response formats
-  const teamsArray = Array.isArray(teamsData)
-    ? teamsData
-    : teamsData?.data
-      ? teamsData.data
-      : teamsData?.teams
-        ? teamsData.teams
+  // My teams from /Team/my-teams
+  const myTeamsArray = Array.isArray(myTeamsData)
+    ? myTeamsData
+    : myTeamsData?.data
+      ? myTeamsData.data
+      : myTeamsData?.teams
+        ? myTeamsData.teams
         : [];
 
-  // For now, show all teams as "my teams" until we understand the API structure
-  // If API fails, show empty arrays
-  const myTeams = teamsArray || [];
+  const myTeams = myTeamsArray || [];
   const availableTeams = [];
 
   const handleCreateTeam = async (values) => {
@@ -141,7 +141,7 @@ const StudentTeams = () => {
   };
 
   // Show loading spinner while fetching teams
-  if (teamsLoading) {
+  if (myTeamsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Spin size="large" />
@@ -150,7 +150,7 @@ const StudentTeams = () => {
   }
 
   // Show error state if there's an error
-  if (teamsError) {
+  if (myTeamsError) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Alert
@@ -220,7 +220,7 @@ const StudentTeams = () => {
           onLeaveTeam={handleLeaveTeam}
           onJoinTeam={handleJoinTeam}
           selectedTeam={selectedTeam}
-          teamLoading={teamLoading}
+          teamLoading={false}
           membersLoading={membersLoading}
           teamMembersData={teamMembersData}
           isMyTeam={true}
@@ -239,12 +239,55 @@ const StudentTeams = () => {
           onLeaveTeam={handleLeaveTeam}
           onJoinTeam={handleJoinTeam}
           selectedTeam={selectedTeam}
-          teamLoading={teamLoading}
+          teamLoading={false}
           membersLoading={membersLoading}
           teamMembersData={teamMembersData}
           isAvailableTeam={true}
           leaveTeamMutation={leaveTeamMutation}
         />
+      </section>
+
+      <section className="space-y-4 border-t border-white/5 pt-8">
+        <Card className="bg-card-background border border-card-border backdrop-blur-xl">
+          <h3 className="text-lg font-semibold text-text-primary mb-4">
+            Lời mời đã gửi của đội đang chọn
+          </h3>
+          {!selectedTeam ? (
+            <Empty description="Chọn một đội để xem lời mời" />
+          ) : teamInvitationsByTeamLoading ? (
+            <div className="flex justify-center py-8">
+              <Spin />
+            </div>
+          ) : teamInvitationsByTeam && teamInvitationsByTeam.length > 0 ? (
+            <div className="space-y-3">
+              {teamInvitationsByTeam.map((invitation) => (
+                <Card
+                  key={invitation.invitationId || invitation.id || invitation.email}
+                  className="bg-card-background/50 border border-card-border"
+                  size="small"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="text-text-primary font-medium mb-1">
+                        {invitation.email || invitation.invitedUserEmail || 'Email không xác định'}
+                      </div>
+                      {invitation.createdAt && (
+                        <p className="text-muted-foreground text-xs">
+                          Gửi lúc: {dayjs(invitation.createdAt).format('DD/MM/YYYY HH:mm')}
+                        </p>
+                      )}
+                    </div>
+                    <Tag color="blue">
+                      {invitation.status || 'Pending'}
+                    </Tag>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Empty description="Đội chưa gửi lời mời nào" />
+          )}
+        </Card>
       </section>
     </div>
   );

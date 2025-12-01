@@ -29,7 +29,7 @@ export const useGetUnreadCount = () => {
             const response = await axiosClient.get('/Notification/unread/count');
             return response.data;
         },
-        staleTime: 30 * 1000, // 30 seconds
+        retry: false,
     });
 };
 

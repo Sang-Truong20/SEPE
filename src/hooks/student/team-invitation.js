@@ -4,6 +4,7 @@ import axiosClient from '../../configs/axiosClient';
 export const teamInvitationQueryKeys = {
     origin: ['student', 'team-invitation'],
     invite: (teamId) => [...teamInvitationQueryKeys.origin, 'invite', teamId],
+    teamInvitations: (teamId) => [...teamInvitationQueryKeys.origin, 'team', teamId],
     status: () => [...teamInvitationQueryKeys.origin, 'status'],
     accept: () => [...teamInvitationQueryKeys.origin, 'accept'],
     reject: () => [...teamInvitationQueryKeys.origin, 'reject'],
@@ -68,7 +69,22 @@ export const useTeamInvitationStatus = () => {
             const response = await axiosClient.get('/TeamInvitation/status');
             return response.data;
         },
-        staleTime: 60 * 1000,
+        retry: false,
     });
 };
+
+// Get invitations by team ID
+export const useGetTeamInvitationsByTeam = (teamId, options = {}) => {
+    return useQuery({
+        queryKey: teamInvitationQueryKeys.teamInvitations(teamId),
+        queryFn: async () => {
+            const response = await axiosClient.get(`/TeamInvitation/team/${teamId}`);
+            return response.data;
+        },
+        enabled: !!teamId && (options.enabled !== false),
+        staleTime: 5 * 60 * 1000,
+        ...options,
+    });
+};
+
 

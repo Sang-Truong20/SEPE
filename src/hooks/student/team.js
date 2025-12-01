@@ -4,6 +4,7 @@ import axiosClient from '../../configs/axiosClient';
 export const teamQueryKeys = {
     origin: ['student', 'team'],
     teams: () => [...teamQueryKeys.origin, 'list'],
+    myTeams: () => [...teamQueryKeys.origin, 'my-teams'],
     team: (id) => [...teamQueryKeys.origin, 'detail', id],
     create: () => [...teamQueryKeys.origin, 'create'],
 };
@@ -39,6 +40,19 @@ export const useGetTeams = (options = {}) => {
             return response.data;
         },
         staleTime: 5 * 60 * 1000, // 5 minutes
+        ...options,
+    });
+};
+
+// Get current user's teams
+export const useGetMyTeams = (options = {}) => {
+    return useQuery({
+        queryKey: teamQueryKeys.myTeams(),
+        queryFn: async () => {
+            const response = await axiosClient.get('/Team/my-teams');
+            return response.data;
+        },
+        staleTime: 5 * 60 * 1000,
         ...options,
     });
 };
