@@ -64,17 +64,38 @@ const MentorLayout = () => {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
   const {
-    data: notifications = mockNotifications,
+    data: notificationsResponse,
     isLoading: notificationsLoading,
   } = useGetNotifications();
-  const {
-    data: unreadCountData = {
-      count: mockNotifications.filter((n) => !n.isRead).length,
-    },
-  } = useGetUnreadCount();
-  const unreadCount =
-    unreadCountData?.count || mockNotifications.filter((n) => !n.isRead).length;
+
+  const { data: unreadCountResponse } = useGetUnreadCount();
+
+  // Normalize notifications to always be an array
+  const notifications = React.useMemo(() => {
+    if (!notificationsResponse) return mockNotifications;
+
+    if (Array.isArray(notificationsResponse)) return notificationsResponse;
+
+    if (Array.isArray(notificationsResponse.data)) return notificationsResponse.data;
+
+    // Fallback
+    return mockNotifications;
+  }, [notificationsResponse]);
+
+  // Normalize unread count to a number
+  const unreadCount = React.useMemo(() => {
+    if (typeof unreadCountResponse === 'number') return unreadCountResponse;
+
+    if (typeof unreadCountResponse?.count === 'number') return unreadCountResponse.count;
+
+    if (typeof unreadCountResponse?.data?.count === 'number')
+      return unreadCountResponse.data.count;
+
+    return notifications.filter((n) => !n.isRead).length;
+  }, [unreadCountResponse, notifications]);
+
   const markAsRead = useMarkAsRead();
   const { userInfo: authUser } = useUserData();
 
@@ -99,12 +120,6 @@ const MentorLayout = () => {
       label: 'Hackathon',
       icon: Trophy,
       path: PATH_NAME.MENTOR_HACKATHONS,
-    },
-    {
-      id: 'resources',
-      label: 'Tài nguyên',
-      icon: BookOpen,
-      path: PATH_NAME.MENTOR_RESOURCES,
     },
   ];
 

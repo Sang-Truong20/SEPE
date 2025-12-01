@@ -67,7 +67,7 @@ const ChapterTeamHackathonApprovalPage = lazy(() => import('../pages/chapter/tea
 const MentorDashboardPage = lazy(() => import('../pages/mentor/dashboard'));
 const MentorHackathonsPage = lazy(() => import('../pages/mentor/hackathons'));
 const MentorHackathonDetailPage = lazy(() => import('../pages/mentor/hackathon-detail'));
-const MentorResourcesPage = lazy(() => import('../pages/mentor/resources'));
+const MentorNotificationsPage = lazy(() => import('../pages/mentor/notifications'));
 
 const withSuspense = (Component) => (
   <Suspense
@@ -360,7 +360,7 @@ const router = createBrowserRouter([
             path: 'hackathons/:hackathonId',
             element: withSuspense(MentorHackathonDetailPage),
           },
-          { path: 'resources', element: withSuspense(MentorResourcesPage) },
+          { path: 'notifications', element: withSuspense(MentorNotificationsPage) },
         ],
       },
     ],

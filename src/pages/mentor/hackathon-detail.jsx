@@ -1,50 +1,179 @@
 import {
-  TeamOutlined,
-  SearchOutlined,
-  MessageOutlined,
-  TrophyOutlined,
-  CalendarOutlined,
-  UserOutlined,
   ArrowLeftOutlined,
-  CheckCircleOutlined,
+  CalendarOutlined,
+  MessageOutlined,
+  SearchOutlined,
+  TrophyOutlined,
+  UserOutlined
 } from '@ant-design/icons';
-import { Button, Card, Input, Tag, Avatar, Spin, Empty, Badge, Row, Col, Divider } from 'antd';
-import { useState, useMemo } from 'react';
+import { Button, Card, Col, Empty, Input, Modal, Row, Spin, Tag } from 'antd';
+import { Calendar as CalendarIcon, Send, Terminal, Users } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
+import {
+  useGetHackathonChatGroups,
+  useGetChatGroupMessages,
+  useSendChatMessage,
+} from '../../hooks/student/chat';
 import { useGetHackathon } from '../../hooks/student/hackathon';
-import { useGetMentorTeamsByHackathon } from '../../hooks/mentor/useMentorTeamsByHackathon';
 import { useUserData } from '../../hooks/useUserData';
-import TeamChatModal from '../../components/features/mentor/TeamChatModal';
+
+const ChatGroupMessagesModal = ({ chatGroupId, open, onClose, group, currentMentorId }) => {
+  const { data: messagesData, isLoading: messagesLoading } = useGetChatGroupMessages(chatGroupId);
+  const { mutate: sendMessage, isLoading: sending } = useSendChatMessage();
+  const [newMessage, setNewMessage] = useState('');
+
+  const messages = Array.isArray(messagesData)
+    ? messagesData
+    : messagesData?.data || [];
+
+  const handleSend = () => {
+    if (!newMessage.trim()) return;
+    sendMessage(
+      { chatGroupId, content: newMessage },
+      {
+        onSuccess: () => setNewMessage(''),
+      },
+    );
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  return (
+    <Modal
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width={720}
+      title={
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <MessageOutlined />
+            <span className="text-white font-semibold">
+              Chat với {group?.teamName} ({group?.hackathonName})
+            </span>
+          </div>
+          <p className="text-xs text-gray-400">
+            Mentor: {group?.mentorName}
+          </p>
+        </div>
+      }
+      className="[&_.ant-modal-content]:bg-dark-secondary [&_.ant-modal-content]:border-white/10 [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white"
+    >
+      <div className="flex flex-col h-[480px]">
+        <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-white/5 rounded-lg mb-3">
+          {messagesLoading ? (
+            <div className="flex justify-center items-center h-full">
+              <Spin />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex justify-center items-center h-full text-gray-400 text-sm">
+              Chưa có tin nhắn nào trong đoạn chat này.
+            </div>
+          ) : (
+            messages.map((msg) => {
+              const isMentorMessage =
+                msg.isMentor === true ||
+                msg.senderRole?.toLowerCase() === 'mentor' ||
+                (currentMentorId &&
+                  msg.senderId &&
+                  String(msg.senderId) === String(currentMentorId));
+
+              return (
+                <div
+                  key={msg.id || msg.messageId}
+                  className={`space-y-1 flex flex-col ${
+                    isMentorMessage ? 'items-end' : 'items-start'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-xs text-gray-400 mb-0.5">
+                    <span className="font-semibold text-gray-200">
+                      {msg.senderName || msg.sender || (isMentorMessage ? 'Mentor' : 'Thành viên')}
+                    </span>
+                    {msg.sentAt && (
+                      <span className="text-[10px]">
+                        {new Date(msg.sentAt).toLocaleString('vi-VN')}
+                      </span>
+                    )}
+                  </div>
+                  <div
+                    className={`px-3 py-2 rounded-lg text-sm max-w-[80%] ${
+                      isMentorMessage ? 'bg-emerald-500 text-white' : 'bg-white/10 text-gray-100'
+                    }`}
+                  >
+                    {msg.content || msg.message}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <Input.TextArea
+            rows={2}
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Nhập tin nhắn..."
+          />
+          <Button
+            type="primary"
+            loading={sending}
+            disabled={!newMessage.trim()}
+            onClick={handleSend}
+          >
+            Gửi
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
 
 const MentorHackathonDetail = () => {
   const navigate = useNavigate();
   const { hackathonId } = useParams();
-  const [teamSearchQuery, setTeamSearchQuery] = useState('');
-  const [chatTeamId, setChatTeamId] = useState(null);
+  const [chatGroupSearchQuery, setChatGroupSearchQuery] = useState('');
+  const [activeChatGroup, setActiveChatGroup] = useState(null);
   const { userInfo } = useUserData();
 
   const currentMentorId = userInfo?.id || userInfo?.userId || null;
 
   const { data: hackathonData, isLoading: hackathonLoading } = useGetHackathon(hackathonId);
   const {
-    data: teamsData,
-    isLoading: teamsLoading,
-  } = useGetMentorTeamsByHackathon(currentMentorId, hackathonId);
+    data: hackathonChatGroupsData,
+    isLoading: hackathonChatGroupsLoading,
+  } = useGetHackathonChatGroups(hackathonId);
 
-  // Filter teams by search query
-  const filteredTeams = useMemo(() => {
-    if (!teamsData) return [];
-    const teams = Array.isArray(teamsData) ? teamsData : teamsData?.data || [];
-    if (!teamSearchQuery) return teams;
-    const query = teamSearchQuery.toLowerCase();
-    return teams.filter(
-      (team) =>
-        team.name?.toLowerCase().includes(query) ||
-        team.teamName?.toLowerCase().includes(query) ||
-        team.description?.toLowerCase().includes(query),
+  // Hackathon chat groups for this mentor
+  const hackathonChatGroups = useMemo(() => {
+    if (!hackathonChatGroupsData) return [];
+
+    const rawGroups = Array.isArray(hackathonChatGroupsData)
+      ? hackathonChatGroupsData
+      : hackathonChatGroupsData?.data || [];
+
+    if (!currentMentorId) return rawGroups;
+
+    return rawGroups.filter((g) => String(g.mentorId) === String(currentMentorId));
+  }, [hackathonChatGroupsData, currentMentorId]);
+
+  const filteredHackathonChatGroups = useMemo(() => {
+    if (!chatGroupSearchQuery) return hackathonChatGroups;
+    const query = chatGroupSearchQuery.toLowerCase();
+    return hackathonChatGroups.filter(
+      (group) =>
+        group.teamName?.toLowerCase().includes(query) ||
+        group.groupName?.toLowerCase().includes(query),
     );
-  }, [teamsData, teamSearchQuery]);
+  }, [hackathonChatGroups, chatGroupSearchQuery]);
 
   const getStatusBadge = (status) => {
     switch (status?.toLowerCase()) {
@@ -66,14 +195,6 @@ const MentorHackathonDetail = () => {
       month: '2-digit',
       year: 'numeric',
     });
-  };
-
-  const handleOpenChat = (teamId) => {
-    setChatTeamId(teamId);
-  };
-
-  const handleCloseChat = () => {
-    setChatTeamId(null);
   };
 
   if (hackathonLoading) {
@@ -99,6 +220,88 @@ const MentorHackathonDetail = () => {
   const hackathon = Array.isArray(hackathonData)
     ? hackathonData[0]
     : hackathonData?.data || hackathonData;
+
+  const ChatGroupCard = ({ group, onJoin }) => {
+    return (
+      <div className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden   hover:shadow-[0_0_25px_rgba(16,185,129,0.18)] transition-all duration-300 flex flex-col relative backdrop-blur-xl">
+        {/* HEADER: Context Info */}
+        <div className="px-5 py-3 border-b border-white/10 bg-zinc-900/60 flex justify-between items-center z-10">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded bg-emerald-500/10 text-emerald-500">
+              <Terminal size={14} />
+            </div>
+            <div>
+              <p className="text-[10px] text-zinc-500 uppercase font-semibold tracking-wider">
+                Hackathon
+              </p>
+              <p className="text-xs font-bold text-zinc-200">{group.hackathonName}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 text-[10px] text-zinc-300 bg-white/10 px-2 py-1 rounded border border-white/10">
+            <CalendarIcon size={10} />
+            <span>{formatDate(group.createdAt)}</span>
+          </div>
+        </div>
+
+        {/* BODY: Team Main Focus */}
+        <div className="p-6 flex flex-col items-center justify-center relative min-h-[160px]">
+          {/* Background Gradient Effect */}
+          <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent opacity-50 pointer-events-none"></div>
+
+          {/* Mentor Badge (Floating Top Right) */}
+          <div className="absolute top-4 right-4 z-20">
+            <div className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full bg-zinc-900/70 border border-violet-500/40 hover:bg-violet-900/40 hover:border-violet-400/60 transition-colors group/mentor cursor-default shadow-lg shadow-violet-500/25">
+              <div className="w-5 h-5 rounded-full bg-violet-600 flex items-center justify-center text-[10px] text-white font-bold ring-2 ring-zinc-900">
+                {group.mentorName?.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[8px] uppercase text-zinc-500 font-bold leading-none group-hover/mentor:text-violet-400">
+                  Mentor
+                </span>
+                <span className="text-[10px] font-semibold text-zinc-300 leading-none group-hover/mentor:text-violet-200">
+                  {group.mentorName}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Team Info (Main Center) */}
+          <div className="relative z-10 flex flex-col items-center">
+            {/* Team Avatar */}
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-xl shadow-emerald-500/30 mb-3 border-4 border-zinc-900 group-hover:scale-105 transition-transform duration-300">
+              <span className="text-2xl font-bold text-white">
+                {group.teamName?.charAt(0).toUpperCase()}
+              </span>
+            </div>
+
+            {/* Team Name */}
+            <h3 className="text-xl font-bold text-white mb-1 tracking-tight text-center px-4">
+              {group.teamName}
+            </h3>
+
+            {/* Subtext */}
+            <div className="flex items-center gap-1.5 text-zinc-200 text-xs bg-zinc-900/60 px-3 py-1 rounded-full border border-white/10">
+              <Users size={12} />
+              <span>Group Chat</span>
+            </div>
+          </div>
+        </div>
+
+        {/* FOOTER: only join chat CTA */}
+        <div className="mt-auto bg-zinc-900/70 border-t border-white/10 p-4">
+          <div
+            className="flex items-center justify-end cursor-pointer group/cta"
+            onClick={() => onJoin && onJoin(group)}
+          >
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 group-hover/cta:bg-emerald-500 group-hover/cta:text-white group-hover/cta:border-emerald-400 transition-all">
+              <Send size={14} className="-ml-0.5 mt-0.5" />
+              <span className="text-xs font-semibold">Tham gia đoạn chat</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -157,151 +360,68 @@ const MentorHackathonDetail = () => {
         </Row>
       </Card>
 
-      {/* Teams Section */}
+      {/* Hackathon Chat Groups Section */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl text-white font-semibold">Teams bạn đang quản lý</h2>
+            <h2 className="text-2xl text-white font-semibold">Nhóm chat trong hackathon</h2>
             <p className="text-gray-400 mt-1">
-              {filteredTeams.length} team{filteredTeams.length !== 1 ? 's' : ''} trong hackathon này
+              {filteredHackathonChatGroups.length} nhóm chat giữa bạn và các team
             </p>
           </div>
         </div>
 
-        {/* Team Search */}
+        {/* Search chat groups by team name */}
         <Card className="border-0 bg-white/5 backdrop-blur-xl">
           <Input
-            placeholder="Tìm kiếm team theo tên hoặc mô tả..."
+            placeholder="Tìm kiếm nhóm chat theo tên team hoặc tên nhóm..."
             prefix={<SearchOutlined className="text-green-400" />}
-            value={teamSearchQuery}
-            onChange={(e) => setTeamSearchQuery(e.target.value)}
+            value={chatGroupSearchQuery}
+            onChange={(e) => setChatGroupSearchQuery(e.target.value)}
             className="bg-white/10 border-white/20 hover:border-green-400/50 focus:border-green-400 transition-all"
             size="large"
             allowClear
           />
         </Card>
 
-        {/* Teams Grid */}
-        {teamsLoading ? (
+        {hackathonChatGroupsLoading ? (
           <Card className="border-0 bg-white/5 backdrop-blur-xl">
             <div className="flex justify-center py-8">
               <Spin size="large" />
             </div>
           </Card>
-        ) : filteredTeams.length > 0 ? (
+        ) : filteredHackathonChatGroups.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredTeams.map((team, index) => (
-              <Card
-                key={team.id}
-                className="border-0 bg-gradient-to-br from-white/5 to-white/5 backdrop-blur-xl hover:from-white/10 hover:to-green-500/10 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl"
-                style={{
-                  animation: `fadeIn 0.3s ease-out ${index * 0.1}s both`,
-                }}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-xl text-white">{team.name || team.teamName}</h3>
-                      <CheckCircleOutlined className="text-green-400" />
-                    </div>
-                    <p className="text-gray-400 text-sm">
-                      {team.description || 'Không có mô tả'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Team Members */}
-                {team.members && team.members.length > 0 && (
-                  <div className="mb-4 p-3 rounded-lg bg-white/5 border border-white/10">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-300">
-                        Thành viên ({team.members.length})
-                      </span>
-                      <Badge
-                        count={team.members.length}
-                        showZero
-                        className="bg-green-500/20 text-green-400"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex -space-x-2">
-                        {team.members.slice(0, 5).map((member, idx) => (
-                          <Avatar
-                            key={member.id || idx}
-                            size="default"
-                            className="border-2 border-white/30 hover:border-green-400 transition-all cursor-pointer"
-                            title={member.name || member.fullName}
-                          >
-                            {(member.name || member.fullName || '?')
-                              .charAt(0)
-                              .toUpperCase()}
-                          </Avatar>
-                        ))}
-                        {team.members.length > 5 && (
-                          <Avatar
-                            size="default"
-                            className="border-2 border-white/30 bg-green-500/20 text-green-400"
-                          >
-                            +{team.members.length - 5}
-                          </Avatar>
-                        )}
-                      </div>
-                    </div>
-                    <div className="mt-2 space-y-1">
-                      {team.members.map((member) => (
-                        <div
-                          key={member.id}
-                          className="flex items-center gap-2 text-sm text-gray-400"
-                        >
-                          <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                          <span>
-                            {member.name || member.fullName}
-                            {member.role === 'leader' && (
-                              <Tag color="gold" className="ml-2">
-                                Leader
-                              </Tag>
-                            )}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Chat Button */}
-                <Button
-                  type="primary"
-                  icon={<MessageOutlined />}
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 border-0 hover:from-green-500 hover:to-emerald-500 shadow-lg hover:shadow-green-500/50 transition-all"
-                  onClick={() => handleOpenChat(team.id)}
-                  size="large"
-                >
-                  💬 Chat với Team
-                </Button>
-              </Card>
+            {filteredHackathonChatGroups.map((group) => (
+              <ChatGroupCard
+                key={group.chatGroupId}
+                group={group}
+                onJoin={setActiveChatGroup}
+              />
             ))}
           </div>
         ) : (
           <Card className="border-0 bg-white/5 backdrop-blur-xl">
             <div className="p-12 text-center">
-              <TeamOutlined className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <MessageOutlined className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-400">
-                {teamSearchQuery
-                  ? 'Không tìm thấy team nào phù hợp'
-                  : 'Bạn chưa quản lý team nào trong hackathon này'}
+                Bạn chưa có nhóm chat nào trong hackathon này
               </p>
             </div>
           </Card>
         )}
       </div>
 
-      {/* Chat Modal */}
-      {chatTeamId && (
-        <TeamChatModal
-          teamId={chatTeamId}
-          visible={!!chatTeamId}
-          onClose={handleCloseChat}
-          teamData={filteredTeams.find((t) => t.id === chatTeamId)}
+
+
+      {/* Chat Modal for selected group */}
+      {activeChatGroup && (
+        <ChatGroupMessagesModal
+          chatGroupId={activeChatGroup.chatGroupId}
+          open={!!activeChatGroup}
+          onClose={() => setActiveChatGroup(null)}
+          group={activeChatGroup}
+          currentMentorId={currentMentorId}
         />
       )}
 
