@@ -58,6 +58,8 @@ src/
 │   │   │   └── useScore.js       // API call  Score data hook. Provides `fetchTeamScoresByGroup(groupId)`, `fetchMyScoresGrouped(phaseId)`, `createScore`, and `updateScore`. Handles scoring endpoints for judge and admin workflows; invalidates score caches after mutations and shows messages.
 │   │   ├── seasons/
 │   │   │   └── useSeasons.js     // API call  Seasons data hook. Provides `fetchSeasons`, `fetchSeason(id)`, `createSeason`, `updateSeason`, and `deleteSeason`. Uses axiosClient and invalidates caches after mutations.
+│   │   ├── groups/
+│   │   │   └── useGroups.js      // API call  Groups data hook. Exposes `fetchGroupsByHackathon(hackathonId)` (list groups for a hackathon), `fetchGroupTeams(groupId)` (list teams in a group with details), and `autoCreateGroups` (mutation POST to auto-create groups by teamsPerGroup count). Uses axiosClient and invalidates group caches after mutations.
 │   │   ├── submission/
 │   │   │   └── useSubmission.js  // API call  Submission data hook (file present but empty placeholder in repo) — intended to implement submission CRUD and listing for teams and partners.
 │   │   ├── teams/
@@ -101,6 +103,9 @@ src/
 │   │   │   ├── form/
 │   │   │   │   └── index.jsx      // Season form page. Uses `CreateEditForm` for season properties. Integrates `useSeasons` for CRUD operations.
 │   │   │   └── index.jsx          // Season list page. Displays seasons for a hackathon using `EntityTable`. Supports create/edit/delete and toggles for active status.
+│   │   ├── group/
+│   │   │   ├── index.jsx          // Group list page. Displays groups for a hackathon using `EntityTable`. Supports auto-create groups with configurable teamsPerGroup. Reads hackathonId from query params. Uses `useGroups` hook and EntityTable for listing and view navigation.
+│   │   │   └── group-detail/index.jsx // Group detail page. Displays teams within a group using Ant Design Table. Shows team name, ID, rank, average score, and joined date. Uses `useGroups.fetchGroupTeams` to load team data within a group.
 │   │   ├── team/
 │   │   │   ├── detail/
 │   │   │   │   └── index.jsx      // Team detail page. Uses `EntityDetail` to render team info. Read-only; shows leader, chapter, and createdAt.
