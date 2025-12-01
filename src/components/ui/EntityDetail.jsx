@@ -261,7 +261,12 @@ const EntityDetail = ({
       if (field.type === 'custom' && field.render) {
         return (
           <div key={keyPath.join('.')} className="mb-6">
-            {field.render(data)}
+            <p className="text-gray-300 text-sm font-medium mb-1">
+              {field.key}
+            </p>
+            <div className="min-h-[42px] px-4 py-3 bg-neutral-900 border border-neutral-700 rounded text-sm flex items-center">
+              {field.render(data)}
+            </div>
           </div>
         );
       }

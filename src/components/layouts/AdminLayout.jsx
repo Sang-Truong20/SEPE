@@ -39,6 +39,10 @@ const items = [
       <Link to={PATH_NAME.ADMIN_PRIZES}>Giải thưởng</Link>,
       PATH_NAME.ADMIN_PRIZES,
     ),
+    getItem(
+      <Link to={PATH_NAME.ADMIN_GROUPS}>Bảng đấu</Link>,
+      PATH_NAME.ADMIN_GROUPS,
+    ),
   ]),
   getItem(
     <Link to={PATH_NAME.ADMIN_CHALLENGES}>Thử thách</Link>,
@@ -59,6 +63,11 @@ const items = [
     <Link to={PATH_NAME.ADMIN_TEAMS}>Nhóm</Link>,
     PATH_NAME.ADMIN_TEAMS,
     <TeamOutlined />,
+  ),
+  getItem(
+    <Link to={PATH_NAME.ADMIN_APPEALS}>Khiếu nại</Link>,
+    PATH_NAME.ADMIN_APPEALS,
+    <FileOutlined />,
   ),
   getItem(
     <Link to={PATH_NAME.ADMIN_FILES}>Files</Link>,
