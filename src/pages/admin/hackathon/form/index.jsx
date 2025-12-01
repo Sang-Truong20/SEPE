@@ -32,6 +32,7 @@ const HackathonForm = ({ mode = 'create' }) => {
   const selectSessions = useMemo(() => 
     sessions.map(s => ({
       value: String(s.seasonId),
+      code: s.seasonCode,
       text: s.name
     })), 
     [sessions]
@@ -53,16 +54,16 @@ const HackathonForm = ({ mode = 'create' }) => {
         key: 'Mùa *',
         type: 'dropdown',
         placeholder: 'Mùa thi...',
-        name: 'season',
+        name: 'seasonId',
         required: true,
         message: 'Vui lòng nhập mùa',
-        items: selectSessions,
+        items: selectSessions
       },
       {
-        key: 'Chủ đề *',
-        type: 'input',
-        placeholder: 'Chủ đề...',
-        name: 'theme',
+        key: 'Mô Tả *',
+        type: 'textarea',
+        placeholder: 'Mô tả...',
+        name: 'description',
         required: true,
         message: 'Vui lòng nhập mô tả'
       },
@@ -73,7 +74,7 @@ const HackathonForm = ({ mode = 'create' }) => {
             {
               key: 'Ngày bắt đầu *',
               type: 'datetime',
-              placeholder: 'mm/dd/yyyy --:-- --',
+              placeholder: 'mm/dd/yyyy',
               name: 'startDate',
               required: true,
               message: 'Vui lòng chọn ngày bắt đầu'
@@ -83,7 +84,7 @@ const HackathonForm = ({ mode = 'create' }) => {
             {
               key: 'Ngày kết thúc *',
               type: 'datetime',
-              placeholder: 'mm/dd/yyyy --:-- --',
+              placeholder: 'mm/dd/yyyy',
               name: 'endDate',
               required: true,
               message: 'Vui lòng chọn ngày kết thúc'
@@ -112,9 +113,13 @@ const HackathonForm = ({ mode = 'create' }) => {
   // Initial values cho edit
   const initialValues = useMemo(() => {
     if (mode === 'edit' && hackathon) {
+      const matchedSeason = sessions.find(s => s.seasonCode === hackathon.season);
+      const seasonId = matchedSeason ? String(matchedSeason.seasonId) : undefined;
+      console.log('hackathon initialValues', hackathon, seasonId);
       return {
         ...hackathon,
         startDate: hackathon.startDate ? dayjs(hackathon.startDate) : null,
+        seasonId: seasonId,
         endDate: hackathon.endDate ? dayjs(hackathon.endDate) : null,
         registrationDeadline: hackathon.registrationDeadline ? dayjs(hackathon.registrationDeadline) : null
       };
@@ -126,9 +131,9 @@ const HackathonForm = ({ mode = 'create' }) => {
   const handleSubmit = async (values) => {
     const payload = {
       ...values,
-      startDate: values.startDate?.format('YYYY-MM-DD HH:mm:ss'),
-      endDate: values.endDate?.format('YYYY-MM-DD HH:mm:ss'),
-      registrationDeadline: values.registrationDeadline?.format('YYYY-MM-DD HH:mm:ss'),
+      startDate: values.startDate?.format('YYYY-MM-DD'),
+      endDate: values.endDate?.format('YYYY-MM-DD'),
+      registrationDeadline: values.registrationDeadline?.format('YYYY-MM-DD'),
     };
     try {
       if (mode === 'create') {

@@ -1,5 +1,5 @@
 // Updated EntityDetail.jsx (add support for href in type: 'url')
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Card,
   Space,
@@ -42,7 +42,7 @@ const SUPPORTED_TYPES = [
 const normalizeFields = (fields = []) =>
   fields.filter((f) => !f.type || SUPPORTED_TYPES.includes(f.type));
 
-const formatDate = (val, fmt = 'DD/MM/YYYY HH:mm') => {
+const formatDate = (val, fmt = 'DD/MM/YYYY') => {
   if (!val) return '--';
   const d = dayjs(val);
   return d.isValid() ? d.format(fmt) : val;
@@ -127,7 +127,7 @@ const EntityDetail = ({
 
         case 'datetime':
           const fmt =
-            dateFormatMap[fieldName] || field.format || 'DD/MM/YYYY HH:mm';
+            dateFormatMap[fieldName] || field.format || 'DD/MM/YYYY';
           return <span className="text-gray-300">{formatDate(raw, fmt)}</span>;
 
         case 'file':

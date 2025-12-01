@@ -156,10 +156,9 @@ const CreateEditForm = ({
             </label>
             <Form.Item {...commonItemProps}>
               <DatePicker
-                showTime={field.showTime !== false}
                 disabled={field.disabled}
                 placeholder={field.placeholder || ''}
-                format={field.format || 'DD/MM/YYYY HH:mm'}
+                format={field.format || 'DD/MM/YYYY'}
                 className="w-full h-10 text-white !bg-neutral-900 !border-neutral-700 rounded
                            hover:!bg-neutral-800 hover:!border-primary
                            focus:!bg-neutral-800 focus:!border-primary

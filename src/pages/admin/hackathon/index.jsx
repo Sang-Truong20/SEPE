@@ -32,17 +32,18 @@ const Hackathons = () => {
       },
       {
         title: 'Mùa',
-        dataIndex: 'season',
-        key: 'season',
+        dataIndex: 'seasonName',
+        key: 'seasonName',
         type: 'tag',
         tagColor: 'gold',
         transform: (val) => val?.toUpperCase()
       },
       {
-        title: 'Chủ đề',
-        dataIndex: 'theme',
-        key: 'theme',
+        title: 'Mô tả',
+        dataIndex: 'description',
+        key: 'description',
         type: 'text',
+        ellipsis: true,
         className: 'text-gray-300'
       },
       {
@@ -50,14 +51,14 @@ const Hackathons = () => {
         dataIndex: 'startDate',
         key: 'startDate',
         type: 'datetime',
-        format: 'DD/MM/YYYY HH:mm'
+        format: 'DD/MM/YYYY'
       },
       {
         title: 'Ngày kết thúc',
         dataIndex: 'endDate',
         key: 'endDate',
         type: 'datetime',
-        format: 'DD/MM/YYYY HH:mm'
+        format: 'DD/MM/YYYY'
       },
       {
         title: 'Quản lý',
