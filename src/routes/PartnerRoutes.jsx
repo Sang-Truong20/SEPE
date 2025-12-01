@@ -7,9 +7,7 @@ import { useUserData } from '../hooks/useUserData';
 const PartnerRoutes = () => {
   const { isLoading, userInfo } = useUserData();
 
-  // Giả lập: role 2 = Partner
-  // const isPartner = userInfo && userInfo.role === 2;
-  const isPartner = true;
+  const isPartner = userInfo && userInfo.roleName?.toLowerCase() === "partner";
 
   if (isLoading) {
     return (

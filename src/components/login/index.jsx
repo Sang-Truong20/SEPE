@@ -1,4 +1,4 @@
-import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
 import { useMutation } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
@@ -46,9 +46,6 @@ function Login() {
     },
   });
 
-  const login = useGoogleLogin({
-    onSuccess: (tokenResponse) => console.log(tokenResponse),
-  });
 
   return (
     <GoogleLogin
