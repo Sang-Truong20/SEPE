@@ -2,6 +2,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
 
+/**
+ * API: Auth user endpoints
+ * OpenAPI components:
+ *  - UpdateUserDto: { fullName?: string }
+ */
 export const userQueryKeys = {
     all: ['Users'],
     lists: () => [...userQueryKeys.all, 'list'],
@@ -12,6 +17,13 @@ export const useUsers = () => {
     const queryClient = useQueryClient();
 
     // Fetch all users
+    /**
+     * API: GET /api/Auth/users
+     * method: GET
+     * path: /api/Auth/users
+     * request: none
+     * response: 200 OK -> array of user objects (OpenAPI lists users)
+     */
     const fetchUsers = useQuery({
         queryKey: userQueryKeys.lists(),
         queryFn: async () => {
@@ -20,6 +32,14 @@ export const useUsers = () => {
         },
     });
 
+    /**
+     * API: PUT /api/Auth/update-info/{id}
+     * method: PUT
+     * path: /api/Auth/update-info/{id}
+     * request body: UpdateUserDto
+     *   - fullName: string | null
+     * response: 200 OK -> updated user
+     */
     // Update user info
     const updateUser = useMutation({
         mutationFn: ({ id, payload }) => axiosClient.put(`/Auth/update-info/${id}`, payload),
@@ -33,6 +53,14 @@ export const useUsers = () => {
         },
     });
 
+    /**
+     * API: PUT /api/Auth/users/{id}/block
+     * method: PUT
+     * path: /api/Auth/users/{id}/block
+     * request: path param id: integer, query param isBlocked: boolean
+     * response: 200 OK
+     * describe: Block or unblock a user
+     */
     // Block/Unblock user
     const toggleBlockUser = useMutation({
         mutationFn: ({ id, isBlocked }) =>

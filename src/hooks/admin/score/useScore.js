@@ -20,6 +20,15 @@ export const useScores = () => {
   const queryClient = useQueryClient();
 
   // 1. Lấy team scores theo groupId
+  /**
+   * API: GET /api/Score/group/{groupId}/team-scores
+   * method: GET
+   * path: /api/Score/group/{groupId}/team-scores
+   * request: path param groupId: integer
+   * response: 200 OK -> array of team score summaries (OpenAPI doesn't provide exact response schema)
+   * describe: Fetch aggregated team scores for a group
+   * example: GET /api/Score/group/10/team-scores
+   */
   const fetchTeamScoresByGroup = (groupId) =>
     useQuery({
       queryKey: scoreQueryKeys.list({ groupId }),
@@ -31,6 +40,15 @@ export const useScores = () => {
     });
 
   // 2. Lấy my scores grouped theo phaseId (dựa trên schema bạn cung cấp)
+  /**
+   * API: GET /api/Score/myscores/grouped/{phaseId}
+   * method: GET
+   * path: /api/Score/myscores/grouped/{phaseId}
+   * request: path param phaseId: integer
+   * response: 200 OK -> grouped scores for the requesting judge
+   * describe: Fetch scores grouped for the current user by phase
+   * example: GET /api/Score/myscores/grouped/5
+   */
   const fetchMyScoresGrouped = (phaseId) =>
     useQuery({
       queryKey: scoreQueryKeys.list({ phaseId }),
@@ -42,11 +60,29 @@ export const useScores = () => {
     });
 
   // 3. Tạo score mới cho submission (POST)
+  /**
+   * API: POST /api/Score/score
+   * method: POST
+   * path: /api/Score/score
+   * request body: SubmissionScoreInputDto (OpenAPI component)
+   *   - submissionId: integer
+   *   - scores: array of ScoreItemDto
+   *       - ScoreItemDto:
+   *           - criteriaId: integer
+   *           - scoreValue: number (double)
+   *           - comment: string | null
+   * response: 200 OK
+   * describe: Submit or create scores for a submission
+   * example payload:
+   * {
+   *   "submissionId": 10,
+   *   "scores": [ { "criteriaId": 1, "scoreValue": 8.5, "comment": "Good" } ]
+   * }
+   */
   const createScore = useMutation({
     mutationFn: (payload) => axiosClient.post("/Score/score", payload),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       // Invalidate lists liên quan đến submission hoặc phase/group (giả sử dựa trên submissionId)
-      const submissionId = variables.submissionId;
       // Có thể cần thêm logic lấy phaseId/groupId từ context nếu biết
       queryClient.invalidateQueries({ queryKey: scoreQueryKeys.all });
       message.success("Score created successfully!");
@@ -58,10 +94,17 @@ export const useScores = () => {
   });
 
   // 4. Cập nhật score cho submission (PUT)
+  /**
+   * API: PUT /api/Score/score
+   * method: PUT
+   * path: /api/Score/score
+   * request body: SubmissionScoreInputDto (same shape as POST)
+   * response: 200 OK
+   * describe: Update existing scores for a submission
+   */
   const updateScore = useMutation({
     mutationFn: (payload) => axiosClient.put("/Score/score", payload),
-    onSuccess: (_, variables) => {
-      const submissionId = variables.submissionId;
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: scoreQueryKeys.all });
       message.success("Score updated successfully!");
     },
