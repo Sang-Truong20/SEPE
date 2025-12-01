@@ -5,6 +5,7 @@ import { useGetChallenge } from './challenge';
 export const trackQueryKeys = {
     origin: ['student', 'track'],
     tracks: () => [...trackQueryKeys.origin, 'list'],
+    tracksByPhase: (phaseId) => [...trackQueryKeys.origin, 'phase', phaseId],
     track: (trackId) => [...trackQueryKeys.origin, 'detail', trackId],
     trackCriteria: (trackId, phaseId) => [...trackQueryKeys.origin, 'criteria', trackId, phaseId],
 };
@@ -72,5 +73,19 @@ export const useGetTracks = () => {
             const response = await axiosClient.get('/Track');
             return response.data;
         },
+    });
+};
+
+// Get tracks by phase ID
+export const useGetTracksByPhase = (phaseId, options = {}) => {
+    return useQuery({
+        queryKey: trackQueryKeys.tracksByPhase(phaseId),
+        queryFn: async () => {
+            const response = await axiosClient.get(`/Track/phase/${phaseId}`);
+            return response.data;
+        },
+        enabled: !!phaseId && (options.enabled !== false),
+        staleTime: 5 * 60 * 1000,
+        ...options,
     });
 };

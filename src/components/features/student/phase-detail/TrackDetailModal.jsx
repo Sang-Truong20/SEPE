@@ -6,30 +6,15 @@ import {
   StarOutlined,
 } from '@ant-design/icons';
 import { Button, Modal, Spin, Tag } from 'antd';
-import { useGetChallenge } from '../../../../hooks/student/challenge';
+import { useGetChallengesByTrack } from '../../../../hooks/student/challenge';
 import { useGetCriteriaByPhase } from '../../../../hooks/student/criterion';
 
-const ChallengeItem = ({ challengeId, title }) => {
-  const { data: challenge, isLoading } = useGetChallenge(challengeId);
-
-  if (isLoading) {
-    return (
-      <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
-        <Spin />
-      </div>
-    );
-  }
-
+const ChallengeItem = ({ challenge }) => {
   if (!challenge) {
-    return (
-      <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
-        <div className="flex items-center gap-2">
-          <FileTextOutlined className="text-green-400" />
-          <span className="text-white">{title}</span>
-        </div>
-      </div>
-    );
+    return null;
   }
+
+  const title = challenge.title || challenge.challengeName || 'Thử thách';
 
   return (
     <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 hover:border-slate-600 transition-colors">
@@ -38,7 +23,7 @@ const ChallengeItem = ({ challengeId, title }) => {
           <div className="flex items-center gap-2 mb-2">
             <FileTextOutlined className="text-green-400" />
             <h5 className="text-white font-semibold text-lg">
-              {challenge.title}
+              {title}
             </h5>
             {challenge.status && (
               <Tag color={challenge.status === 'Complete' ? 'green' : 'orange'}>
@@ -76,10 +61,24 @@ const TrackDetailModal = ({
   isSelected,
   phaseId
 }) => {
+  const trackId = track?.trackId ?? track?.id;
   // Get criteria for this phase
   const { data: criteria = [], isLoading: criteriaLoading } = useGetCriteriaByPhase(
     phaseId ? parseInt(phaseId) : null
   );
+
+  const {
+    data: challengesData = [],
+    isLoading: challengesLoading,
+  } = useGetChallengesByTrack(trackId, { enabled: !!trackId });
+
+  const challenges = Array.isArray(challengesData)
+    ? challengesData
+    : challengesData?.data
+      ? challengesData.data
+      : challengesData?.challenges
+        ? challengesData.challenges
+        : [];
 
   return (
     <Modal
@@ -155,16 +154,19 @@ const TrackDetailModal = ({
         <div>
           <h4 className="text-sm font-semibold text-slate-400 mb-4 flex items-center gap-2">
             <TrophyOutlined />
-            Thử thách ({track?.challenges?.length || 0})
+            Thử thách ({challenges.length})
           </h4>
-          
-          {track?.challenges && track.challenges.length > 0 ? (
+
+          {challengesLoading ? (
+            <div className="flex justify-center py-4">
+              <Spin />
+            </div>
+          ) : challenges.length > 0 ? (
             <div className="space-y-4">
-              {track.challenges.map((challenge) => (
+              {challenges.map((challenge) => (
                 <ChallengeItem
-                  key={challenge.challengeId}
-                  challengeId={challenge.challengeId}
-                  title={challenge.title}
+                  key={challenge.challengeId || challenge.id}
+                  challenge={challenge}
                 />
               ))}
             </div>
@@ -188,7 +190,7 @@ const TrackDetailModal = ({
               }
             }}
             className="w-full bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 text-white border-0"
-            disabled={!track?.challenges || track.challenges.length === 0}
+            disabled={challenges.length === 0}
           >
             {isSelected ? 'Đã chọn track này' : 'Chọn track này'}
           </Button>

@@ -13,7 +13,7 @@ import { useGetHackathonPhases } from '../../hooks/student/hackathon-phase';
 import { useGetTeamHackathonRegistration } from '../../hooks/student/hackathon-registration';
 import { useGetTeams } from '../../hooks/student/team';
 import { useSelectTeamTrack } from '../../hooks/student/team-track';
-import { useGetTracks } from '../../hooks/student/track';
+import { useGetTracksByPhase } from '../../hooks/student/track';
 import { useUserData } from '../../hooks/useUserData';
 
 const StudentPhaseDetail = () => {
@@ -33,13 +33,18 @@ const StudentPhaseDetail = () => {
   const teamId = userTeam?.id || 'team-1';
   
   const { data: registration } = useGetTeamHackathonRegistration(hackathonId);
-  const { data: allTracks = [], isLoading: tracksLoading } = useGetTracks();
-  // Filter tracks by phaseId - ensure both are numbers for comparison
-  const currentPhaseId = parseInt(phaseId);
-  const tracks = allTracks.filter(track => {
-    const trackPhaseId = typeof track.phaseId === 'string' ? parseInt(track.phaseId) : track.phaseId;
-    return trackPhaseId === currentPhaseId;
-  });
+  const {
+    data: tracksData = [],
+    isLoading: tracksLoading,
+  } = useGetTracksByPhase(phaseId, { enabled: !!phaseId });
+
+  const tracks = Array.isArray(tracksData)
+    ? tracksData
+    : tracksData?.data
+      ? tracksData.data
+      : tracksData?.tracks
+        ? tracksData.tracks
+        : [];
   const selectTeamTrackMutation = useSelectTeamTrack();
   
   const [form] = Form.useForm();

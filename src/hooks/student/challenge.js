@@ -3,22 +3,9 @@ import axiosClient from '../../configs/axiosClient';
 
 export const challengeQueryKeys = {
     origin: ['student', 'challenge'],
-    challenges: () => [...challengeQueryKeys.origin, 'list'],
+    challengesByTrack: (trackId) => [...challengeQueryKeys.origin, 'track', trackId],
     challenge: (id) => [...challengeQueryKeys.origin, 'detail', id],
 
-};
-
-// Get all challenges
-export const useGetChallenges = (options = {}) => {
-    return useQuery({
-        queryKey: challengeQueryKeys.challenges(),
-        queryFn: async () => {
-            const response = await axiosClient.get('/Challenge');
-            return response.data;
-        },
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        ...options,
-    });
 };
 
 // Get challenge by ID
@@ -32,6 +19,18 @@ export const useGetChallenge = (challengeId, options = {}) => {
         enabled: !!challengeId && (options.enabled !== false),
         staleTime: 5 * 60 * 1000, // 5 minutes
         ...options,
+    });
+};
+
+// Get challenges by track ID
+export const useGetChallengesByTrack = (trackId, ) => {
+    return useQuery({
+        queryKey: challengeQueryKeys.challengesByTrack(trackId),
+        queryFn: async () => {
+            const response = await axiosClient.get(`/Challenge/track/${trackId}`);
+            return response.data;
+        },
+        enabled: !!trackId,
     });
 };
 
