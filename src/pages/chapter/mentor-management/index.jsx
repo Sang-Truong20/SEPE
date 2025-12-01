@@ -1,37 +1,175 @@
-import { useState } from 'react';
 import {
-  ReadOutlined,
-  UserAddOutlined,
+  ArrowLeftOutlined,
+  BankOutlined,
   CheckCircleOutlined,
+  ClockCircleOutlined,
   CloseCircleOutlined,
   EyeOutlined,
-  StarOutlined,
   MailOutlined,
-  PhoneOutlined,
-  EnvironmentOutlined,
-  CalendarOutlined,
-  UserOutlined,
-  BankOutlined,
-  ClockCircleOutlined,
+  ReadOutlined,
   SearchOutlined,
-  ArrowLeftOutlined,
-  TrophyOutlined,
+  StarOutlined,
+  UserAddOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
+import { Button, Card, Input, message, Modal, Select, Tabs, Tag } from 'antd';
 import {
-  Card,
-  Badge,
-  Button,
-  Input,
-  Select,
-  Modal,
-  message,
-  Tabs,
-  Tag,
-} from 'antd';
+  AlertCircle,
+  Briefcase,
+  CheckCircle2,
+  ExternalLink,
+  FileText,
+  Mail as MailIcon,
+  Phone as PhoneIcon,
+  XCircle,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../../constants';
+import {
+  useApproveMentorVerification,
+  useGetMentorVerifications,
+  useRejectMentorVerification,
+} from '../../../hooks/chapter/mentor-verification';
 
 const { TextArea } = Input;
+
+const StatusBadge = ({ status }) => {
+  const normalized = (status || '').toLowerCase();
+
+  let label = 'Không rõ';
+  let classes =
+    'px-2.5 py-0.5 rounded-full text-xs font-semibold border border-white/10 text-gray-200 bg-white/5';
+
+  if (normalized === 'pending') {
+    label = 'Chờ duyệt';
+    classes =
+      'px-2.5 py-0.5 rounded-full text-xs font-semibold border border-amber-500/40 text-amber-300 bg-amber-500/10';
+  } else if (normalized === 'approved') {
+    label = 'Đã duyệt';
+    classes =
+      'px-2.5 py-0.5 rounded-full text-xs font-semibold border border-emerald-500/40 text-emerald-300 bg-emerald-500/10';
+  } else if (normalized === 'rejected') {
+    label = 'Từ chối';
+    classes =
+      'px-2.5 py-0.5 rounded-full text-xs font-semibold border border-red-500/40 text-red-300 bg-red-500/10';
+  }
+
+  return <span className={classes}>{label}</span>;
+};
+
+const RequestCard = ({ item, onApprove, onReject }) => {
+  const isPending = (item.status || '').toLowerCase() === 'pending';
+  const isRejected = (item.status || '').toLowerCase() === 'rejected';
+
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:bg-white/10 hover:border-white/20 backdrop-blur-xl transition-all duration-300 flex flex-col h-full group">
+      {/* Header Info */}
+      <div className="p-5 border-b border-white/10 flex justify-between items-start bg-darkv2-secondary/80">
+        <div className="flex gap-3">
+          {/* Avatar Placeholder */}
+          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-gray-300 font-bold text-lg border border-white/10">
+            {(item.name || '?').charAt(0).toUpperCase()}
+          </div>
+
+          <div>
+            <h3 className="text-base font-bold text-white group-hover:text-emerald-400 transition-colors">
+              {item.name}
+            </h3>
+            <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
+              <Briefcase size={12} />
+              <span>{item.position}</span>
+              {item.chapterName && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
+                  <span>{item.chapterName}</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <StatusBadge status={item.status} />
+      </div>
+
+      {/* Body Content */}
+      <div className="p-5 flex-1 space-y-4">
+        {/* Contact Info */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="flex items-center gap-2 text-sm text-gray-300 bg-white/5 p-2 rounded border border-white/10">
+            <MailIcon size={14} className="text-gray-400" />
+            <span className="truncate" title={item.email}>
+              {item.email}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-300 bg-white/5 p-2 rounded border border-white/10">
+            <PhoneIcon size={14} className="text-gray-400" />
+            <span>{item.phone}</span>
+          </div>
+        </div>
+
+        {/* Reason */}
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase mb-1.5 flex items-center gap-1.5">
+            <AlertCircle size={12} /> Lý do đăng ký
+          </p>
+          <div className="text-sm text-gray-200 bg-white/5 p-3 rounded-lg border border-white/10 italic leading-relaxed">
+            {item.mentorReason ? `"${item.mentorReason}"` : 'Không có thông tin'}
+          </div>
+        </div>
+
+        {/* Reject Reason (if any) */}
+        {isRejected && item.rejectReason && (
+          <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-lg">
+            <p className="text-xs font-bold text-red-300 mb-1">Lý do từ chối:</p>
+            <p className="text-sm text-red-200/80">{item.rejectReason}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Footer Actions */}
+      <div className="p-4 bg-darkv2-secondary/90 border-t border-white/10 flex items-center justify-between gap-3">
+        {/* CV Link */}
+        {item.cv ? (
+          <a
+            href={item.cv}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300 hover:underline transition-colors"
+          >
+            <FileText size={14} />
+            Xem CV / Portfolio
+            <ExternalLink size={10} />
+          </a>
+        ) : (
+          <span className="text-xs text-gray-500 italic">Không có CV</span>
+        )}
+
+        {/* Approval Actions (Only show if Pending) */}
+        {isPending ? (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onReject && onReject(item)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 text-gray-300 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/50 border border-transparent transition-all text-xs font-semibold"
+            >
+              <XCircle size={14} /> Từ chối
+            </button>
+            <button
+              type="button"
+              onClick={() => onApprove && onApprove(item)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/20 transition-all text-xs font-semibold"
+            >
+              <CheckCircle2 size={14} /> Duyệt ngay
+            </button>
+          </div>
+        ) : (
+          <div className="text-xs text-gray-500 italic">Đã xử lý hồ sơ</div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const ChapterMentorManagement = () => {
   const navigate = useNavigate();
@@ -39,130 +177,75 @@ const ChapterMentorManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedApplication, setSelectedApplication] = useState(null);
-  const [selectedMentor, setSelectedMentor] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const mentorApplications = [
-    {
-      id: '1',
-      name: 'TS. Phạm Văn Đức',
-      email: 'ducpv@fpt.edu.vn',
-      phone: '+84 912 345 678',
-      position: 'Giảng viên Senior',
-      department: 'Khoa Công nghệ thông tin',
-      experience: '8 năm',
-      specializations: ['AI/Machine Learning', 'Data Science', 'Python'],
-      education: 'Tiến sĩ Khoa học máy tính - ĐH Quốc gia',
-      submittedAt: '1 ngày trước',
-      status: 'pending',
-      cv: 'cv_pham_van_duc.pdf',
-      linkedIn: 'linkedin.com/in/phamvanduc',
-      mentorReason: 'Muốn chia sẻ kinh nghiệm và hướng dẫn sinh viên trong lĩnh vực AI',
-      availableTime: 'Thứ 2, 4, 6 (18:00-20:00)',
-      previousMentoring: 'Đã mentor 15 sinh viên trong 3 năm qua',
-    },
-    {
-      id: '2',
-      name: 'ThS. Nguyễn Thị Mai',
-      email: 'maivn@fpt.edu.vn',
-      phone: '+84 987 654 321',
-      position: 'Giảng viên',
-      department: 'Khoa Kỹ thuật phần mềm',
-      experience: '5 năm',
-      specializations: ['Web Development', 'React', 'Node.js', 'JavaScript'],
-      education: 'Thạc sĩ Kỹ thuật phần mềm - ĐH Bách khoa',
-      submittedAt: '2 ngày trước',
-      status: 'pending',
-      cv: 'cv_nguyen_thi_mai.pdf',
-      portfolio: 'portfolio.mai-nguyen.dev',
-      mentorReason: 'Đam mê giảng dạy và muốn hướng dẫn sinh viên làm dự án thực tế',
-      availableTime: 'Thứ 3, 5, 7 (19:00-21:00)',
-    },
-    {
-      id: '3',
-      name: 'KS. Trần Minh Hoàng',
-      email: 'hoangtm@techcorp.vn',
-      phone: '+84 901 234 567',
-      position: 'Senior Software Engineer',
-      department: 'Bên ngoài - TechCorp',
-      experience: '6 năm',
-      specializations: ['Mobile Development', 'Flutter', 'React Native'],
-      education: 'Kỹ sư Phần mềm - ĐH FPT',
-      submittedAt: '3 ngày trước',
-      status: 'approved',
-      portfolio: 'github.com/hoangmintran',
-      mentorReason: 'Alumni muốn đóng góp lại cho trường và hướng dẫn junior',
-      availableTime: 'Cuối tuần (9:00-17:00)',
-    },
-  ];
+  const { data: mentorVerificationsData } = useGetMentorVerifications();
+  const approveMutation = useApproveMentorVerification();
+  const rejectMutation = useRejectMentorVerification();
 
-  const existingMentors = [
-    {
-      id: '1',
-      name: 'TS. Lê Văn Hùng',
-      email: 'hunglv@fpt.edu.vn',
-      position: 'Trưởng bộ môn AI',
-      department: 'Khoa Công nghệ thông tin',
-      specializations: ['AI/ML', 'Deep Learning', 'Computer Vision'],
-      activeTeams: 3,
-      rating: 4.8,
-      totalMentored: 45,
-      joinedAt: '2 năm trước',
-      status: 'active',
-    },
-    {
-      id: '2',
-      name: 'ThS. Bùi Thị Hương',
-      email: 'huongbt@fpt.edu.vn',
-      position: 'Giảng viên',
-      department: 'Khoa Kỹ thuật phần mềm',
-      specializations: ['Full-stack', 'Database', 'Cloud Computing'],
-      activeTeams: 2,
-      rating: 4.6,
-      totalMentored: 28,
-      joinedAt: '1.5 năm trước',
-      status: 'active',
-    },
-    {
-      id: '3',
-      name: 'KS. Võ Minh Tú',
-      email: 'tuvm@startup.vn',
-      position: 'CTO',
-      department: 'Bên ngoài - StartupVN',
-      specializations: ['Blockchain', 'Cryptocurrency', 'Smart Contracts'],
-      activeTeams: 1,
-      rating: 4.9,
-      totalMentored: 12,
-      joinedAt: '8 tháng trước',
-      status: 'active',
-    },
-  ];
+  const mentorApplications = useMemo(() => {
+    const raw = mentorVerificationsData;
 
-  const filteredApplications = mentorApplications.filter((app) => {
-    const matchesSearch =
-      app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.department.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+    const list = Array.isArray(raw)
+      ? raw
+      : Array.isArray(raw?.data)
+      ? raw.data
+      : Array.isArray(raw?.notifications)
+      ? raw.notifications
+      : [];
 
-  const filteredMentors = existingMentors.filter((mentor) => {
-    const matchesSearch =
-      mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mentor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mentor.department.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+    return list.map((item) => ({
+      id: item.id,
+      name: item.fullName || item.name,
+      email: item.email,
+      phone: item.phone,
+      position: item.position,
+      department: item.chapterName || 'Chapter',
+      experience: item.experience || '',
+      specializations: item.specializations || [],
+      education: item.education || '',
+      submittedAt: item.createdAt
+        ? new Date(item.createdAt).toLocaleString('vi-VN')
+        : '',
+      status: (item.status || '').toLowerCase(), // Pending/Approved/Rejected -> pending/approved/rejected
+      cv: item.cv,
+      mentorReason: item.reasonToBecomeMentor,
+      rejectReason: item.rejectReason,
+      availableTime: item.availableTime || '',
+      previousMentoring: item.previousMentoring || '',
+    }));
+  }, [mentorVerificationsData]);
+
+  const approvedMentors = useMemo(
+    () => mentorApplications.filter((app) => app.status === 'approved'),
+    [mentorApplications],
+  );
+
+   const filteredApplications = mentorApplications.filter((app) => {
+     const query = searchTerm.toLowerCase();
+     const matchesSearch =
+       app.name.toLowerCase().includes(query) ||
+       app.email.toLowerCase().includes(query) ||
+       (app.department || '').toLowerCase().includes(query);
+     const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
+     return matchesSearch && matchesStatus;
+   });
+
+   const filteredMentors = approvedMentors.filter((mentor) => {
+     const query = searchTerm.toLowerCase();
+     const matchesSearch =
+       mentor.name.toLowerCase().includes(query) ||
+       mentor.email.toLowerCase().includes(query) ||
+       (mentor.department || '').toLowerCase().includes(query);
+     return matchesSearch;
+   });
 
   const pendingCount = mentorApplications.filter((app) => app.status === 'pending').length;
-  const approvedCount = mentorApplications.filter((app) => app.status === 'approved').length;
-  const activeMentorsCount = existingMentors.filter((m) => m.status === 'active').length;
+  const activeMentorsCount = approvedMentors.length;
 
   const handleApprove = (id) => {
-    message.success('Đã phê duyệt đăng ký mentor!');
-    console.log('Approved mentor application:', id);
+    approveMutation.mutate({ verificationId: id });
   };
 
   const handleReject = (id) => {
@@ -170,28 +253,17 @@ const ChapterMentorManagement = () => {
       message.warning('Vui lòng nhập lý do từ chối!');
       return;
     }
-    message.success('Đã từ chối đăng ký mentor!');
-    console.log('Rejected mentor application:', id, 'Reason:', rejectionReason);
-    setIsModalVisible(false);
-    setSelectedApplication(null);
-    setRejectionReason('');
-  };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'pending':
-        return <Badge status="processing" text="Chờ duyệt" style={{ color: '#fbbf24' }} />;
-      case 'approved':
-        return <Badge status="success" text="Đã duyệt" style={{ color: '#10b981' }} />;
-      case 'rejected':
-        return <Badge status="error" text="Từ chối" style={{ color: '#ef4444' }} />;
-      case 'active':
-        return <Badge status="success" text="Đang hoạt động" style={{ color: '#3b82f6' }} />;
-      case 'inactive':
-        return <Badge status="default" text="Tạm ngưng" style={{ color: '#6b7280' }} />;
-      default:
-        return null;
-    }
+    rejectMutation.mutate(
+      { verificationId: id, reason: rejectionReason },
+      {
+        onSuccess: () => {
+          setIsModalVisible(false);
+          setSelectedApplication(null);
+          setRejectionReason('');
+        },
+      },
+    );
   };
 
   const showModal = (application) => {
@@ -206,7 +278,7 @@ const ChapterMentorManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-orange-900/20 to-slate-900 p-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div className="max-w-6xl mx-auto">
         <Button
           icon={<ArrowLeftOutlined />}
@@ -225,7 +297,7 @@ const ChapterMentorManagement = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
@@ -244,32 +316,8 @@ const ChapterMentorManagement = () => {
                 <ReadOutlined className="w-6 h-6 text-emerald-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Mentor hoạt động</p>
+                <p className="text-sm text-gray-400">Mentor đã duyệt</p>
                 <p className="text-2xl text-white">{activeMentorsCount}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                <StarOutlined className="w-6 h-6 text-green-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-400">Đánh giá TB</p>
-                <p className="text-2xl text-white">4.8</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                <TrophyOutlined className="w-6 h-6 text-purple-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-400">Teams đã mentor</p>
-                <p className="text-2xl text-white">85</p>
               </div>
             </div>
           </Card>
@@ -315,100 +363,36 @@ const ChapterMentorManagement = () => {
                     </div>
                   </Card>
 
-                  {/* Applications List */}
-                  <Card
-                    className="bg-white/5 border-white/10 backdrop-blur-xl"
-                    title={
-                      <div className="flex items-center">
-                        <UserAddOutlined className="w-5 h-5 mr-2 text-emerald-400" />
-                        <span className="text-white">
-                          Đăng Ký Mentor ({filteredApplications.length})
-                        </span>
-                      </div>
-                    }
-                  >
-                    <div className="space-y-4">
-                      {filteredApplications.map((application) => (
-                        <div
-                          key={application.id}
-                          className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <h4 className="text-white">{application.name}</h4>
-                              <Tag color="purple">{application.position}</Tag>
-                              {getStatusBadge(application.status)}
-                            </div>
+                   {/* Applications List */}
+                   <Card
+                     className="bg-white/5 border-white/10 backdrop-blur-xl"
+                     title={
+                       <div className="flex items-center">
+                         <UserAddOutlined className="w-5 h-5 mr-2 text-emerald-400" />
+                         <span className="text-white">
+                           Đăng Ký Mentor ({filteredApplications.length})
+                         </span>
+                       </div>
+                     }
+                   >
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       {filteredApplications.map((application) => (
+                         <RequestCard
+                           key={application.id}
+                           item={application}
+                           onApprove={(app) => handleApprove(app.id)}
+                           onReject={(app) => showModal(app)}
+                         />
+                       ))}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400 mb-2">
-                              <div className="flex items-center">
-                                <MailOutlined className="w-3 h-3 mr-1" />
-                                {application.email}
-                              </div>
-                              <div className="flex items-center">
-                                <BankOutlined className="w-3 h-3 mr-1" />
-                                {application.department}
-                              </div>
-                              <div className="flex items-center">
-                                <StarOutlined className="w-3 h-3 mr-1" />
-                                {application.experience} kinh nghiệm
-                              </div>
-                              <div className="flex items-center">
-                                <ClockCircleOutlined className="w-3 h-3 mr-1" />
-                                {application.submittedAt}
-                              </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-1">
-                              {application.specializations.slice(0, 3).map((spec, idx) => (
-                                <Tag key={idx} color="green">
-                                  {spec}
-                                </Tag>
-                              ))}
-                              {application.specializations.length > 3 && (
-                                <Tag>+{application.specializations.length - 3}</Tag>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-2 ml-4">
-                            <Button
-                              size="small"
-                              icon={<EyeOutlined />}
-                              onClick={() => showModal(application)}
-                              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
-                            >
-                              Chi tiết
-                            </Button>
-
-                            {application.status === 'pending' && (
-                              <>
-                                <Button
-                                  size="small"
-                                  icon={<CheckCircleOutlined />}
-                                  onClick={() => handleApprove(application.id)}
-                                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
-                                />
-                                <Button
-                                  size="small"
-                                  icon={<CloseCircleOutlined />}
-                                  onClick={() => showModal(application)}
-                                  className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white border-0"
-                                />
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-
-                      {filteredApplications.length === 0 && (
-                        <div className="text-center py-12">
-                          <UserAddOutlined className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                          <p className="text-gray-400">Không có đăng ký mentor nào phù hợp</p>
-                        </div>
-                      )}
-                    </div>
-                  </Card>
+                       {filteredApplications.length === 0 && (
+                         <div className="col-span-full text-center py-12">
+                           <UserAddOutlined className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                           <p className="text-gray-400">Không có đăng ký mentor nào phù hợp</p>
+                         </div>
+                       )}
+                     </div>
+                   </Card>
                 </div>
               ),
             },
@@ -449,8 +433,8 @@ const ChapterMentorManagement = () => {
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-2">
                               <h4 className="text-white">{mentor.name}</h4>
-                              <Tag color="purple">{mentor.position}</Tag>
-                              {getStatusBadge(mentor.status)}
+                               <Tag color="purple">{mentor.position}</Tag>
+                               <StatusBadge status={mentor.status} />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400 mb-2">
@@ -488,8 +472,7 @@ const ChapterMentorManagement = () => {
                             <Button
                               size="small"
                               icon={<EyeOutlined />}
-                              onClick={() => setSelectedMentor(mentor)}
-                          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
+                              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
                             >
                               Xem
                             </Button>
