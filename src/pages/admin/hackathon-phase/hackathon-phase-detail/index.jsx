@@ -80,15 +80,14 @@ const HackathonPhaseDetail = () => {
           ],
         ],
       },
-      { key: 'Hackathon ID', type: 'input', name: 'hackathonId' },
     ],
   };
 
   const trackTableModel = {
-    entityName: 'Tracks',
+    entityName: 'phần thi',
     rowKey: 'trackId',
     createButton: {
-      label: 'Tạo mới Track',
+      label: 'Tạo mới phần thi',
       action: () =>
         navigate(
           `${PATH_NAME.ADMIN_TRACKS}/create?phaseId=${id}&hackathonId=${hackathonId}`,
@@ -108,13 +107,17 @@ const HackathonPhaseDetail = () => {
         dataIndex: 'description',
         key: 'description',
         type: 'text',
+        ellipsis: { tooltip: true },
+        width: 800,
         className: 'text-gray-300',
       },
       {
         title: 'Thử thách',
         key: 'challenges',
         type: 'custom',
-        render: (_, record) => {
+        ellipsis: true,
+        width: 500,
+        render: (record) => {
           const challenges = record.challenges || [];
           if (challenges.length === 0) {
             return <Tag color="default">Chưa có thử thách</Tag>;

@@ -2,6 +2,19 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
 
+/**
+ * API: GET /api/Season
+ * method: GET
+ * path: /api/Season
+ * request: none
+ * response: 200 OK -> array of Season objects (inferred)
+ * SeasonRequest/SeasonUpdateDto fields (OpenAPI components):
+ *   - seasonCode: string | null
+ *   - name: string | null
+ *   - startDate: string (date-time)
+ *   - endDate: string (date-time)
+ * describe: Manage seasons (list, detail, create, update, delete)
+ */
 export const seasonQueryKeys = {
     all: ['Seasons'],
     lists: () => [...seasonQueryKeys.all, 'list'],
@@ -22,6 +35,13 @@ export const useSeasons = () => {
         },
     });
 
+    /**
+     * API: GET /api/Season/{id}
+     * method: GET
+     * path: /api/Season/{id}
+     * request: path param id: integer
+     * response: 200 OK -> Season object
+     */
     // Fetch single season
     const fetchSeason = (id) => useQuery({
         queryKey: seasonQueryKeys.detail(id),
@@ -32,6 +52,17 @@ export const useSeasons = () => {
         enabled: !!id,
     });
 
+    /**
+     * API: POST /api/Season
+     * method: POST
+     * path: /api/Season
+     * request body: SeasonRequest
+     *   - seasonCode: string | null
+     *   - name: string | null
+     *   - startDate: string (date-time)
+     *   - endDate: string (date-time)
+     * response: 200 OK -> created Season
+     */
     // Create season
     const createSeason = useMutation({
         mutationFn: (payload) => axiosClient.post('/Season', payload),
@@ -45,6 +76,17 @@ export const useSeasons = () => {
         },
     });
 
+    /**
+     * API: PUT /api/Season/{id}
+     * method: PUT
+     * path: /api/Season/{id}
+     * request body: SeasonUpdateDto
+     *   - seasonCode: string | null
+     *   - name: string | null
+     *   - startDate: string (date-time)
+     *   - endDate: string (date-time)
+     * response: 200 OK -> updated Season
+     */
     // Update season
     const updateSeason = useMutation({
         mutationFn: ({ id, payload }) => axiosClient.put(`/Season/${id}`, payload),
@@ -58,6 +100,13 @@ export const useSeasons = () => {
         },
     });
 
+    /**
+     * API: DELETE /api/Season/{id}
+     * method: DELETE
+     * path: /api/Season/{id}
+     * request: path param id: integer
+     * response: 200 OK
+     */
     // Delete season
     const deleteSeason = useMutation({
         mutationFn: (id) => axiosClient.delete(`/Season/${id}`),

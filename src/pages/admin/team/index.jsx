@@ -33,11 +33,11 @@ const Teams = () => {
                 transform: (val) => `Chương ${val}`
             },
             {
-                title: 'Leader ID',
-                dataIndex: 'leaderId',
+                title: 'Leader',
+                dataIndex: 'teamLeaderName',
                 key: 'leaderId',
-                type: 'text',
-                transform: (val) => `User #${val}`
+                type: 'tag',
+                tagColor: 'green',
             },
             {
                 title: 'Ngày tạo',

@@ -10,7 +10,7 @@ import {
 import dayjs from 'dayjs';
 
 const defaultDateFormatter = (val, fmt) =>
-  val ? dayjs(val).format(fmt || 'DD/MM/YYYY HH:mm') : '--';
+  val ? dayjs(val).format(fmt || 'DD/MM/YYYY') : '--';
 
 const buildRender = (col, dateFormatter) => {
   const {
@@ -108,7 +108,19 @@ const EntityTable = ({
     entityName,
   } = model || {};
 
-  const builtColumns = columns.map((col) => ({
+  const columnsWithAutoScroll = columns.map(col => {
+    if (col.dataIndex && data.length > 0) {
+      const sampleValues = data.slice(0, 10).map(row => String(row[col.dataIndex] || ''));
+      const avgLength = sampleValues.reduce((sum, v) => sum + v.length, 0) / sampleValues.length;
+
+      if (avgLength > 50 && !col.width) {
+        return { ...col, scrollable: true, width: 250 };
+      }
+    }
+    return col;
+  });
+
+  const builtColumns = columnsWithAutoScroll.map((col) => ({
     ...col,
     render: buildRender(col, dateFormatter),
   }));

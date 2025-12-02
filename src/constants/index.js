@@ -8,18 +8,23 @@ const PATH_NAME = {
   ADMIN_USERS: '/admin/users',
   ADMIN_SEASON: '/admin/season',
   ADMIN_TEAMS: '/admin/team',
+  ADMIN_GROUPS: '/admin/groups',
+  ADMIN_APPEALS: '/admin/appeal',
   ADMIN_HACKATHONS: '/admin/hackathons',
   ADMIN_HACKATHON_PHASES: '/admin/hackathons/hackathon-phases',
   ADMIN_PRIZES: '/admin/hackathons/prizes',
   ADMIN_CHALLENGES: '/admin/challenges',
   ADMIN_TRACKS: '/admin/tracks',
   ADMIN_CRITERIAS: '/admin/criterias',
+  ADMIN_FILES: '/admin/files',
+  ADMIN_SETTINGS: '/admin/settings',
   PARTNER: '/partner',
   PARTNER_HACKATHONS: '/partner/hackathons',
   PARTNER_CHALLENGES: '/partner/challenges',
   PARTNER_TEAM_SCORES: '/partner/score',
   JUDGE: '/judge',
   JUDGE_TEAM_SCORES: '/judge/score',
+  JUDGE_CHALLENGES: '/judge/challenges',
 };
 
 const GROUP = {

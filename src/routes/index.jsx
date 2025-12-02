@@ -23,6 +23,7 @@ import TrackForm from '../pages/admin/track/form/index.jsx';
 import TrackDetail from '../pages/admin/track/detail/index.jsx';
 import CriterionForm from '../pages/admin/criteria/form/index.jsx';
 import CriterionDetail from '../pages/admin/criteria/detail/index.jsx';
+import GroupDetail from '../pages/admin/group/group-detail/index.jsx';
 
 const LandingPage = lazy(() => import('../pages/landing'));
 const MemberPage = lazy(() => import('../pages/member'));
@@ -32,6 +33,8 @@ const HackathonPhases = lazy(() => import('../pages/admin/hackathon-phase'));
 const Challenges = lazy(() => import('../pages/admin/challenge/index.jsx'));
 const Prizes = lazy(() => import('../pages/admin/prizes'));
 const Seasons = lazy(() => import('../pages/admin/season'));
+const Appeals = lazy(() => import('../pages/admin/appeal'));
+const Groups = lazy(() => import('../pages/admin/group'));
 const Users = lazy(() => import('../pages/admin/users'));
 const Teams = lazy(() => import('../pages/admin/team/index.jsx'));
 
@@ -50,6 +53,7 @@ const JHackathons = lazy(() => import('../pages/judge/hackathon'));
 const JHackathonPhases = lazy(() => import('../pages/judge/hackathon-phase'));
 const JScore = lazy(() => import('../pages/judge/score'));
 import JScoreDetail from '../pages/judge/score/detail/index.jsx';
+import JChallengeDetail from '../pages/judge/challenge/detail/index.jsx';
 
 const withSuspense = (Component) => (
   <Suspense
@@ -202,10 +206,23 @@ const router = createBrowserRouter([
             ],
           },
           {
+            path: 'groups',
+            children: [
+              { index: true, element: withSuspense(Groups) },
+              { path: ':id', element: withSuspense(GroupDetail) },
+            ],
+          },
+          {
             path: 'users',
             children: [
               { index: true, element: withSuspense(Users) },
               { path: 'edit/:id', element: withSuspense(UserForm) },
+            ],
+          },
+          {
+            path: 'appeal',
+            children: [
+              { index: true, element: withSuspense(Appeals) },
             ],
           },
           {
@@ -288,6 +305,12 @@ const router = createBrowserRouter([
                 element: withSuspense(JHackathons)
               },
               { path: ':id', element: withSuspense(JScoreDetail) },
+            ],
+          },
+          {
+            path: 'challenges',
+            children: [
+              { path: ':id', element: withSuspense(JChallengeDetail) },
             ],
           },
         ],
