@@ -117,7 +117,7 @@ const HackathonPhaseDetail = () => {
         type: 'custom',
         ellipsis: true,
         width: 500,
-        render: (_, record) => {
+        render: (record) => {
           const challenges = record.challenges || [];
           if (challenges.length === 0) {
             return <Tag color="default">Chưa có thử thách</Tag>;

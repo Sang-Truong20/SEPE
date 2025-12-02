@@ -80,6 +80,13 @@ const Hackathons = () => {
             >
               Giải thưởng
             </Button>
+            <Button
+              size="small"
+              className="text-xs bg-purple-600/30 text-purple-300 border-purple-600/50 hover:bg-purple-600/50"
+              onClick={() => navigate(`${PATH_NAME.ADMIN_GROUPS}?hackathonId=${record.hackathonId}`)}
+            >
+              Bảng đấu
+            </Button>
           </div>
         )
       }
