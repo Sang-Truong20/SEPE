@@ -21,7 +21,7 @@ const AdminRoutes = () => {
       <Outlet />
     </AdminLayout>
   ) : (
-    <Navigate to="/login" replace />
+    <Navigate to="/" replace />
   );
 };
 

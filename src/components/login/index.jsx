@@ -52,7 +52,7 @@ function Login() {
       text="signin_with"
       theme="outline"
       size="large"
-      width="100%"
+      width="400px"
       onSuccess={(credentialResponse) => {
         console.log(credentialResponse);
         mutateLoginGoogle({ token: credentialResponse?.credential });

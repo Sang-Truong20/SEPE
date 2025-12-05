@@ -64,9 +64,9 @@ const Hackathons = () => {
               <Button
                 size="small"
                 className="text-xs bg-blue-600/30 text-blue-300 border-blue-600/50 hover:bg-blue-600/50"
-                onClick={() => navigate(`${PATH_NAME.PARTNER_TEAM_SCORES}/phase?hackathonId=${record.hackathonId}`)}
+                onClick={() => navigate(`${PATH_NAME.PARTNER_TEAM_SCORES}?hackathonId=${record.hackathonId}`)}
               >
-                Giai đoạn
+                Xem thứ hạng
               </Button>
             </div>
           ),

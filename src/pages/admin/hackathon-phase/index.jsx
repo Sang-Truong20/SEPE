@@ -44,7 +44,7 @@ const HackathonPhases = () => {
               label: 'Tạo mới Phase',
               action: () =>
                 navigate(
-                  `/admin/hackathons/hackathon-phases/create?hackathonId=${hackathonId}`,
+                  `/admin/hackathons/hackathon-phases/create?hackathonId=${hackathonId}&existingPhaseId=${phasesData[0]?.phaseId}`,
                 ),
               icon: true,
             }

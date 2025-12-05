@@ -7,13 +7,19 @@ import { useGroups } from '../../../hooks/admin/groups/useGroups';
 import EntityTable from '../../../components/ui/EntityTable.jsx';
 import { useHackathons } from '../../../hooks/admin/hackathons/useHackathons.js';
 
-const Groups = () => {
+const Groups = (tracks) => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const hackathonId = searchParams.get('hackathonId');
     
     const { fetchGroupsByHackathon, autoCreateGroups } = useGroups();
-    const { data: groupsData = [], isLoading, error } = fetchGroupsByHackathon(hackathonId);
+    const { data: groupsData = [], isLoading, error } = fetchGroupsByHackathon(hackathonId)
+
+    const trackIds = tracks.tracks.map(t => t.trackId);
+
+    const sortedGroups = [...groupsData].filter(group => trackIds.includes(group.trackId))?.sort((a, b) =>
+      a.groupName.localeCompare(b.groupName)
+    );
 
     // fetch hackathons for select
     const { fetchHackathons } = useHackathons();
@@ -87,7 +93,7 @@ const Groups = () => {
             onOk: () => {
                 autoCreateGroups.mutate({
                     teamsPerGroup: teamsPerGroup,
-                    hackathonId: hackathonId
+                    phaseId: tracks.tracks[0]?.phaseId || null,
                 }, {
                     onSuccess: () => {
                         // nothing extra to do here
@@ -101,57 +107,6 @@ const Groups = () => {
         onView: (record) => navigate(`/admin/groups/${record.groupId}?trackId=${record.trackId}`),
     };
 
-    const handleHackathonChange = (newHackathonId) => {
-        if (newHackathonId) {
-            setSearchParams({ hackathonId: newHackathonId });
-        }
-    };
-
-    if (!hackathonId) {
-        // when no hackathon selected, show a prompt to choose one (like HackathonPhases)
-        return (
-            <ConfigProvider
-                theme={{
-                    algorithm: theme.darkAlgorithm,
-                    token: {
-                        colorBgContainer: '#111111',
-                        colorBorder: '#2f2f2f',
-                        colorText: '#ffffff',
-                        colorTextPlaceholder: '#9ca3af',
-                        colorPrimary: '#10b981',
-                        borderRadius: 6
-                    }
-                }}
-            >
-                <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
-                    <div className="mb-4">
-                        <label className="block text-gray-300 text-sm font-medium mb-2">Chọn Hackathon</label>
-                        <Select
-                            placeholder="Chọn hackathon để xem bảng đấu"
-                            value={hackathonId}
-                            onChange={handleHackathonChange}
-                            loading={hackathonsLoading}
-                            className="w-full max-w-md"
-                            style={{ backgroundColor: '#1f1f1f' }}
-                        >
-                            {hackathons.map((hackathon) => (
-                                <Select.Option
-                                    key={hackathon.hackathonId}
-                                    value={hackathon.hackathonId.toString()}
-                                >
-                                    {hackathon.name} ({hackathon.season})
-                                </Select.Option>
-                            ))}
-                        </Select>
-                    </div>
-
-                    <div className="text-center py-8">
-                        <p className="text-gray-400">Vui lòng chọn một hackathon để xem các bảng đấu.</p>
-                    </div>
-                </div>
-            </ConfigProvider>
-        );
-    }
 
     if (error) {
         return (
@@ -162,68 +117,29 @@ const Groups = () => {
     }
 
     return (
-        <ConfigProvider
-            theme={{
-                algorithm: theme.darkAlgorithm,
-                token: {
-                    colorBgContainer: '#111111',
-                    colorBorder: '#2f2f2f',
-                    colorText: '#ffffff',
-                    colorTextPlaceholder: '#9ca3af',
-                    colorPrimary: '#10b981',
-                    borderRadius: 6
-                }
-            }}
-        >
-            <div className="space-y-4">
-                <div className="flex justify-end">
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={handleAutoCreateGroups}
-                        size="large"
-                        loading={autoCreateGroups.isPending}
-                        disabled={!hackathonId}
-                    >
-                        Tạo bảng đấu Tự Động
-                    </Button>
-                </div>
+      <>
+        <div className="flex justify-end">
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAutoCreateGroups}
+            size="large"
+            loading={autoCreateGroups.isPending}
+            disabled={!hackathonId}
+          >
+            Tạo bảng đấu Tự Động
+          </Button>
+        </div>
+        <EntityTable
+          model={tableModel}
+          data={sortedGroups}
+          loading={isLoading}
+          handlers={handlers}
+          emptyText="Không có bảng đấu nào"
+          dateFormatter={(value, fmt) => value ? dayjs(value).format(fmt) : '--'}
+        /></>
 
-                <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
-                    {/* Selected hackathon info (optional) */}
-                    {selectedHackathon && (
-                        <Card
-                            bordered={false}
-                            className="bg-neutral-900 border border-neutral-700 rounded-xl shadow-lg mb-4"
-                            title={<h3 className="text-white font-semibold text-lg">Hackathon đã chọn</h3>}
-                        >
-                            <div className="space-y-2">
-                                <p className="text-gray-200 text-base font-medium">{selectedHackathon.name} - {selectedHackathon.season}</p>
-                                <p className="text-gray-400 text-sm italic">{selectedHackathon.theme}</p>
 
-                                <div className="flex items-center gap-3 pt-2">
-                                    <Tag color="green" icon={<CalendarOutlined />} className="flex items-center gap-1">
-                                        <span className="text-sm text-gray-100">{selectedHackathon.startDate}</span>
-                                    </Tag>
-                                    <Tag color="geekblue" icon={<CalendarOutlined />} className="flex items-center gap-1">
-                                        <span className="text-sm text-gray-100">{selectedHackathon.endDate}</span>
-                                    </Tag>
-                                </div>
-                            </div>
-                        </Card>
-                    )}
-
-                    <EntityTable
-                        model={tableModel}
-                        data={groupsData}
-                        loading={isLoading}
-                        handlers={handlers}
-                        emptyText="Không có bảng đấu nào"
-                        dateFormatter={(value, fmt) => value ? dayjs(value).format(fmt) : '--'}
-                    />
-                </div>
-            </div>
-        </ConfigProvider>
     );
 };
 
