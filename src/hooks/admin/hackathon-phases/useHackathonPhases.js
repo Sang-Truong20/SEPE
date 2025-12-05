@@ -65,10 +65,12 @@ export const useHackathonPhases = () => {
      * method: POST
      * path: /api/HackathonPhase
      * request body: array of HackathonPhaseCreateDto (OpenAPI component)
+     * [{
      *   - hackathonId: integer
      *   - phaseName: string | null
      *   - startDate: string (date-time)
      *   - endDate: string (date-time)
+     * }]
      * response: 200 OK -> created phases
      */
     // Create phase

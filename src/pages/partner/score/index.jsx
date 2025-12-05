@@ -1,511 +1,327 @@
-// components/partner/scores/PhaseScores.jsx
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  ConfigProvider,
-  theme,
-  Button,
-  Card,
-  Tag,
-  Modal,
-  Form,
-  InputNumber,
-  Input,
-  Space,
-  message,
-  Divider,
-  Collapse,
-  Row,
-  Col,
-  Empty,
-  Typography,
-  Alert,
-} from 'antd';
-import {
-  ArrowLeftOutlined,
-  TrophyOutlined,
-  EditOutlined,
-  FileTextOutlined,
-  BarsOutlined,
-} from '@ant-design/icons';
-import EntityTable from '../../../components/ui/EntityTable.jsx';
-import { useMemo, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query'; // ← THÊM IMPORT NÀY
-import { useSubmission } from '../../../hooks/admin/submission/useSubmission.js';
-import { useCriteria } from '../../../hooks/admin/criterias/useCriteria.js';
-import { useTracks } from '../../../hooks/admin/tracks/useTracks.js';
-import { useScores } from '../../../hooks/admin/score/useScore.js';
-import { PATH_NAME } from '../../../constants/index.js';
-const { TextArea } = Input;
-const { Title, Text } = Typography;
+import React, { useState, useEffect, useMemo } from 'react';
+import { Trophy, Users, TrendingUp, Award, Medal, Crown } from 'lucide-react';
+import { useGroups } from '../../../hooks/admin/groups/useGroups.js';
 
-const PhaseScores = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const phaseId = searchParams.get('phaseId');
-  const queryClient = useQueryClient(); // ← THÊM HOOK NÀY
+// Mock hooks - replace with your actual hooks
+// const useGroups = () => ({
+//   fetchGroupsByHackathon: (hackathonId) => ({
+//     data: [
+//       { groupId: 1, groupName: "A", trackId: 1, teamIds: [1, 2, 3], createdAt: "2025-11-12T08:06:28.7992909" },
+//       { groupId: 2, groupName: "B", trackId: 1, teamIds: [4, 5], createdAt: "2025-11-12T08:06:28.7992909" },
+//       { groupId: 3, groupName: "A", trackId: 2, teamIds: [6, 7], createdAt: "2025-11-12T08:06:28.7992909" },
+//     ],
+//     isLoading: false,
+//     error: null
+//   }),
+//   fetchGroupTeams: (groupId) => ({
+//     data: groupId === 1 ? [
+//       { groupTeamId: 1, groupId: 1, teamId: 1, averageScore: 9.5, rank: 1, teamName: "Tech Innovators" },
+//       { groupTeamId: 2, groupId: 1, teamId: 2, averageScore: 8.7, rank: 2, teamName: "Code Warriors" },
+//       { groupTeamId: 3, groupId: 1, teamId: 3, averageScore: 7.8, rank: 3, teamName: "Digital Pioneers" },
+//     ] : groupId === 2 ? [
+//       { groupTeamId: 4, groupId: 2, teamId: 4, averageScore: 9.2, rank: 1, teamName: "AI Masters" },
+//       { groupTeamId: 5, groupId: 2, teamId: 5, averageScore: 8.1, rank: 2, teamName: "Data Wizards" },
+//     ] : [
+//       { groupTeamId: 6, groupId: 3, teamId: 6, averageScore: 8.9, rank: 1, teamName: "Cloud Ninjas" },
+//       { groupTeamId: 7, groupId: 3, teamId: 7, averageScore: 7.5, rank: 2, teamName: "Cyber Squad" },
+//     ],
+//     isLoading: false,
+//     error: null
+//   })
+// });
 
-  const { fetchSubmissionsByPhase } = useSubmission();
-  const { fetchCriteria } = useCriteria();
-  const { fetchTracks } = useTracks();
-  const { createScore, updateScore, fetchMyScoresGrouped } = useScores();
+// const fetchGroupTeams = (groupId) => ({
+//     data: groupId === 1 ? [
+//       { groupTeamId: 1, groupId: 1, teamId: 1, averageScore: 9.5, rank: 1, teamName: "Tech Innovators" },
+//       { groupTeamId: 2, groupId: 1, teamId: 2, averageScore: 8.7, rank: 2, teamName: "Code Warriors" },
+//       { groupTeamId: 3, groupId: 1, teamId: 3, averageScore: 7.8, rank: 3, teamName: "Digital Pioneers" },
+//     ] : groupId === 2 ? [
+//       { groupTeamId: 4, groupId: 2, teamId: 4, averageScore: 9.2, rank: 1, teamName: "AI Masters" },
+//       { groupTeamId: 5, groupId: 2, teamId: 5, averageScore: 8.1, rank: 2, teamName: "Data Wizards" },
+//     ] : [
+//       { groupTeamId: 6, groupId: 3, teamId: 6, averageScore: 8.9, rank: 1, teamName: "Cloud Ninjas" },
+//       { groupTeamId: 7, groupId: 3, teamId: 7, averageScore: 7.5, rank: 2, teamName: "Cyber Squad" },
+//     ],
+//     isLoading: false,
+//     error: null
+//   })
 
-  const { data: allTracks = [], isLoading: tracksLoading } = fetchTracks;
-  const { data: submissionsData = [], isLoading: submissionsLoading } = fetchSubmissionsByPhase(phaseId);
-  const { data: allCriteria = [], isLoading: criteriaLoading } = fetchCriteria(phaseId);
-  const { data: allScore = [] } = fetchMyScoresGrouped(phaseId);
+const HackathonLeaderboard = () => {
+  const [hackathonId, setHackathonId] = useState(null);
+  const [selectedGroup, setSelectedGroup] = useState('all');
+  const { fetchGroupsByHackathon, fetchMultipleGroupTeams } = useGroups();
 
-  const [detailsModal, setDetailsModal] = useState({ open: false, submission: null, track: null });
-  const [editModal, setEditModal] = useState({ open: false, submission: null, track: null, criteria: [] });
-  const [form] = Form.useForm();
+  useEffect(() => {
+    // Get hackathonId from URL
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('hackathonId');
+    if (id) setHackathonId(id);
+  }, []);
 
-  // Enrich data
-  const enrichedSubmissions = useMemo(() => {
-    return submissionsData
-      .filter(s => s.isFinal)
-      .map(submission => {
-        const track = allTracks.find(t => t.name === submission.trackName && t.phaseId.toString() === phaseId);
-        const challenges = track?.challenges || [];
+  const groupsQuery = fetchGroupsByHackathon(hackathonId);
+  const groups = groupsQuery.data || [];
 
-        const selectedChallenge = challenges.find(c => c.challengeId === submission.challengeId);
+// Gom tất cả groupId theo groupName (vì có thể nhiều track có cùng tên nhóm A, B, C...)
+  const groupsByName = groups.reduce((acc, group) => {
+    if (!acc[group.groupName]) {
+      acc[group.groupName] = [];
+    }
+    acc[group.groupName].push(group);
+    return acc;
+  }, {});
 
-        const relevantCriteria = allCriteria.filter(c => !c.trackId || c.trackId === track?.trackId);
+// Lấy tất cả groupId cần fetch teams
+  const allGroupIds = Object.values(groupsByName)
+    .flat()
+    .map(g => g.groupId);
 
-        const scores = allScore.filter(s => s.submissionId === submission.submissionId).pop()?.scores || [];
-        const totalWeighted = scores.reduce((sum, s) => {
-          const crit = relevantCriteria.find(c => c.criteriaId === s.criteriaId);
-          return sum + (s.scoreValue || 0) * (crit?.weight || 1);
-        }, 0);
-        const maxPossible = relevantCriteria.reduce((sum, c) => sum + (c.weight || 1), 0);
-        const finalScore = maxPossible > 0 ? (totalWeighted / maxPossible) * 100 : 0;
-        submission.scores = scores;
+// Dùng useQueries để fetch tất cả teams một lần
+  const teamsQueries = fetchMultipleGroupTeams(allGroupIds);
 
-        return {
-          ...submission,
-          track,
-          challenges,
-          selectedChallenge,
-          relevantCriteria,
-          totalScore: finalScore.toFixed(2),
-          scoredCount: scores.length,
-          criteriaCount: relevantCriteria.length,
-          status: scores.length === relevantCriteria.length && scores.every(s => s.scoreValue != null) ? 'scored' : 'pending',
-        };
-      })
-      .sort((a, b) => b.totalScore - a.totalScore);
-  }, [submissionsData, allTracks, allCriteria, phaseId, allScore]);
+// Tính toán dữ liệu sau khi tất cả query hoàn thành
+  const isLoading = groupsQuery.isLoading || teamsQueries.some(q => q.isLoading);
+  const isError = groupsQuery.isError || teamsQueries.some(q => q.isError);
 
-  const tableModel = useMemo(() => ({
-    entityName: 'Bảng điểm các đội',
-    rowKey: 'id',
-    columns: [
-      {
-        title: 'Đội thi',
-        dataIndex: 'teamName',
-        key: 'teamName',
-        width: 180,
-        render: text => <span className="font-medium">{text || 'Chưa đặt tên'}</span>,
-      },
-      {
-        title: 'Track',
-        dataIndex: ['track', 'name'],
-        key: 'track',
-        render: name => name ? <Tag color="purple">{name}</Tag> : '-',
-      },
-      {
-        title: 'Thử thách',
-        key: 'challenges',
-        type: 'custom',
-        ellipsis: true,
-        width: 500,
-        render: (_, record) => {
-          const challenges = record.challenges || [];
-          if (challenges.length === 0) {
-            return <Tag color="default">Chưa có thử thách</Tag>;
+  const allTeamsData = useMemo(() => {
+    if (isLoading || !groups.length) return {};
+
+    const result = {};
+
+    Object.keys(groupsByName).forEach(groupName => {
+      const groupIdsInThisName = groupsByName[groupName].map(g => g.groupId);
+      const teamsForThisGroup = [];
+
+      // Lấy dữ liệu từ các query tương ứng
+      allGroupIds.forEach((groupId, index) => {
+        if (groupIdsInThisName.includes(groupId)) {
+          const queryData = teamsQueries[index]?.data;
+          if (queryData) {
+            teamsForThisGroup.push(...queryData);
           }
-          return (
-            <Space wrap>
-              {challenges?.map((ch) => (
-                <Button
-                  key={ch.challengeId}
-                  size="small"
-                  type="primary"
-                  ghost
-                  className="text-xs"
-                  onClick={() =>
-                    navigate(`${PATH_NAME.JUDGE_CHALLENGES}/${ch.challengeId}`)
-                  }
-                >
-                  {ch.title}
-                </Button>
-              ))}
-            </Space>
-          );
-        },
-      },
-      {
-        title: 'Đã chọn',
-        key: 'selected',
-        render: (_, record) => record.selectedChallenge ? (
-          <Tag color="green" icon={<TrophyOutlined />}>
-            {record.selectedChallenge.title}
-          </Tag>
-        ) : <Tag color="orange">Chưa chọn</Tag>,
-      },
-      {
-        title: 'Tiêu chí',
-        key: 'criteria',
-        render: (_, r) => <Tag>{r.scoredCount}/{r.criteriaCount}</Tag>,
-      },
-      {
-        title: 'Tổng điểm',
-        dataIndex: 'totalScore',
-        key: 'totalScore',
-        render: score => <strong className="text-lg text-green-400">{score}%</strong>,
-        sorter: (a, b) => a.totalScore - a.totalScore,
-      },
-    ],
-    actions: {
-      view: { tooltip: 'Xem chi tiết', icon: <FileTextOutlined />, className: 'text-blue-400' },
-      edit: { tooltip: 'Chấm điểm', icon: <EditOutlined />, className: 'text-yellow-500' },
-    },
-  }), []);
-
-  const handlers = {
-    onView: (record) => {
-      setDetailsModal({
-        open: true,
-        submission: record,
-        track: record.track,
-      });
-    },
-    onEdit: (record) => {
-      setEditModal({
-        open: true,
-        submission: record,
-        track: record.track,
-        criteria: record.relevantCriteria,
-        existingScores: record.scores || [],
-      });
-
-      form.resetFields();
-
-      const fieldValues = {};
-      record.scores?.forEach(s => {
-        fieldValues[`score_${s.criteriaId}`] = s.scoreValue;
-        fieldValues[`comment_${s.criteriaId}`] = s.comment || '';
-      });
-
-      form.setFieldsValue(fieldValues);
-    },
-  };
-
-  const handleSaveScore = () => {
-    form.validateFields().then(values => {
-      const scores = editModal?.criteria?.map(c => ({
-        criteriaId: c.criteriaId,
-        scoreValue: values[`score_${c.criteriaId}`] || 0,
-        comment: values[`comment_${c.criteriaId}`] || null,
-      }));
-
-      const payload = { submissionId: editModal.submission.submissionId, scores };
-      const mutation = editModal.existingScores.length > 0 ? updateScore : createScore;
-
-      mutation.mutate(payload, {
-        onSuccess: () => {
-          message.success('Lưu điểm thành công!');
-
-          // ← THÊM PHẦN NÀY: Invalidate queries để refetch dữ liệu mới
-          queryClient.invalidateQueries({
-            queryKey: ['myScoresGrouped', phaseId]
-          });
-          queryClient.invalidateQueries({
-            queryKey: ['submissionsByPhase', phaseId]
-          });
-
-          setEditModal({ open: false });
-          form.resetFields();
-        },
-        onError: (error) => {
-          message.error('Có lỗi xảy ra khi lưu điểm!');
-          console.error('Save score error:', error);
         }
       });
-    }).catch(error => {
-      message.warning('Vui lòng kiểm tra lại thông tin nhập vào!');
+
+      // Sort và tính rank
+      teamsForThisGroup.sort((a, b) => (b.averageScore || 0) - (a.averageScore || 0));
+      teamsForThisGroup.forEach((team, idx) => {
+        team.calculatedRank = idx + 1;
+      });
+
+      result[groupName] = teamsForThisGroup;
     });
+    return result;
+  }, [groups, teamsQueries, allGroupIds]);
+
+  const getRankIcon = (rank) => {
+    switch(rank) {
+      case 1: return <Crown className="w-6 h-6 text-yellow-400" />;
+      case 2: return <Medal className="w-6 h-6 text-gray-300" />;
+      case 3: return <Award className="w-6 h-6 text-amber-600" />;
+      default: return <span className="w-6 h-6 flex items-center justify-center text-text-secondary font-bold">{rank}</span>;
+    }
   };
 
-  if (!phaseId) return <div className="text-center py-16 text-gray-400">Vui lòng chọn giai đoạn</div>;
+  const getRankColor = (rank) => {
+    switch(rank) {
+      case 1: return 'from-yellow-500/20 to-yellow-600/10 border-yellow-500/30';
+      case 2: return 'from-gray-400/20 to-gray-500/10 border-gray-400/30';
+      case 3: return 'from-amber-600/20 to-amber-700/10 border-amber-600/30';
+      default: return 'from-dark-secondary to-dark-tertiary border-dark-accent';
+    }
+  };
+
+  const getScoreColor = (score) => {
+    if (score >= 9) return 'text-primary';
+    if (score >= 8) return 'text-tertiary';
+    if (score >= 7) return 'text-light-tertiary';
+    return 'text-text-secondary';
+  };
+
+  if (groupsQuery.isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-dark-primary via-dark-secondary to-dark-primary flex items-center justify-center">
+        <div className="text-text-primary text-xl animate-pulse">Loading leaderboard...</div>
+      </div>
+    );
+  }
+
+  const groupNames = Object.keys(groupsByName).sort();
+  const displayGroups = selectedGroup === 'all' ? groupNames : [selectedGroup];
 
   return (
-    <ConfigProvider
-      theme={{
-        algorithm: theme.darkAlgorithm,
-        token: {
-          colorBgContainer: '#111111',
-          colorBorder: '#2f2f2f',
-          colorText: '#ffffff',
-          colorPrimary: '#10b981',
-        },
-      }}
-    >
-      <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
-        <div className="mb-6">
-          <Button
-            onClick={() => navigate(-1)}
-            type="link"
-            icon={<ArrowLeftOutlined />}
-            className="mb-4 !text-light-primary hover:!text-primary"
-          >
-            Quay lại
-          </Button>
-
-          <Card className="bg-neutral-900 border border-neutral-800 mb-6">
-            <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-gradient-to-br from-dark-primary via-dark-secondary to-dark-primary">
+      {/* Header */}
+      <div className="bg-dark-secondary/50 backdrop-blur-sm border-b border-primary/20 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-br from-primary to-secondary p-3 rounded-xl shadow-lg shadow-primary/20">
+                <Trophy className="w-8 h-8 text-dark-primary" />
+              </div>
               <div>
-                <Title level={3} className="!text-white !mb-1">Bảng điểm Phase {phaseId}</Title>
-                <Text className="text-gray-400">Tổng {enrichedSubmissions.length} đội thi</Text>
+                <h1 className="text-3xl font-bold text-text-primary">Hackathon Leaderboard</h1>
+                <p className="text-text-secondary text-sm mt-1">Track performance across all groups</p>
               </div>
-              <Tag icon={<TrophyOutlined />} color="gold" size="large">Top {enrichedSubmissions.length}</Tag>
             </div>
-          </Card>
-
-          <EntityTable
-            model={tableModel}
-            data={enrichedSubmissions}
-            loading={submissionsLoading || criteriaLoading || tracksLoading}
-            handlers={handlers}
-            emptyText="Chưa có bài nộp cuối cùng"
-          />
-
-          {/* Modal Chi tiết */}
-          <Modal
-            open={detailsModal.open}
-            onCancel={() => setDetailsModal({ open: false })}
-            footer={null}
-            width={950}
-            title={<Title level={4}><FileTextOutlined /> Chi tiết bài thi</Title>}
-          >
-            {detailsModal.submission && (
-              <div className="space-y-6">
-                <Card title="Thông tin đội thi">
-                  <Row gutter={[16, 12]}>
-                    <Col span={12}><Text strong>Đội:</Text> {detailsModal.submission.teamName}</Col>
-                    <Col span={12}><Text strong>Track:</Text> <Tag color="purple">{detailsModal.track?.name}</Tag></Col>
-                    <Col span={24}>
-                      <Text strong>Thử thách trong Track:</Text>
-                      <div className="mt-2">
-                        <Space wrap>
-                          {detailsModal.track?.challenges?.length > 0 ? (
-                            detailsModal.track?.challenges?.map((ch) => (
-                              <Button
-                                key={ch.challengeId}
-                                size="small"
-                                type="primary"
-                                ghost
-                                className="text-xs"
-                                onClick={() =>
-                                  navigate(`${PATH_NAME.JUDGE_CHALLENGES}/${ch.challengeId}`)
-                                }
-                              >
-                                {ch.title}
-                              </Button>
-                            ))
-                          )  : (
-                            <Tag color="default">Chưa có thử thách</Tag>
-                          )}
-                        </Space>
-                      </div>
-                    </Col>
-                    {detailsModal.submission.selectedChallenge && (
-                      <Col span={24}>
-                        <Alert
-                          message={<>Đội đã chọn: <strong>{detailsModal.submission.selectedChallenge.title}</strong></>}
-                          type="success"
-                          showIcon
-                        />
-                      </Col>
-                    )}
-                  </Row>
-                </Card>
-
-                <Card title={<><TrophyOutlined /> Tiêu chí chấm điểm</>}>
-                  {detailsModal.submission.relevantCriteria?.length > 0 ? (
-                    <Collapse>
-                      {detailsModal.submission?.relevantCriteria?.map(crit => {
-                        const score = detailsModal.submission.scores?.find(s => s.criteriaName === crit.name);
-                        return (
-                          <Collapse.Panel
-                            key={crit.criteriaId}
-                            header={
-                              <div className="flex justify-between">
-                                <span className="font-medium">{crit.name}</span>
-                                <Space>
-                                  <Tag>Weight: {crit.weight}</Tag>
-                                  {score && <Tag color="green">Điểm: {score.scoreValue}/{crit.weight}</Tag>}
-                                </Space>
-                              </div>
-                            }
-                          >
-                            {score?.comment && (
-                              <div>
-                                <Text type="secondary">Nhận xét:</Text><br />
-                                <Text>{score.comment}</Text>
-                              </div>
-                            )}
-                          </Collapse.Panel>
-                        );
-                      })}
-                    </Collapse>
-                  ) : <Empty description="Không có tiêu chí" />}
-                </Card>
-
-                <Card className="bg-gradient-to-r from-emerald-900 to-green-900 text-white">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <Text className="text-green-200 text-lg">Tổng điểm cuối cùng</Text>
-                      <Title level={1} className="!text-white !mt-0">
-                        {detailsModal.submission.totalScore}%
-                      </Title>
-                    </div>
-                    <TrophyOutlined className="text-6xl opacity-80" />
-                  </div>
-                </Card>
-              </div>
-            )}
-          </Modal>
-
-          {/* Modal Chấm điểm */}
-          <Modal
-            open={editModal.open}
-            onCancel={() => {
-              setEditModal({ open: false });
-              form.resetFields();
-            }}
-            onOk={handleSaveScore}
-            okText="Lưu điểm"
-            cancelText="Hủy"
-            width={900}
-            confirmLoading={createScore.isPending || updateScore.isPending}
-            title={<><EditOutlined /> Chấm điểm: {editModal.submission?.teamName}</>}
-          >
-            <Form form={form} layout="vertical">
-              <Alert
-                className="mb-4"
-                message={
-                  <Space>
-                    <Text strong>Track:</Text> <Tag color="purple">{editModal.track?.name}</Tag>
-                    {editModal.submission?.selectedChallenge && (
-                      <>| Đã chọn: <Tag color="green">{editModal.submission.selectedChallenge.title}</Tag></>
-                    )}
-                  </Space>
-                }
-                type="info"
-                showIcon
-              />
-
-              {editModal.track?.challenges?.length > 0 && (
-                <Card size="small" title="Các thử thách trong Track" className="mb-6 bg-neutral-800">
-                  <Space wrap>
-                    {editModal?.track?.challenges?.map((ch) => (
-                      <Button
-                        key={ch.challengeId}
-                        size="small"
-                        type="primary"
-                        ghost
-                        className="text-xs"
-                        onClick={() =>
-                          navigate(`${PATH_NAME.JUDGE_CHALLENGES}/${ch.challengeId}`)
-                        }
-                      >
-                        {ch.title}
-                      </Button>
-                    ))}
-                  </Space>
-                </Card>
-              )}
-
-              <Title level={5}>Chấm điểm theo tiêu chí</Title>
-              {editModal?.criteria?.map(crit => {
-                const existing = editModal.existingScores.find(s => s.criteriaName === crit.name);
-
-                const scoreValidator = (_, value) => {
-                  if (value === undefined || value === null || value === '') {
-                    return Promise.reject(new Error('Vui lòng nhập điểm!'));
-                  }
-                  if (value < 0) {
-                    return Promise.reject(new Error('Điểm phải lớn hơn 0!'));
-                  }
-                  if (value > crit.weight) {
-                    return Promise.reject(new Error(`Điểm không được lớn hơn trọng số (${crit.weight})!`));
-                  }
-                  return Promise.resolve();
-                };
-
-                return (
-                  <Card
-                    key={crit.criteriaId}
-                    className="mb-4 bg-neutral-800"
-                    size="small"
-                    bordered={false}
-                  >
-                    <div className="flex justify-between items-center mb-3">
-                      <Text strong className="text-lg">{crit.name}</Text>
-                      <Tag color="blue" className="text-sm">
-                        Trọng số: {crit.weight}
-                      </Tag>
-                    </div>
-                    <Row gutter={16}>
-                      <Col span={10}>
-                        <Form.Item
-                          name={`score_${crit.criteriaId}`}
-                          label={`Điểm (0 < điểm ≤ ${crit.weight})`}
-                          initialValue={existing?.scoreValue ?? undefined}
-                          rules={[
-                            { required: true },
-                            { validator: scoreValidator }
-                          ]}
-                          validateTrigger={['onChange', 'onBlur']}
-                        >
-                          <InputNumber
-                            min={0}
-                            max={crit.weight}
-                            step={0.5}
-                            precision={2}
-                            className="w-full"
-                            placeholder={`0 - ${crit.weight}`}
-                            style={{ width: '100%' }}
-                          />
-                        </Form.Item>
-                      </Col>
-
-                      <Col span={14}>
-                        <Form.Item
-                          name={`comment_${crit.criteriaId}`}
-                          label="Nhận xét"
-                          initialValue={existing?.comment || ''}
-                        >
-                          <TextArea
-                            rows={4}
-                            placeholder="Nhập nhận xét chi tiết về tiêu chí này..."
-                            autoSize={{ minRows: 3, maxRows: 8 }}
-                            className="resize-none"
-                            style={{ resize: 'none' }}
-                            showCount
-                            maxLength={1000}
-                          />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                  </Card>
-                );
-              })}
-            </Form>
-          </Modal>
+            <div className="flex items-center gap-2 bg-dark-tertiary px-4 py-2 rounded-lg border border-primary/20">
+              <Users className="w-5 h-5 text-primary" />
+              <span className="text-text-primary font-semibold">
+                {Object.values(allTeamsData).flat().length} Teams
+              </span>
+            </div>
+          </div>
         </div>
       </div>
-    </ConfigProvider>
+
+      {/* Group Filter Tabs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          <button
+            onClick={() => setSelectedGroup('all')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all whitespace-nowrap ${
+              selectedGroup === 'all'
+                ? 'bg-gradient-to-r from-primary to-secondary text-dark-primary shadow-lg shadow-primary/30'
+                : 'bg-dark-tertiary text-text-secondary hover:bg-dark-accent border border-dark-accent'
+            }`}
+          >
+            All Groups
+          </button>
+          {groupNames.map(groupName => (
+            <button
+              key={groupName}
+              onClick={() => setSelectedGroup(groupName)}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all whitespace-nowrap ${
+                selectedGroup === groupName
+                  ? 'bg-gradient-to-r from-primary to-secondary text-dark-primary shadow-lg shadow-primary/30'
+                  : 'bg-dark-tertiary text-text-secondary hover:bg-dark-accent border border-dark-accent'
+              }`}
+            >
+              Group {groupName}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Leaderboard Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="space-y-8">
+          {displayGroups.map(groupName => {
+            const teams = allTeamsData[groupName] || [];
+
+            return (
+              <div key={groupName} className="space-y-4">
+                {/* Group Header */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30 px-6 py-3 rounded-xl">
+                    <h2 className="text-2xl font-bold text-text-primary">Group {groupName}</h2>
+                  </div>
+                  <div className="flex-1 h-px bg-gradient-to-r from-primary/50 to-transparent"></div>
+                  <div className="flex items-center gap-2 bg-dark-tertiary px-4 py-2 rounded-lg border border-primary/20">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                    <span className="text-text-secondary text-sm font-medium">{teams.length} teams</span>
+                  </div>
+                </div>
+
+                {/* Top 3 Podium */}
+                {teams.length > 0 && (
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    {/* 2nd Place */}
+                    {teams[1] && (
+                    <div className="pt-12">
+                      <div className="bg-gradient-to-br from-gray-400/20 to-gray-500/10 border border-gray-400/30 rounded-2xl p-6 text-center hover:scale-105 transition-transform">
+                        <Medal className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <div className="text-4xl font-bold text-text-primary mb-2">#2</div>
+                        <div className="text-lg font-semibold text-text-primary mb-1">{teams[1].teamName}</div>
+                        <div className="text-3xl font-bold text-tertiary">{teams[1].averageScore.toFixed(1)}</div>
+                      </div>
+                    </div>
+                    )}
+
+                    {/* 1st Place */}
+                    {teams[0] && (
+                    <div>
+                      <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-2 border-yellow-500/40 rounded-2xl p-6 text-center hover:scale-105 transition-transform shadow-2xl shadow-yellow-500/20">
+                        <Crown className="w-16 h-16 text-yellow-400 mx-auto mb-3 animate-pulse" />
+                        <div className="text-5xl font-bold text-text-primary mb-2">#1</div>
+                        <div className="text-xl font-bold text-text-primary mb-1">{teams[0].teamName}</div>
+                        <div className="text-4xl font-bold text-primary">{teams[0].averageScore.toFixed(1)}</div>
+                      </div>
+                    </div>
+                    )}
+
+                    {/* 3rd Place */}
+                    {teams[2] && (
+                    <div className="pt-12">
+                      <div className="bg-gradient-to-br from-amber-600/20 to-amber-700/10 border border-amber-600/30 rounded-2xl p-6 text-center hover:scale-105 transition-transform">
+                        <Award className="w-12 h-12 text-amber-600 mx-auto mb-3" />
+                        <div className="text-4xl font-bold text-text-primary mb-2">#3</div>
+                        <div className="text-lg font-semibold text-text-primary mb-1">{teams[2].teamName}</div>
+                        <div className="text-3xl font-bold text-light-tertiary">{teams[2].averageScore.toFixed(1)}</div>
+                      </div>
+                    </div>
+                    )}
+
+                  </div>
+                )}
+
+                {/* Full Rankings Table */}
+                <div className="bg-dark-secondary/50 backdrop-blur-sm border border-primary/20 rounded-2xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-dark-tertiary border-b border-primary/20">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-text-primary">Rank</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-text-primary">Team Name</th>
+                        <th className="px-6 py-4 text-right text-sm font-semibold text-text-primary">Score</th>
+                        <th className="px-6 py-4 text-right text-sm font-semibold text-text-primary">Status</th>
+                      </tr>
+                      </thead>
+                      <tbody className="divide-y divide-dark-accent">
+                      {teams.map((team, index) => (
+                        <tr
+                          key={team.groupTeamId}
+                          className={`bg-gradient-to-r ${getRankColor(team.calculatedRank)} hover:bg-dark-accent/50 transition-all border-l-4 ${
+                            team.calculatedRank === 1 ? 'border-l-yellow-500' :
+                              team.calculatedRank === 2 ? 'border-l-gray-400' :
+                                team.calculatedRank === 3 ? 'border-l-amber-600' :
+                                  'border-l-transparent'
+                          }`}
+                        >
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-3">
+                              {getRankIcon(team.calculatedRank)}
+                            </div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="font-semibold text-text-primary text-lg">{team.teamName}</div>
+                          </td>
+                          <td className="px-6 py-5 text-right">
+                            <div className={`text-2xl font-bold ${getScoreColor(team.averageScore)}`}>
+                              {team.averageScore.toFixed(1)}
+                            </div>
+                          </td>
+                          <td className="px-6 py-5 text-right">
+                              <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                                team.calculatedRank <= 3
+                                  ? 'bg-primary/20 text-primary border border-primary/30'
+                                  : 'bg-dark-accent/50 text-text-secondary border border-dark-accent'
+                              }`}>
+                                {team.calculatedRank <= 3 ? 'Top 3' : 'Competing'}
+                              </span>
+                          </td>
+                        </tr>
+                      ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default PhaseScores;
+export default HackathonLeaderboard;

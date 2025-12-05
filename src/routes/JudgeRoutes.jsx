@@ -21,7 +21,7 @@ const JudgeRoutes = () => {
       <Outlet />
     </JudgeLayout>
   ) : (
-    <Navigate to="/login" replace />
+    <Navigate to="/" replace />
   );
 };
 

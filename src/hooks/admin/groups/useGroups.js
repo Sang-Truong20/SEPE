@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
 
@@ -11,10 +11,32 @@ import axiosClient from "../../../configs/axiosClient";
  * 3.4 Group ( View )
  * GET /api/Group/Group/{hackathonId}
  * response: array of group objects
+ * [
+ *   {
+ *     "groupId": 1,
+ *     "groupName": "A",
+ *     "trackId": 3,
+ *     "teamIds": [
+ *       8
+ *     ],
+ *     "createdAt": "2025-11-12T08:06:28.7992909"
+ *   }
+ * ]
  * 
  * 3.5 GroupTeams
  * GET /api/Group/{groupId}/teams
  * response: array of group team objects
+ * [
+ *   {
+ *     "groupTeamId": 1,
+ *     "groupId": 1,
+ *     "teamId": 8,
+ *     "averageScore": 8.5,
+ *     "rank": 1,
+ *     "joinedAt": "2025-11-12T08:06:29.2417146",
+ *     "teamName": "Fpt"
+ *   }
+ * ]
  */
 
 export const groupQueryKeys = {
@@ -74,9 +96,24 @@ export const useGroups = () => {
         },
     });
 
+  const fetchMultipleGroupTeams = (groupIds) => {
+    return useQueries({
+      queries: groupIds.map(groupId => ({
+        queryKey: groupQueryKeys.teamsByGroup(groupId),
+        queryFn: async () => {
+          const response = await axiosClient.get(`/Group/${groupId}/teams`);
+          return response.data;
+        },
+        enabled: !!groupId && groupIds.length > 0,
+        staleTime: 1000 * 60, // tùy chỉnh nếu cần
+      })),
+    });
+  };
+
     return {
         fetchGroupsByHackathon,
         fetchGroupTeams,
         autoCreateGroups,
+        fetchMultipleGroupTeams,
     };
 };

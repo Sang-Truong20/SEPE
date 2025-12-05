@@ -39,10 +39,6 @@ const items = [
       <Link to={PATH_NAME.ADMIN_PRIZES}>Giải thưởng</Link>,
       PATH_NAME.ADMIN_PRIZES,
     ),
-    getItem(
-      <Link to={PATH_NAME.ADMIN_GROUPS}>Bảng đấu</Link>,
-      PATH_NAME.ADMIN_GROUPS,
-    ),
   ]),
   getItem(
     <Link to={PATH_NAME.ADMIN_CHALLENGES}>Thử thách</Link>,

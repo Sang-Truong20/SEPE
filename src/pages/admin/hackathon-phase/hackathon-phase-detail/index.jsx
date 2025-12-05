@@ -27,6 +27,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useChallenges } from '../../../../hooks/admin/challanges/useChallenges.js';
+import Group from '../../group/index.jsx';
 
 const HackathonPhaseDetail = () => {
   const { id } = useParams();
@@ -302,6 +303,12 @@ const HackathonPhaseDetail = () => {
             }
           />
         </Card>
+        {/* Group Section */}
+        {hackathonId && (
+          <Card className="mt-6 border border-white/10 bg-white/5 rounded-xl">
+            <Group tracks={phaseTracks}/>
+          </Card>
+        )}
       </EntityDetail>
 
       {/* Modal Gán thử thách ngẫu nhiên - ĐÃ HOÀN THIỆN */}

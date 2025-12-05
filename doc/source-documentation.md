@@ -67,7 +67,7 @@ src/
 │   │   ├── tracks/
 │   │   │   └── useTracks.js      // API call  Tracks data hook. Supports fetching tracks, creating/updating/deleting tracks, assigning random challenges and letting teams select a track. Exposes `fetchTracks`, `fetchTrackById`, `createTrack`, `updateTrack`, `deleteTrack`, `assignRandomChallenge`, and `selectTrackForTeam`.
 │   │   └── users/
-│   │       └── useUsers.js       // API call  Users data hook. Fetches user list (`GET /Auth/users`), updates user info, and toggles block/unblock state via `/Auth/users/{id}/block`. Invalidates user caches after mutations.
+│   │       └── useRanking.js       // API call  Users data hook. Fetches user list (`GET /Auth/users`), updates user info, and toggles block/unblock state via `/Auth/users/{id}/block`. Invalidates user caches after mutations.
 │   ├── useFirebaseMessaging.js   // API call  Firebase messaging hook. Requests notification permission, retrieves FCM token via `getToken(messaging, { vapidKey })` and logs it. Registers `onMessage` handler to show an alert when a foreground message arrives. Uses Vite env `VITE_WEBPUSH_CER` as VAPID key.
 │   ├── useLogout.js              // API call  Logout hook. Returns a mutate function `mutateLogout` that calls the `logout` service, clears cookies/localStorage/query cache and redirects to `PATH_NAME.HOME`. Uses React Query mutation with onSuccess/onError handlers.
 │   └── useUserData.js            // API call  User data hook. Uses React Query `useQuery` to call `getMe` when an access token is present in cookies. Returns `{ userInfo, isLoading, error, refetch }` where `userInfo` contains the API `data.data` payload.
@@ -111,7 +111,7 @@ src/
 │   │   │   │   └── index.jsx      // Team detail page. Uses `EntityDetail` to render team info. Read-only; shows leader, chapter, and createdAt.
 │   │   │   └── index.jsx          // Team list page. Renders `EntityTable` listing teams with view and delete actions. Uses `useTeams` hook.
 │   │   └── users/
-│   │       └── index.jsx          // User management page. Displays list of users with roles and statuses. Integrates `useUsers` for fetching and updating user data.
+│   │       └── index.jsx          // User management page. Displays list of users with roles and statuses. Integrates `useRanking` for fetching and updating user data.
 │   ├── landing/
 │   │   └── index.jsx              // Landing page: marketing site with sections (features, hackathons, timeline, FAQ) and a modal login dialog that delegates to `Login` component and `loginGoogle` service. Uses AOS for scroll animations and Tailwind styling. Handles login mutation to store tokens and redirect based on role claim in JWT.
 │   ├── notfound/
