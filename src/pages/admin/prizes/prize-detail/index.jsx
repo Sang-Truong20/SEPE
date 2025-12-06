@@ -31,8 +31,7 @@ const PrizeDetail = () => {
                         { key: 'Phần Thưởng', type: 'input', name: 'reward' }
                     ]
                 ]
-            },
-            { key: 'Hackathon', type: 'input', name: 'hackathonName' }
+            }
         ]
     };
 

@@ -203,13 +203,6 @@ const Appeals = () => {
         setSelectedAppeal(null);
     };
 
-    if (error) {
-        return (
-            <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md text-red-400">
-                Lỗi tải dữ liệu.
-            </div>
-        );
-    }
 
     return (
         <ConfigProvider

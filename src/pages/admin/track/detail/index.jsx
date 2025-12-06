@@ -21,6 +21,7 @@ const TrackDetail = () => {
   const hackathonId = searchParams.get('hackathonId');
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assignForm] = Form.useForm();
+  const [confirmModal, setConfirmModal] = useState({ open: false, type: '', record: null });
 
   // Lấy dữ liệu track
   const { fetchTrackById } = useTracks();
@@ -206,17 +207,7 @@ const TrackDetail = () => {
         `${PATH_NAME.ADMIN_CRITERIAS}/edit/${record.criteriaId}?phaseId=${phaseId}&trackId=${trackId}&hackathonId=${hackathonId}`,
       ),
     onDelete: (record) => {
-      Modal.confirm({
-        title: 'Xóa tiêu chí',
-        icon: <ExclamationCircleOutlined />,
-        content: `Xóa tiêu chí "${record.name}"? Hành động này không thể hoàn tác.`,
-        okText: 'Xóa',
-        okType: 'danger',
-        cancelText: 'Hủy',
-        onOk: () => {
-          deleteCriterion.mutate(record.criteriaId);
-        },
-      });
+      setConfirmModal({ open: true, type: 'deleteCriteria', record });
     },
     isDeleting: (record) =>
       deleteCriterion.isPending &&
@@ -239,31 +230,27 @@ const TrackDetail = () => {
   };
 
   const handleBlockAssignment = (record) => {
-    Modal.confirm({
-      title: 'Block Judge Assignment',
-      icon: <ExclamationCircleOutlined />,
-      content: `Block assignment for judge "${record.judgeName}"?`,
-      okText: 'Block',
-      okType: 'danger',
-      cancelText: 'Cancel',
-      onOk: () => {
-        blockJudgeAssignment.mutate(record.assignmentId);
-      },
-    });
+    setConfirmModal({ open: true, type: 'blockAssignment', record });
   };
 
   const handleReactivateAssignment = (record) => {
-    Modal.confirm({
-      title: 'Reactivate Judge Assignment',
-      icon: <ExclamationCircleOutlined />,
-      content: `Reactivate assignment for judge "${record.judgeName}"?`,
-      okText: 'Reactivate',
-      okType: 'primary',
-      cancelText: 'Cancel',
-      onOk: () => {
-        reactivateJudgeAssignment.mutate(record.assignmentId);
-      },
-    });
+    setConfirmModal({ open: true, type: 'reactivateAssignment', record });
+  };
+
+  const handleConfirmOk = () => {
+    const { type, record } = confirmModal;
+    if (type === 'deleteCriteria') {
+      deleteCriterion.mutate(record.criteriaId);
+    } else if (type === 'blockAssignment') {
+      blockJudgeAssignment.mutate(record.assignmentId);
+    } else if (type === 'reactivateAssignment') {
+      reactivateJudgeAssignment.mutate(record.assignmentId);
+    }
+    setConfirmModal({ open: false, type: '', record: null });
+  };
+
+  const handleConfirmCancel = () => {
+    setConfirmModal({ open: false, type: '', record: null });
   };
 
   if (trackError)
@@ -370,6 +357,44 @@ const TrackDetail = () => {
             </Select>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Confirm Modal */}
+      <Modal
+        title={
+          confirmModal.type === 'deleteCriteria'
+            ? 'Xóa tiêu chí'
+            : confirmModal.type === 'blockAssignment'
+            ? 'Block Judge Assignment'
+            : 'Reactivate Judge Assignment'
+        }
+        open={confirmModal.open}
+        onOk={handleConfirmOk}
+        onCancel={handleConfirmCancel}
+        okText={
+          confirmModal.type === 'deleteCriteria'
+            ? 'Xóa'
+            : confirmModal.type === 'blockAssignment'
+            ? 'Block'
+            : 'Reactivate'
+        }
+        okButtonProps={{
+          danger: confirmModal.type === 'deleteCriteria' || confirmModal.type === 'blockAssignment'
+        }}
+        cancelText={confirmModal.type === 'deleteCriteria' ? 'Hủy' : 'Cancel'}
+        centered
+      >
+        <div className="flex items-start gap-3">
+          <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
+          <span>
+            {confirmModal.type === 'deleteCriteria' &&
+              `Xóa tiêu chí "${confirmModal.record?.name}"? Hành động này không thể hoàn tác.`}
+            {confirmModal.type === 'blockAssignment' &&
+              `Block assignment for judge "${confirmModal.record?.judgeName}"?`}
+            {confirmModal.type === 'reactivateAssignment' &&
+              `Reactivate assignment for judge "${confirmModal.record?.judgeName}"?`}
+          </span>
+        </div>
       </Modal>
     </ConfigProvider>
   );

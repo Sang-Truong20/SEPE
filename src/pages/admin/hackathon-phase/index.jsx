@@ -17,6 +17,7 @@ const HackathonPhases = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const hackathonId = searchParams.get('hackathonId');
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ open: false, phaseId: null });
 
   const { fetchHackathons } = useHackathons();
   const { data: hackathons = [], isLoading: hackathonsLoading } =
@@ -84,21 +85,22 @@ const HackathonPhases = () => {
   );
 
   const handleDeleteConfirm = (id) => {
-    Modal.confirm({
-      title: 'Xác nhận xóa',
-      icon: <ExclamationCircleOutlined />,
-      content: 'Bạn có chắc chắn muốn xóa phase này không?',
-      okText: 'Xóa',
-      okType: 'danger',
-      cancelText: 'Hủy',
-      centered: true,
-      onOk: () => {
-        setDeletingId(id);
-        deleteHackathonPhase.mutate(id, {
-          onSettled: () => setDeletingId(null),
-        });
+    setConfirmModal({ open: true, phaseId: id });
+  };
+
+  const handleConfirmOk = () => {
+    const { phaseId } = confirmModal;
+    setDeletingId(phaseId);
+    deleteHackathonPhase.mutate(phaseId, {
+      onSettled: () => {
+        setDeletingId(null);
+        setConfirmModal({ open: false, phaseId: null });
       },
     });
+  };
+
+  const handleConfirmCancel = () => {
+    setConfirmModal({ open: false, phaseId: null });
   };
 
   const handlers = {
@@ -236,6 +238,21 @@ const HackathonPhases = () => {
           </div>
         )}
       </div>
+      <Modal
+        title="Xác nhận xóa"
+        open={confirmModal.open}
+        onOk={handleConfirmOk}
+        onCancel={handleConfirmCancel}
+        okText="Xóa"
+        okButtonProps={{ danger: true }}
+        cancelText="Hủy"
+        centered
+      >
+        <div className="flex items-start gap-3">
+          <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
+          <span>Bạn có chắc chắn muốn xóa phase này không?</span>
+        </div>
+      </Modal>
     </ConfigProvider>
   );
 };

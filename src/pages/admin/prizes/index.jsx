@@ -12,6 +12,7 @@ const Prizes = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const hackathonId = searchParams.get('hackathonId');
     const [deletingId, setDeletingId] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ open: false, prizeId: null });
 
     const { fetchHackathons } = useHackathons();
     const { data: hackathons = [], isLoading: hackathonsLoading } = fetchHackathons;
@@ -76,21 +77,22 @@ const Prizes = () => {
     }), [hackathonId, navigate]);
 
     const handleDeleteConfirm = (id) => {
-        Modal.confirm({
-            title: 'Xác nhận xóa',
-            icon: <ExclamationCircleOutlined />,
-            content: 'Bạn có chắc chắn muốn xóa giải thưởng này không?',
-            okText: 'Xóa',
-            okType: 'danger',
-            cancelText: 'Hủy',
-            centered: true,
-            onOk: () => {
-                setDeletingId(id);
-                deletePrize.mutate(id, {
-                    onSettled: () => setDeletingId(null)
-                });
+        setConfirmModal({ open: true, prizeId: id });
+    };
+
+    const handleConfirmOk = () => {
+        const { prizeId } = confirmModal;
+        setDeletingId(prizeId);
+        deletePrize.mutate(prizeId, {
+            onSettled: () => {
+                setDeletingId(null);
+                setConfirmModal({ open: false, prizeId: null });
             }
         });
+    };
+
+    const handleConfirmCancel = () => {
+        setConfirmModal({ open: false, prizeId: null });
     };
 
     const handlers = {
@@ -104,13 +106,6 @@ const Prizes = () => {
         setSearchParams({ hackathonId: newHackathonId });
     };
 
-    if (error) {
-        return (
-            <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md text-red-400">
-                Lỗi tải dữ liệu Prizes.
-            </div>
-        );
-    }
 
     return (
         <ConfigProvider
@@ -214,6 +209,21 @@ const Prizes = () => {
                     </div>
                 )}
             </div>
+            <Modal
+                title="Xác nhận xóa"
+                open={confirmModal.open}
+                onOk={handleConfirmOk}
+                onCancel={handleConfirmCancel}
+                okText="Xóa"
+                okButtonProps={{ danger: true }}
+                cancelText="Hủy"
+                centered
+            >
+                <div className="flex items-start gap-3">
+                    <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
+                    <span>Bạn có chắc chắn muốn xóa giải thưởng này không?</span>
+                </div>
+            </Modal>
         </ConfigProvider>
     );
 };

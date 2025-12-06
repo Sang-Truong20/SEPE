@@ -12,6 +12,7 @@ const Hackathons = () => {
   const { fetchHackathons, deleteHackathon } = useHackathons();
   const { data: hackathonData = [], isLoading, error } = fetchHackathons;
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ open: false, hackathonId: null });
 
   // Model cho bảng
   const tableModel = useMemo(
@@ -85,21 +86,21 @@ const Hackathons = () => {
   );
 
   const handleDeleteConfirm = (id) => {
-    Modal.confirm({
-      title: 'Xác nhận xóa',
-      icon: <ExclamationCircleOutlined />,
-      content: 'Bạn có chắc chắn muốn xóa hackathon này không?',
-      okText: 'Xóa',
-      okType: 'danger',
-      cancelText: 'Hủy',
-      centered: true,
-      onOk: () => {
-        setDeletingId(id);
-        deleteHackathon.mutate(id, {
-          onSettled: () => setDeletingId(null),
-        });
+    setConfirmModal({ open: true, hackathonId: id });
+  };
+
+  const handleConfirmOk = () => {
+    setDeletingId(confirmModal.hackathonId);
+    deleteHackathon.mutate(confirmModal.hackathonId, {
+      onSettled: () => {
+        setDeletingId(null);
+        setConfirmModal({ open: false, hackathonId: null });
       },
     });
+  };
+
+  const handleConfirmCancel = () => {
+    setConfirmModal({ open: false, hackathonId: null });
   };
 
   const handlers = {
@@ -142,6 +143,21 @@ const Hackathons = () => {
           }
         />
       </div>
+      <Modal
+        title="Xác nhận xóa"
+        open={confirmModal.open}
+        onOk={handleConfirmOk}
+        onCancel={handleConfirmCancel}
+        okText="Xóa"
+        okButtonProps={{ danger: true }}
+        cancelText="Hủy"
+        centered
+      >
+        <div className="flex items-start gap-3">
+          <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
+          <span>Bạn có chắc chắn muốn xóa hackathon này không?</span>
+        </div>
+      </Modal>
     </ConfigProvider>
   );
 };

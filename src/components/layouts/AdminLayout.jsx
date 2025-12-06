@@ -21,11 +21,6 @@ function getItem(label, key, icon, children) {
 }
 
 const items = [
-  getItem(
-    <Link to={PATH_NAME.ADMIN_DASHBOARD}>Dashboard</Link>,
-    PATH_NAME.ADMIN_DASHBOARD,
-    <PieChartOutlined />,
-  ),
   getItem('Hackathons', 'sub-hackathons', <RocketOutlined />, [
     getItem(
       <Link to={PATH_NAME.ADMIN_HACKATHONS}>Hackathons</Link>,

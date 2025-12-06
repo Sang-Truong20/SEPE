@@ -255,9 +255,11 @@ const EntityTable = ({
         {createButton && (
           <Button
             type="primary"
-            icon={createButton.icon !== false && <PlusOutlined />}
+            icon={<PlusOutlined />}
             className="bg-primary hover:bg-primary/90 transition-all"
             onClick={createButton.action}
+            loading={createButton.loading}
+            disabled={createButton.disabled}
           >
             {createButton.label || 'Thêm mới'}
           </Button>

@@ -11,7 +11,7 @@ const Groups = (tracks) => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const hackathonId = searchParams.get('hackathonId');
-    
+
     const { fetchGroupsByHackathon, autoCreateGroups } = useGroups();
     const { data: groupsData = [], isLoading, error } = fetchGroupsByHackathon(hackathonId)
 
@@ -20,6 +20,8 @@ const Groups = (tracks) => {
     const sortedGroups = [...groupsData].filter(group => trackIds.includes(group.trackId))?.sort((a, b) =>
       a.groupName.localeCompare(b.groupName)
     );
+
+    const [confirmModal, setConfirmModal] = useState({ open: false, teamsPerGroup: 1 });
 
     // fetch hackathons for select
     const { fetchHackathons } = useHackathons();
@@ -72,49 +74,31 @@ const Groups = (tracks) => {
     }), [hackathonId, navigate]);
 
     const handleAutoCreateGroups = () => {
-        Modal.confirm({
-            title: 'Tạo bảng đấu Tự Động',
-            icon: <ExclamationCircleOutlined />,
-            content: (
-                <div className="space-y-4">
-                    <p>Nhập số lượng teams trong mỗi bảng đấu:</p>
-                    <InputNumber
-                        min={1}
-                        value={teamsPerGroup}
-                        onChange={(value) => setTeamsPerGroup(value)}
-                        className="w-full"
-                        placeholder="Số teams/bảng đấu"
-                    />
-                </div>
-            ),
-            okText: 'Tạo',
-            cancelText: 'Hủy',
-            centered: true,
-            onOk: () => {
-                autoCreateGroups.mutate({
-                    teamsPerGroup: teamsPerGroup,
-                    phaseId: tracks.tracks[0]?.phaseId || null,
-                }, {
-                    onSuccess: () => {
-                        // nothing extra to do here
-                    }
-                });
+        setConfirmModal({ open: true, teamsPerGroup: 1 });
+    };
+
+    const handleConfirmOk = () => {
+        autoCreateGroups.mutate({
+            teamsPerGroup: confirmModal.teamsPerGroup,
+            phaseId: tracks.tracks[0]?.phaseId || null,
+        }, {
+            onSuccess: () => {
+                setConfirmModal({ open: false, teamsPerGroup: 1 });
+            },
+            onSettled: () => {
+                setConfirmModal({ open: false, teamsPerGroup: 1 });
             }
         });
+    };
+
+    const handleConfirmCancel = () => {
+        setConfirmModal({ open: false, teamsPerGroup: 1 });
     };
 
     const handlers = {
         onView: (record) => navigate(`/admin/groups/${record.groupId}?trackId=${record.trackId}`),
     };
 
-
-    if (error) {
-        return (
-            <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md text-red-400">
-                Lỗi tải dữ liệu Groups.
-            </div>
-        );
-    }
 
     return (
       <>
@@ -137,9 +121,31 @@ const Groups = (tracks) => {
           handlers={handlers}
           emptyText="Không có bảng đấu nào"
           dateFormatter={(value, fmt) => value ? dayjs(value).format(fmt) : '--'}
-        /></>
-
-
+        />
+        <Modal
+          title="Tạo bảng đấu Tự Động"
+          open={confirmModal.open}
+          onOk={handleConfirmOk}
+          onCancel={handleConfirmCancel}
+          okText="Tạo"
+          cancelText="Hủy"
+          centered
+        >
+          <div className="flex items-start gap-3">
+            <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
+            <div className="flex-1 space-y-4">
+              <p>Nhập số lượng teams trong mỗi bảng đấu:</p>
+              <InputNumber
+                min={1}
+                value={confirmModal.teamsPerGroup}
+                onChange={(value) => setConfirmModal({ ...confirmModal, teamsPerGroup: value })}
+                className="w-full"
+                placeholder="Số teams/bảng đấu"
+              />
+            </div>
+          </div>
+        </Modal>
+      </>
     );
 };
 
