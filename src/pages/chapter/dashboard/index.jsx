@@ -372,14 +372,6 @@ const ChapterDashboard = () => {
             </Button>
 
             <Button
-              onClick={() => navigate(PATH_NAME.CHAPTER_TEAMS)}
-              className="border-white/20 bg-white/5 hover:bg-white/10 h-auto py-4 flex flex-col items-center"
-            >
-              <TeamOutlined className="w-6 h-6 mb-2 text-purple-400" />
-              <span>Teams Trường</span>
-            </Button>
-
-            <Button
               onClick={() => navigate(PATH_NAME.CHAPTER_NOTIFICATIONS)}
               className="border-white/20 bg-white/5 hover:bg-white/10 h-auto py-4 flex flex-col items-center"
             >

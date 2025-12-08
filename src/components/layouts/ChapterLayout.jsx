@@ -71,13 +71,6 @@ const ChapterLayout = ({ children }) => {
       icon: GraduationCap,
       path: PATH_NAME.CHAPTER_MENTOR_MANAGEMENT,
     },
-    { id: 'teams', label: 'Teams', icon: Users, path: PATH_NAME.CHAPTER_TEAMS },
-    {
-      id: 'results',
-      label: 'Kết quả',
-      icon: TrophyOutlined,
-      path: PATH_NAME.CHAPTER_RESULTS,
-    },
     {
       id: 'approval',
       label: 'Duyệt Hackathon',
