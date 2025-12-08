@@ -10,6 +10,7 @@ export const hackathonRegistrationQueryKeys = {
         hackathonId
     ],
     register: () => [...hackathonRegistrationQueryKeys.origin, 'register'],
+    myRegistrations: () => [...hackathonRegistrationQueryKeys.origin, 'my-registrations'],
 };
 
 // Get hackathon registration
@@ -21,6 +22,19 @@ export const useGetTeamHackathonRegistration = (hackathonId) => {
             return response.data;
         },
         enabled: !!hackathonId,
+    });
+};
+
+// Get my hackathon registrations
+export const useGetMyHackathonRegistrations = (options = {}) => {
+    return useQuery({
+        queryKey: hackathonRegistrationQueryKeys.myRegistrations(),
+        queryFn: async () => {
+            const response = await axiosClient.get('/HackathonRegistration/my-registrations');
+            return response.data;
+        },
+        staleTime: 2 * 60 * 1000,
+        ...options,
     });
 };
 
