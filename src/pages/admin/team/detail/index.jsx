@@ -38,6 +38,7 @@ const TeamDetail = () => {
   const [penaltyModalMode, setPenaltyModalMode] = useState('create');
   const [selectedPenalty, setSelectedPenalty] = useState(null);
   const [penaltyForm] = Form.useForm();
+  const [confirmModal, setConfirmModal] = useState({ open: false, record: null });
 
   const { data: trackData } = fetchTrackById(trackId);
   console.log("trackData", trackData);
@@ -192,18 +193,16 @@ const TeamDetail = () => {
     setPenaltyModalOpen(true);
   };
   const handlePenaltyDelete = (record) => {
-    Modal.confirm({
-      title: 'Xác nhận xóa',
-      icon: <ExclamationCircleOutlined />,
-      content: `Bạn có chắc chắn muốn xóa thưởng/phạt này không?`,
-      okText: 'Xóa',
-      okType: 'danger',
-      cancelText: 'Hủy',
-      centered: true,
-      onOk: () => {
-        deletePenalty.mutate(record.adjustmentId, );
-      },
-    });
+    setConfirmModal({ open: true, record });
+  };
+
+  const handleConfirmOk = () => {
+    deletePenalty.mutate(confirmModal.record.adjustmentId);
+    setConfirmModal({ open: false, record: null });
+  };
+
+  const handleConfirmCancel = () => {
+    setConfirmModal({ open: false, record: null });
   };
   const handlePenaltyModalSubmit = () => {
     penaltyForm.validateFields().then((values) => {
@@ -334,6 +333,23 @@ const TeamDetail = () => {
             />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Confirm Delete Modal */}
+      <Modal
+        title="Xác nhận xóa"
+        open={confirmModal.open}
+        onOk={handleConfirmOk}
+        onCancel={handleConfirmCancel}
+        okText="Xóa"
+        okButtonProps={{ danger: true }}
+        cancelText="Hủy"
+        centered
+      >
+        <div className="flex items-start gap-3">
+          <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
+          <span>Bạn có chắc chắn muốn xóa thưởng/phạt này không?</span>
+        </div>
       </Modal>
     </ConfigProvider>
   );

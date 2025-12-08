@@ -1,5 +1,5 @@
 // components/admin/hackathon-phases/HackathonPhaseDetail.jsx
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Spin,
   ConfigProvider,
@@ -18,27 +18,32 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useHackathonPhases } from '../../../../hooks/admin/hackathon-phases/useHackathonPhases';
 import { useTracks } from '../../../../hooks/admin/tracks/useTracks';
+import { useGroups } from '../../../../hooks/admin/groups/useGroups';
 import { PATH_NAME } from '../../../../constants';
 import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
 import EntityTable from '../../../../components/ui/EntityTable.jsx';
 import {
   ExclamationCircleOutlined,
-  ThunderboltOutlined,
+  PlusOutlined,
+  SyncOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useChallenges } from '../../../../hooks/admin/challanges/useChallenges.js';
-import Group from '../../group/index.jsx';
+import { useQualifications } from '../../../../hooks/admin/qualification/useQualification.js';
 
 const HackathonPhaseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const hackathonId = searchParams.get('hackathonId');
+  const isLastPhase = searchParams.get('isLastPhase')?.includes('true');
   const queryClient = useQueryClient();
 
   const { fetchHackathonPhase } = useHackathonPhases();
   const { deleteTrack, fetchTracks, assignRandomChallenge } = useTracks();
-  const { fetchChallenges } = useChallenges();
+  const { fetchChallenges, fetchCompleteChallenge } = useChallenges();
+  const { fetchGroupsByHackathon, autoCreateGroups } = useGroups();
+  const { fetchFinalQualified, selectTopTeams } = useQualifications();
 
   const {
     data: phase,
@@ -46,15 +51,24 @@ const HackathonPhaseDetail = () => {
     error: phaseError,
   } = fetchHackathonPhase(id);
   const { data: allTracks, isLoading: tracksLoading } = fetchTracks;
-  const { data: allChallenges = [], isLoading: challengesLoading } = fetchChallenges;
+  const { data: completesChallenges = [], isLoading: cChallengesLoading } = fetchCompleteChallenge(hackathonId);
+  const { data: groupsData = [], isLoading: groupsLoading } = fetchGroupsByHackathon(hackathonId);
+  const { data: qualifiedTeams = [], isLoading: qualifiedLoading } = fetchFinalQualified(id);
 
   const phaseTracks =
     allTracks?.filter((track) => track.phaseId === parseInt(id)) || [];
 
-  const challengeMap = allChallenges.reduce((map, ch) => {
-    map[ch.challengeId] = ch.title;
-    return map;
-  }, {});
+  const trackIds = phaseTracks.map(t => t.trackId);
+  const sortedGroups = [...groupsData]
+    .filter(group => trackIds?.includes(group.trackId))
+    ?.sort((a, b) => a.groupName.localeCompare(b.groupName));
+
+  const [assignModal, setAssignModal] = useState({ open: false, track: null });
+  const [createGroupModal, setCreateGroupModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState({ open: false, trackId: null });
+  const [showQualifiedTable, setShowQualifiedTable] = useState(false);
+  const [assignForm] = Form.useForm();
+  const [createGroupForm] = Form.useForm();
 
   const model = {
     modelName: 'HackathonPhases',
@@ -109,7 +123,6 @@ const HackathonPhaseDetail = () => {
         key: 'description',
         type: 'text',
         ellipsis: { tooltip: true },
-        width: 800,
         className: 'text-gray-300',
       },
       {
@@ -117,7 +130,6 @@ const HackathonPhaseDetail = () => {
         key: 'challenges',
         type: 'custom',
         ellipsis: true,
-        width: 500,
         render: (record) => {
           const challenges = record.challenges || [];
           if (challenges.length === 0) {
@@ -151,16 +163,104 @@ const HackathonPhaseDetail = () => {
       extra: [
         {
           key: 'assign-random-challenge',
-          icon: <ThunderboltOutlined />,
-          tooltip: 'Gán challenge ngẫu nhiên',
+          icon: <SyncOutlined />,
+          tooltip: 'Gán thử thách ngẫu nhiên',
           className: 'text-yellow-500 hover:text-yellow-400',
         },
       ],
     },
   };
 
-  const [assignModal, setAssignModal] = useState({ open: false, track: null });
-  const [assignForm] = Form.useForm();
+  const groupTableModel = useMemo(() => ({
+    entityName: 'bảng đấu',
+    rowKey: 'groupId',
+    createButton: {
+      label: 'Tạo bảng đấu Tự Động',
+      action: () => {
+        setCreateGroupModal(true);
+        createGroupForm.setFieldsValue({ teamsPerGroup: 1 });
+      },
+      icon: true,
+    },
+    columns: [
+      {
+        title: 'Tên bảng đấu',
+        dataIndex: 'groupName',
+        key: 'groupName',
+        type: 'text',
+        className: 'font-medium text-white'
+      },
+      {
+        title: 'Track ID',
+        dataIndex: 'trackId',
+        key: 'trackId',
+        type: 'tag',
+        tagColor: 'blue',
+        transform: (val) => val || 'N/A'
+      },
+      {
+        title: 'Số Teams',
+        dataIndex: 'teamIds',
+        key: 'teamIds',
+        type: 'text',
+        transform: (val) => Array.isArray(val) ? val.length : 0
+      },
+      {
+        title: 'Ngày Tạo',
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+        type: 'datetime',
+        format: 'DD/MM/YYYY HH:mm'
+      }
+    ],
+    actions: {
+      view: true,
+      edit: false,
+      delete: false,
+    }
+  }), []);
+
+  // Model cho bảng Qualification
+  const qualificationTableModel = useMemo(() => ({
+    entityName: 'đội đủ điều kiện',
+    rowKey: 'teamId',
+    columns: [
+      {
+        title: 'Tên đội',
+        dataIndex: 'teamName',
+        key: 'teamName',
+        type: 'text',
+        className: 'font-medium text-white'
+      },
+      {
+        title: 'Bảng đấu',
+        dataIndex: 'groupName',
+        key: 'groupName',
+        type: 'tag',
+        tagColor: 'green',
+        transform: (val) => val || 'N/A'
+      },
+      {
+        title: 'Track',
+        dataIndex: 'trackName',
+        key: 'trackName',
+        type: 'text',
+        className: 'text-gray-300'
+      },
+      {
+        title: 'Group ID',
+        dataIndex: 'groupId',
+        key: 'groupId',
+        type: 'tag',
+        tagColor: 'blue'
+      }
+    ],
+    actions: {
+      view: false,
+      edit: false,
+      delete: false,
+    }
+  }), []);
 
   const handleAssignRandomClick = (record) => {
     setAssignModal({ open: true, track: record });
@@ -193,6 +293,59 @@ const HackathonPhaseDetail = () => {
     });
   };
 
+  const handleCreateGroupSubmit = () => {
+    createGroupForm.validateFields().then((values) => {
+      autoCreateGroups.mutate({
+        teamsPerGroup: values.teamsPerGroup,
+        phaseId: phaseTracks[0]?.phaseId || null,
+      }, {
+        onSuccess: () => {
+          message.success('Tạo bảng đấu thành công!');
+          setCreateGroupModal(false);
+          createGroupForm.resetFields();
+        },
+        onError: () => {
+          message.error('Tạo bảng đấu thất bại!');
+        }
+      });
+    });
+  };
+
+  const handleDeleteConfirm = (id) => {
+    setConfirmModal({ open: true, trackId: id });
+  };
+
+  const handleConfirmOk = () => {
+    const { trackId } = confirmModal;
+    deleteTrack.mutate(trackId, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ['hackathonPhases', id],
+        });
+        setConfirmModal({ open: false, trackId: null });
+      },
+      onSettled: () => {
+        setConfirmModal({ open: false, trackId: null });
+      },
+    });
+  };
+
+  const handleConfirmCancel = () => {
+    setConfirmModal({ open: false, trackId: null });
+  };
+
+  const handleGetQualifiedTeams = () => {
+    selectTopTeams.mutate(id, {
+      onSuccess: () => {
+        setShowQualifiedTable(true);
+        message.success('Đã lấy danh sách đội đủ điều kiện!');
+      },
+      onError: () => {
+        message.error('Không thể lấy danh sách đội!');
+      }
+    });
+  };
+
   const trackHandlers = {
     onView: (record) =>
       navigate(
@@ -202,26 +355,7 @@ const HackathonPhaseDetail = () => {
       navigate(
         `${PATH_NAME.ADMIN_TRACKS}/edit/${record.trackId}?phaseId=${id}&hackathonId=${hackathonId}`,
       ),
-    onDelete: (record) => {
-      Modal.confirm({
-        title: 'Xác nhận xóa',
-        icon: <ExclamationCircleOutlined />,
-        content: 'Bạn có chắc chắn muốn xóa track này không?',
-        okText: 'Xóa',
-        okType: 'danger',
-        cancelText: 'Hủy',
-        centered: true,
-        onOk: () => {
-          deleteTrack.mutate(record.trackId, {
-            onSuccess: () => {
-              queryClient.invalidateQueries({
-                queryKey: hackathonPhaseQueryKeys.detail(id),
-              });
-            },
-          });
-        },
-      });
-    },
+    onDelete: (record) => handleDeleteConfirm(record.trackId),
     isDeleting: (record) =>
       deleteTrack.isPending && deleteTrack.variables === record.trackId,
     onExtraAction: (key, record) => {
@@ -244,6 +378,10 @@ const HackathonPhaseDetail = () => {
     },
   };
 
+  const groupHandlers = {
+    onView: (record) => navigate(`/admin/groups/${record.groupId}?trackId=${record.trackId}`),
+  };
+
   if (phaseError) {
     return (
       <div className="min-h-screen flex items-center justify-center text-red-400">
@@ -252,7 +390,7 @@ const HackathonPhaseDetail = () => {
     );
   }
 
-  if (phaseLoading || tracksLoading || challengesLoading) {
+  if (phaseLoading || tracksLoading || cChallengesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spin size="large" />
@@ -291,34 +429,79 @@ const HackathonPhaseDetail = () => {
         }
         showEdit
       >
-        <Card className="mt-16 border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm">
-          <EntityTable
-            model={trackTableModel}
-            data={phaseTracks}
-            loading={tracksLoading || challengesLoading}
-            handlers={trackHandlers}
-            emptyText="Không có track nào cho phase này"
-            dateFormatter={(value, fmt) =>
-              value ? dayjs(value).format(fmt) : '--'
-            }
-          />
-        </Card>
-        {/* Group Section */}
-        {hackathonId && (
-          <Card className="mt-6 border border-white/10 bg-white/5 rounded-xl">
-            <Group tracks={phaseTracks}/>
+        {/* Track Section - Không hiển thị nếu là phase cuối */}
+        {!isLastPhase && (
+          <Card className="mt-16 border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm">
+            <EntityTable
+              model={trackTableModel}
+              data={phaseTracks}
+              loading={tracksLoading || cChallengesLoading}
+              handlers={trackHandlers}
+              emptyText="Không có track nào cho phase này"
+              dateFormatter={(value, fmt) =>
+                value ? dayjs(value).format(fmt) : '--'
+              }
+            />
           </Card>
+        )}
+
+        {/* Group Section - Không hiển thị nếu là phase cuối */}
+        {hackathonId && !isLastPhase && (
+          <Card className="mt-16 border border-white/10 bg-white/5 rounded-xl">
+            <EntityTable
+              model={groupTableModel}
+              data={sortedGroups}
+              loading={groupsLoading}
+              handlers={groupHandlers}
+              emptyText="Không có bảng đấu nào"
+              dateFormatter={(value, fmt) =>
+                value ? dayjs(value).format(fmt) : '--'
+              }
+            />
+          </Card>
+        )}
+
+        {/* Qualification Section - Chỉ hiển thị nếu là phase cuối */}
+        {isLastPhase && (
+          <>
+            { !showQualifiedTable &&
+              ( <div className="mx-6 mb-6">
+                <Button
+                  type="dashed"
+                  icon={<PlusOutlined />}
+                  onClick={handleGetQualifiedTeams}
+                  loading={selectTopTeams.isPending}
+                  disabled={selectTopTeams.isPending}
+                  className="w-full h-12 !text-primary !border-primary/50 hover:!border-primary hover:!bg-primary/5"
+                >
+                  {selectTopTeams.isPending
+                    ? 'Đang xử lý...'
+                    : 'Lấy danh sách đội'}
+                </Button>
+              </div>)
+            }
+
+            {showQualifiedTable && (
+              <Card className="mt-6 border border-white/10 bg-white/5 rounded-xl">
+                <EntityTable
+                  model={qualificationTableModel}
+                  data={qualifiedTeams}
+                  loading={qualifiedLoading}
+                  handlers={{}}
+                  emptyText="Không có đội nào đủ điều kiện"
+                  dateFormatter={(value, fmt) =>
+                    value ? dayjs(value).format(fmt) : '--'
+                  }
+                />
+              </Card>
+            )}
+          </>
         )}
       </EntityDetail>
 
-      {/* Modal Gán thử thách ngẫu nhiên - ĐÃ HOÀN THIỆN */}
+      {/* Modal Gán thử thách ngẫu nhiên */}
       <Modal
-        title={
-          <>
-            <ThunderboltOutlined className="text-yellow-500 mr-2" />
-            Gán thử thách ngẫu nhiên
-          </>
-        }
+        title="Gán thử thách ngẫu nhiên"
         open={assignModal.open}
         onCancel={() => {
           setAssignModal({ open: false, track: null });
@@ -331,12 +514,13 @@ const HackathonPhaseDetail = () => {
         confirmLoading={assignRandomChallenge.isPending}
       >
         <div className="mb-2 text-sm font-medium">
-          Track: <span className="text-primary">{assignModal.track?.name}</span>
+          Phần thi:{' '}
+          <span className="text-primary">{assignModal.track?.name}</span>
         </div>
         <Form form={assignForm} layout="vertical">
           <Form.Item
             name="quantity"
-            label="Số lượng entity nhận thử thách"
+            label="Số lượng thử thách trong một phân thi"
             rules={[{ required: true, message: 'Vui lòng nhập số lượng!' }]}
           >
             <InputNumber min={1} max={1000} style={{ width: '100%' }} />
@@ -344,11 +528,11 @@ const HackathonPhaseDetail = () => {
           <Form.Item name="challengeIds" label="Chọn thử thách">
             <Select
               mode="multiple"
-              placeholder="Chọn thử thách ưu tiên"
+              placeholder="Chọn thử thách"
               allowClear
               showSearch
             >
-              {allChallenges.map((ch) => (
+              {completesChallenges?.map((ch) => (
                 <Select.Option key={ch.challengeId} value={ch.challengeId}>
                   {ch.title}
                 </Select.Option>
@@ -356,6 +540,52 @@ const HackathonPhaseDetail = () => {
             </Select>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Modal Tạo bảng đấu Tự Động */}
+      <Modal
+        title="Tạo bảng đấu Tự Động"
+        open={createGroupModal}
+        onCancel={() => {
+          setCreateGroupModal(false);
+          createGroupForm.resetFields();
+        }}
+        onOk={handleCreateGroupSubmit}
+        okText="Tạo"
+        cancelText="Hủy"
+        centered
+        confirmLoading={autoCreateGroups.isPending}
+      >
+        <Form form={createGroupForm} layout="vertical">
+          <Form.Item
+            name="teamsPerGroup"
+            label="Số lượng đôi thi trong mỗi bảng đấu"
+            rules={[{ required: true, message: 'Vui lòng nhập số lượng!' }]}
+          >
+            <InputNumber
+              min={1}
+              style={{ width: '100%' }}
+              placeholder="Số đội/bảng đấu"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal xác nhận xóa track */}
+      <Modal
+        title="Xác nhận xóa"
+        open={confirmModal.open}
+        onOk={handleConfirmOk}
+        onCancel={handleConfirmCancel}
+        okText="Xóa"
+        okButtonProps={{ danger: true }}
+        cancelText="Hủy"
+        centered
+      >
+        <div className="flex items-start gap-3">
+          <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
+          <span>Bạn có chắc chắn muốn xóa track này không?</span>
+        </div>
       </Modal>
     </ConfigProvider>
   );

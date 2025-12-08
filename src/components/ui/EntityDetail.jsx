@@ -69,7 +69,15 @@ const EntityDetail = ({
   const fields = useMemo(() => normalizeFields(model?.fields), [model?.fields]);
   const lowerEntity = entityName.toLowerCase();
 
-  const getValue = useCallback((field) => data[field.name] ?? null, [data]);
+  const getValue = useCallback(
+    (field) => {
+      if (Array.isArray(field.name)) {
+        return field.name.reduce((acc, key) => acc?.[key], data) ?? null;
+      }
+      return data[field.name] ?? null;
+    },
+    [data]
+  );
 
   const renderValue = useCallback(
     (field) => {
@@ -260,7 +268,7 @@ const EntityDetail = ({
 
       if (field.type === 'custom' && field.render) {
         return (
-          <div key={keyPath.join('.')} className="mb-6">
+          <div key={keyPath.join('.')}>
             <p className="text-gray-300 text-sm font-medium mb-1">
               {field.key}
             </p>
@@ -272,7 +280,7 @@ const EntityDetail = ({
       }
 
       return (
-        <div key={field.name || keyPath.join('.')} className="mb-2">
+        <div key={field.name || keyPath.join('.')}>
           <p className="text-gray-300 text-sm font-medium mb-1">{field.key}</p>
           <div className="min-h-[42px] px-4 py-3 bg-neutral-900 border border-neutral-700 rounded text-sm flex items-center">
             {renderValue(field)}

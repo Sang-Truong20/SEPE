@@ -20,11 +20,13 @@ const PATH_NAME = {
   ADMIN_SETTINGS: '/admin/settings',
   PARTNER: '/partner',
   PARTNER_HACKATHONS: '/partner/hackathons',
+  PARTNER_HACKATHON_PHASES: '/partner/hackathons/hackathon-phases',
   PARTNER_CHALLENGES: '/partner/challenges',
   PARTNER_TEAM_SCORES: '/partner/score',
   JUDGE: '/judge',
   JUDGE_TEAM_SCORES: '/judge/score',
   JUDGE_CHALLENGES: '/judge/challenges',
+  JUDGE_HACKATHON_PHASES: '/judge/score/phase',
 };
 
 const GROUP = {

@@ -78,6 +78,15 @@ export const useChallenges = () => {
         enabled: !!id,
     });
 
+  const fetchCompleteChallenge = (hackathonId) => useQuery({
+    queryKey: challengeQueryKeys.detail(hackathonId),
+    queryFn: async () => {
+      const response = await axiosClient.get(`/Challenge/completed/${hackathonId}`);
+      return response.data;
+    },
+    enabled: !!hackathonId,
+  });
+
     // Update challenge (full PUT)
     /**
      * API: PUT /api/Challenge/{id}/partner
@@ -172,6 +181,7 @@ export const useChallenges = () => {
         fetchChallenges,
         fetchChallenge,
         createChallenge,
+        fetchCompleteChallenge,
         updateChallenge,
         updateChallengeStatus,
         deleteChallenge,

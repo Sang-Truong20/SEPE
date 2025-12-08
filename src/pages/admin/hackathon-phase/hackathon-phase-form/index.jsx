@@ -14,7 +14,8 @@ const HackathonPhaseForm = ({ mode = 'create' }) => {
   const existingPhaseId = id || searchParams.get('existingPhaseId');
 
   const { fetchHackathonPhase, createHackathonPhase, updateHackathonPhase } = useHackathonPhases();
-  const { data: phase, isLoading } = fetchHackathonPhase(existingPhaseId);
+  const { data: phase, isLoading } = existingPhaseId > 0 ? fetchHackathonPhase(existingPhaseId) : { data: [], isLoading: false };
+
 
   // Định nghĩa model
   const model = useMemo(() => ({
@@ -167,7 +168,7 @@ const HackathonPhaseForm = ({ mode = 'create' }) => {
         onBack={() => navigate(`${PATH_NAME.ADMIN_HACKATHON_PHASES}?hackathonId=${hackathonId}`)}
         isBatch={{modes: ['create']}} // Chỉ cho phép batch khi tạo mới
         batchLimit={2} // Giới hạn tối đa 10 phases
-        skip={existingPhaseId? 1 : 0}
+        skip={existingPhaseId > -1 ? 1 : 0}
       />
     </ConfigProvider>
   );

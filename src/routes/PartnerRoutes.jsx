@@ -22,7 +22,7 @@ const PartnerRoutes = () => {
       <Outlet />
     </PartnerLayout>
   ) : (
-    <Navigate to="/login" replace />
+    <Navigate to="/" replace />
   );
 };
 

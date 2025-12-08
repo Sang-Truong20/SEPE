@@ -255,9 +255,11 @@ const EntityTable = ({
         {createButton && (
           <Button
             type="primary"
-            icon={createButton.icon !== false && <PlusOutlined />}
+            icon={<PlusOutlined />}
             className="bg-primary hover:bg-primary/90 transition-all"
             onClick={createButton.action}
+            loading={createButton.loading}
+            disabled={createButton.disabled}
           >
             {createButton.label || 'Thêm mới'}
           </Button>
@@ -271,6 +273,7 @@ const EntityTable = ({
         locale={{ emptyText: loading ? ' ' : emptyText }}
         rowKey={rowKey}
         pagination={false}
+        scroll={{ x: 'max-content' }}
         className="[&_.ant-table]:bg-transparent [&_th]:!bg-white/5 [&_th]:!text-white [&_td]:!text-gray-300 [&_td]:border-white/10 [&_th]:border-white/10 [&_tr:hover_td]:!bg-white/[0.03] [&_.ant-table-tbody_tr]:transition-colors"
       />
     </>

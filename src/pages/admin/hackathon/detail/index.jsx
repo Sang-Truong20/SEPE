@@ -57,13 +57,6 @@ const HackathonDetail = () => {
     endDate: (val) => <span className="text-gray-300">{val ? dayjs(val).format('DD/MM/YYYY') : '--'}</span>
   };
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-400">
-        Lỗi tải dữ liệu.
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (

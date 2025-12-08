@@ -40,7 +40,9 @@ const Teams = lazy(() => import('../pages/admin/team/index.jsx'));
 
 const PChallenges = lazy(() => import('../pages/partner/challenge/index.jsx'));
 const PHackathons = lazy(() => import('../pages/partner/hackathon'));
+const PHackathonPhases = lazy(() => import('../pages/partner/hackathon-phase'));
 import PHackathonDetail from '../pages/partner/hackathon/detail/index.jsx';
+import PHackathonPhaseDetail from '../pages/partner/hackathon-phase/hackathon-phase-detail';
 import PChallengeDetail from '../pages/partner/challenge/detail/index.jsx';
 import PChallengeForm from '../pages/partner/challenge/form/index.jsx';
 const PSHackathons = lazy(() => import('../pages/partner/score/hackathon'));
@@ -51,6 +53,7 @@ import PScoreDetail from '../pages/partner/score/detail/index.jsx';
 import JudgeRoutes from './JudgeRoutes.jsx';
 const JHackathons = lazy(() => import('../pages/judge/hackathon'));
 const JHackathonPhases = lazy(() => import('../pages/judge/hackathon-phase'));
+import JHackathonPhaseDetail from '../pages/judge/hackathon-phase/hackathon-phase-detail';
 const JScore = lazy(() => import('../pages/judge/score'));
 import JScoreDetail from '../pages/judge/score/detail/index.jsx';
 import JChallengeDetail from '../pages/judge/challenge/detail/index.jsx';
@@ -105,7 +108,7 @@ const router = createBrowserRouter([
               { path: ':id', element: withSuspense(ChallengeDetail) },
               {
                 path: 'edit/:id',
-                element: withSuspense(() => <ChallengeForm mode="edit" />),
+                element: withSuspense(() => <ChallengeForm mode="edit"  />),
               },
               {
                 path: 'create',
@@ -247,6 +250,13 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: withSuspense(PHackathons) },
               { path: ':id', element: withSuspense(PHackathonDetail) },
+              {
+                path: 'hackathon-phases',
+                children: [
+                  { index: true, element: withSuspense(PHackathonPhases) },
+                  { path: ':id', element: withSuspense(PHackathonPhaseDetail) },
+                ],
+              },
             ],
           },
           {
@@ -298,7 +308,10 @@ const router = createBrowserRouter([
               { index: true, element: withSuspense(JScore) },
               {
                 path:  'phase',
-                element: withSuspense(JHackathonPhases)
+                children: [
+                  { index: true, element: withSuspense(JHackathonPhases) },
+                  { path: ':id', element: withSuspense(JHackathonPhaseDetail) },
+                ],
               },
               {
                 path:  'hackathon',
