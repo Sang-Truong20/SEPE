@@ -8,14 +8,14 @@ import {
   TrophyOutlined,
   UserOutlined
 } from '@ant-design/icons';
-import { Alert, Button, Card, Divider, Modal, Space, Spin, Table, Tag } from 'antd';
-import { useState } from 'react';
+import { Alert, Button, Card, Divider, Form, Input, Modal, Space, Spin, Table, Tag } from 'antd';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import HackathonPhases from '../../components/features/student/HackathonPhases';
 import PrizeList from '../../components/features/student/PrizeList';
 import { PATH_NAME } from '../../constants';
 import { useGetHackathon } from '../../hooks/student/hackathon';
-import { useGetTeamHackathonRegistration, useRegisterHackathon } from '../../hooks/student/hackathon-registration';
+import { useGetMyHackathonRegistrations, useGetTeamHackathonRegistration, useRegisterHackathon } from '../../hooks/student/hackathon-registration';
 import { useGetTeams } from '../../hooks/student/team';
 import { useGetTrackRanking } from '../../hooks/student/team-ranking';
 import { useUserData } from '../../hooks/useUserData';
@@ -36,10 +36,20 @@ const StudentHackathonDetail = () => {
     : null;
   
   const { data: registration } = useGetTeamHackathonRegistration(id);
+  const { data: myRegistrations } = useGetMyHackathonRegistrations();
+  
+  // Tìm registration của user cho hackathon hiện tại
+  const myRegistration = useMemo(() => {
+    if (!myRegistrations || !Array.isArray(myRegistrations)) return null;
+    return myRegistrations.find(reg => reg.hackathonId === parseInt(id)) || null;
+  }, [myRegistrations, id]);
+  
   const registerMutation = useRegisterHackathon();
   
   const [rankingModalVisible, setRankingModalVisible] = useState(false);
+  const [registerModalVisible, setRegisterModalVisible] = useState(false);
   const [selectedPhaseId, setSelectedPhaseId] = useState(null);
+  const [registerForm] = Form.useForm();
   
   // Get ranking data when phase is selected
   const { data: rankingData = [] } = useGetTrackRanking(
@@ -53,14 +63,19 @@ const StudentHackathonDetail = () => {
     navigate(PATH_NAME.STUDENT_HACKATHONS);
   };
 
-  const handleRegisterHackathon = async () => {
+  const handleRegisterHackathon = () => {
+    setRegisterModalVisible(true);
+    registerForm.resetFields();
+  };
 
-    
+  const handleSubmitRegistration = async (values) => {
     try {
       await registerMutation.mutateAsync({ 
         hackathonId: parseInt(id), 
-        link: '' // Có thể thêm input cho link nếu cần
+        link: values.link || ''
       });
+      setRegisterModalVisible(false);
+      registerForm.resetFields();
     } catch (error) {
       console.error('Register hackathon error:', error);
     }
@@ -262,6 +277,26 @@ const StudentHackathonDetail = () => {
               Hành động
             </h3>
             <Space direction="vertical" className="w-full" style={{ width: '100%' }}>
+              {myRegistration && (
+                <div className="mb-2">
+                  <Tag 
+                    icon={myRegistration.status === 'Approved' ? <CheckCircleOutlined /> : <ClockCircleOutlined />} 
+                    color={myRegistration.status === 'Approved' ? 'green' : myRegistration.status === 'Pending' ? 'orange' : 'red'}
+                  >
+                    {myRegistration.status === 'Approved' 
+                      ? 'Đã tham gia hackathon' 
+                      : myRegistration.status === 'Pending' 
+                      ? 'Đang chờ duyệt' 
+                      : 'Bị từ chối'}
+                  </Tag>
+                  {myRegistration.teamName && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Đội: {myRegistration.teamName}
+                    </p>
+                  )}
+                </div>
+              )}
+              
               {registration && (
                 <div className="mb-2">
                   {getRegistrationStatusTag()}
@@ -273,25 +308,25 @@ const StudentHackathonDetail = () => {
                 </div>
               )}
               
-              {/* {(!registration || registration.status !== 'approved') && userTeam && ( */}
+              {!myRegistration && (
                 <Button
                   type="primary"
                   size="large"
                   icon={<TeamOutlined />}
                   onClick={handleRegisterHackathon}
                   className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
-                  disabled={hackathon.status?.toLowerCase() === 'completed' || registerMutation.isPending}
+                  disabled={hackathon.status?.toLowerCase() === 'completed' || registerMutation.isPending || !userTeam}
                   loading={registerMutation.isPending}
                 >
-                  {registration?.status === 'pending' 
-                    ? 'Đang chờ duyệt...' 
-                    : hackathon.status?.toLowerCase() === 'completed' 
+                  {hackathon.status?.toLowerCase() === 'completed' 
                     ? 'Đã kết thúc' 
+                    : !userTeam
+                    ? 'Cần tạo đội trước'
                     : 'Đăng ký Hackathon'}
                 </Button>
-              {/* )} */}
+              )}
 
-              {registration?.status === 'approved' && registration.selectedPhaseId && registration.selectedTrackId && (
+              {myRegistration?.status === 'Approved' && registration?.status === 'approved' && registration.selectedPhaseId && registration.selectedTrackId && (
                 <>
                   <Button
                     size="large"
@@ -413,6 +448,69 @@ const StudentHackathonDetail = () => {
           rowKey="teamId"
           className="[&_.ant-table]:bg-transparent [&_th]:!bg-card-background [&_th]:!text-text-primary [&_td]:!text-text-secondary [&_td]:border-card-border [&_th]:border-card-border [&_tr:hover_td]:!bg-card-background/50"
         />
+      </Modal>
+
+      {/* Register Hackathon Modal */}
+      <Modal
+        title="Đăng ký Hackathon"
+        open={registerModalVisible}
+        onCancel={() => {
+          setRegisterModalVisible(false);
+          registerForm.resetFields();
+        }}
+        footer={null}
+        width={600}
+        className="[&_.ant-modal-content]:bg-gray-900/95 [&_.ant-modal-content]:backdrop-blur-xl [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white [&_.ant-modal-mask]:bg-black/50"
+      >
+        <Form
+          form={registerForm}
+          layout="vertical"
+          onFinish={handleSubmitRegistration}
+          className="[&_.ant-form-item-label>label]:text-white [&_.ant-input]:bg-card-background [&_.ant-input]:border-card-border [&_.ant-input]:text-white [&_.ant-input]:placeholder:text-gray-500"
+        >
+          <Form.Item
+            label="Link GitHub Repository"
+            name="link"
+            rules={[
+              { required: true, message: 'Vui lòng nhập link GitHub!' },
+              { 
+                type: 'url', 
+                message: 'Vui lòng nhập URL hợp lệ!' 
+              },
+              {
+                pattern: /^https?:\/\/(www\.)?github\.com\/.+/i,
+                message: 'Vui lòng nhập link GitHub hợp lệ!'
+              }
+            ]}
+          >
+            <Input
+              placeholder="https://github.com/username/repository"
+              size="large"
+            />
+          </Form.Item>
+
+          <Form.Item className="mb-0">
+            <Space className="w-full justify-end">
+              <Button
+                onClick={() => {
+                  setRegisterModalVisible(false);
+                  registerForm.resetFields();
+                }}
+                className="[&]:text-white [&]:border-card-border [&]:hover:bg-card-background/50"
+              >
+                Hủy
+              </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={registerMutation.isPending}
+                className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
+              >
+                Đăng ký
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );
