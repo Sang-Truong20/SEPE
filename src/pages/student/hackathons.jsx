@@ -5,10 +5,12 @@ import {
 } from '@ant-design/icons';
 import { Alert, Button, Input, Select, Spin } from 'antd';
 import dayjs from 'dayjs';
-import { Archive, ArrowRight, Hourglass, Layers, Terminal, Zap } from 'lucide-react';
+import { Archive, ArrowRight, CheckCircle, Hourglass, Layers, Terminal, Zap } from 'lucide-react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 import { useGetHackathons } from '../../hooks/student/hackathon';
+import { useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -45,9 +47,31 @@ const getStatusConfig = (status) => {
   }
 };
 
-const HackathonCard = ({ item, onViewDetails }) => {
+const HackathonCard = ({ item, registration, onViewDetails }) => {
   const statusConfig = getStatusConfig(item.status);
   const StatusIcon = statusConfig.icon;
+
+  const getRegistrationBadge = () => {
+    if (!registration) return null;
+    
+    const status = registration.status?.toLowerCase();
+    if (status === 'approved') {
+      return (
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-green-500/10 text-green-400 border-green-500/20">
+          <CheckCircle size={12} className="mr-1.5" />
+          Đã đăng ký
+        </span>
+      );
+    } else if (status === 'pending') {
+      return (
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">
+          <Hourglass size={12} className="mr-1.5" />
+          Chờ duyệt
+        </span>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="group relative bg-card-background border border-card-border backdrop-blur-xl hover:border-emerald-500/50 rounded-xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10 flex flex-col h-full cursor-pointer" onClick={() => onViewDetails(item.hackathonId)}>
@@ -63,11 +87,16 @@ const HackathonCard = ({ item, onViewDetails }) => {
           {item.seasonName || 'Hackathon'}
         </span>
         
-        {/* Status Badge */}
-        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusConfig.styles}`}>
-          <StatusIcon size={12} className="mr-1.5" />
-          {statusConfig.label}
-        </span>
+        <div className="flex items-center gap-2">
+          {/* Registration Badge */}
+          {getRegistrationBadge()}
+          
+          {/* Status Badge */}
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusConfig.styles}`}>
+            <StatusIcon size={12} className="mr-1.5" />
+            {statusConfig.label}
+          </span>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -129,12 +158,20 @@ const HackathonCard = ({ item, onViewDetails }) => {
 const StudentHackathons = () => {
   const navigate = useNavigate();
   const { data: hackathons, isLoading, error } = useGetHackathons();
+  const { data: myRegistrations } = useGetMyHackathonRegistrations();
 
   const handleViewDetails = (hackathonId) => {
     navigate(`/student/hackathons/${hackathonId}`);
   };
 
-
+  // Create a map of registrations by hackathonId for quick lookup
+  const registrationsMap = useMemo(() => {
+    if (!myRegistrations || !Array.isArray(myRegistrations)) return {};
+    return myRegistrations.reduce((acc, reg) => {
+      acc[reg.hackathonId] = reg;
+      return acc;
+    }, {});
+  }, [myRegistrations]);
 
   const filteredHackathons = hackathons?.filter(h => h.status?.toLowerCase() !== 'completed') || [];
 
@@ -215,6 +252,7 @@ const StudentHackathons = () => {
           <HackathonCard
             key={hackathon.hackathonId}
             item={hackathon}
+            registration={registrationsMap[hackathon.hackathonId]}
             onViewDetails={handleViewDetails}
           />
         ))}
