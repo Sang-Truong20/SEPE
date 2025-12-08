@@ -16,18 +16,18 @@ const SeasonForm = ({ mode = 'create' }) => {
 
     // Định nghĩa model
     const model = useMemo(() => ({
-        modelName: 'Seasons',
+        modelName: 'mùa',
         fields: [
             {
-                key: 'Tên Season *',
+                key: 'Tên mùa *',
                 type: 'input',
                 placeholder: 'VD: Spring 2025, Summer 2025...',
                 name: 'name',
                 required: true,
-                message: 'Vui lòng nhập tên season'
+                message: 'Vui lòng nhập tên mùa'
             },
             {
-                key: 'Mã Season',
+                key: 'Mã',
                 type: 'input',
                 placeholder: 'VD: SP2025, SU2025...',
                 name: 'seasonCode',

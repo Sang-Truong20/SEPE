@@ -168,7 +168,7 @@ const AdminLayout = () => {
             {!collapsed && (
               <div>
                 <div className="text-white font-semibold">Admin Panel</div>
-                <div className="text-gray-400 text-sm">Administrator</div>
+                <div className="text-gray-400 text-sm">Admin</div>
               </div>
             )}
           </div>

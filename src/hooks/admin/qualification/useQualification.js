@@ -58,7 +58,7 @@ export const useQualifications = () => {
         const response = await axiosClient.get(`/Qualification/${phaseId}/final-qualified`);
         return response.data;
       },
-      enabled: !!phaseId,
+      enabled: false,
     });
 
   /**

@@ -47,6 +47,7 @@ const Challenges = () => {
     return challengesData.map((challenge) => {
       const user = userData.find((u) => u.userId === challenge.userId);
       const hackathon = hackData.find((h) => h.hackathonId === challenge.hackathonId);
+      challenge.disableDelete = challenge.status === 'Complete';
 
       return {
         ...challenge,
@@ -57,7 +58,7 @@ const Challenges = () => {
   }, [challengesData, userData, hackData]);
 
   // Model cho bảng challenges
-  const tableModel = useMemo(
+  let tableModel = useMemo(
     () => ({
       entityName: 'thử thách',
       rowKey: 'challengeId',
