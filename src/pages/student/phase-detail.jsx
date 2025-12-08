@@ -52,18 +52,24 @@ const StudentPhaseDetail = () => {
 
   const phaseStatus = phase ? getPhaseStatus(phase) : null;
 
+  // Tìm track đã chọn từ danh sách tracks dựa vào registration
+  const selectedTrack = React.useMemo(() => {
+    if (!registration?.selectedTrackId || !tracks.length) return null;
+    return tracks.find(t => t.trackId === registration.selectedTrackId) || null;
+  }, [tracks, registration?.selectedTrackId]);
+
   const handleBack = () => {
     navigate(`/student/hackathons/${hackathonId}`);
   };
 
-  // Set form initial value when registration data is loaded
+  // Set form initial value when tracks and registration data are loaded
   useEffect(() => {
-    if (registration?.selectedTrackId && phaseId && parseInt(phaseId) === registration?.selectedPhaseId) {
-      const trackId = registration.selectedTrackId;
+    if (selectedTrack && phaseId && parseInt(phaseId) === registration?.selectedPhaseId) {
+      const trackId = selectedTrack.trackId;
       form.setFieldsValue({ trackId });
       setSelectedTrackId(trackId);
     }
-  }, [registration, phaseId, form]);
+  }, [selectedTrack, registration, phaseId, form]);
 
   const handleSelectTrack = async (values) => {
     try {
@@ -140,7 +146,7 @@ const StudentPhaseDetail = () => {
           <PhaseInfoSidebar
             phaseStatus={phaseStatus}
             tracksCount={tracks.length}
-            selectedTrack={tracks.find(t => t.trackId === registration?.selectedTrackId)}
+            selectedTrack={selectedTrack}
             registration={registration}
             phaseId={phaseId}
           />

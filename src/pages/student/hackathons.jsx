@@ -6,7 +6,7 @@ import {
 import { Alert, Button, Input, Select, Spin } from 'antd';
 import dayjs from 'dayjs';
 import { Archive, ArrowRight, CheckCircle, Hourglass, Layers, Terminal, Zap } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 import { useGetHackathons } from '../../hooks/student/hackathon';
@@ -90,12 +90,12 @@ const HackathonCard = ({ item, registration, onViewDetails }) => {
         <div className="flex items-center gap-2">
           {/* Registration Badge */}
           {getRegistrationBadge()}
-          
-          {/* Status Badge */}
-          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusConfig.styles}`}>
-            <StatusIcon size={12} className="mr-1.5" />
-            {statusConfig.label}
-          </span>
+        
+        {/* Status Badge */}
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusConfig.styles}`}>
+          <StatusIcon size={12} className="mr-1.5" />
+          {statusConfig.label}
+        </span>
         </div>
       </div>
 
@@ -160,6 +160,10 @@ const StudentHackathons = () => {
   const { data: hackathons, isLoading, error } = useGetHackathons();
   const { data: myRegistrations } = useGetMyHackathonRegistrations();
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState(null);
+  const [seasonFilter, setSeasonFilter] = useState(null);
+
   const handleViewDetails = (hackathonId) => {
     navigate(`/student/hackathons/${hackathonId}`);
   };
@@ -173,7 +177,53 @@ const StudentHackathons = () => {
     }, {});
   }, [myRegistrations]);
 
-  const filteredHackathons = hackathons?.filter(h => h.status?.toLowerCase() !== 'completed') || [];
+  // Get unique seasons from hackathons
+  const uniqueSeasons = useMemo(() => {
+    if (!hackathons || !Array.isArray(hackathons)) return [];
+    const seasons = new Set();
+    hackathons.forEach(h => {
+      if (h.seasonName) {
+        seasons.add(h.seasonName);
+      }
+    });
+    return Array.from(seasons).sort();
+  }, [hackathons]);
+
+  // Filter hackathons based on search, status, and season
+  const filteredHackathons = useMemo(() => {
+    if (!hackathons || !Array.isArray(hackathons)) return [];
+    
+    return hackathons.filter(h => {
+      // Filter out completed hackathons
+      if (h.status?.toLowerCase() === 'completed') return false;
+
+      // Search by name
+      if (searchTerm) {
+        const nameMatch = h.name?.toLowerCase().includes(searchTerm.toLowerCase());
+        if (!nameMatch) return false;
+      }
+
+      // Filter by status
+      if (statusFilter) {
+        const hackathonStatus = h.status?.toLowerCase();
+        if (statusFilter === 'active' && hackathonStatus !== 'active' && hackathonStatus !== 'inprogress') {
+          return false;
+        }
+        if (statusFilter === 'upcoming' && hackathonStatus !== 'pending' && hackathonStatus !== 'upcoming') {
+          return false;
+        }
+      }
+
+      // Filter by season
+      if (seasonFilter) {
+        if (h.seasonName !== seasonFilter) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [hackathons, searchTerm, statusFilter, seasonFilter]);
 
   if (isLoading) {
     return (
@@ -227,23 +277,32 @@ const StudentHackathons = () => {
           allowClear
           className="flex-1"
           prefix={<SearchOutlined />}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onSearch={setSearchTerm}
         />
         <Select
           placeholder="Lọc theo trạng thái"
-          style={{ width: 150 }}
+          style={{ width: 180 }}
           allowClear
+          value={statusFilter}
+          onChange={setStatusFilter}
         >
           <Option value="active">Đang diễn ra</Option>
           <Option value="upcoming">Sắp diễn ra</Option>
         </Select>
         <Select
-          placeholder="Lọc theo độ khó"
-          style={{ width: 150 }}
+          placeholder="Lọc theo mùa"
+          style={{ width: 180 }}
           allowClear
+          value={seasonFilter}
+          onChange={setSeasonFilter}
         >
-          <Option value="beginner">Beginner</Option>
-          <Option value="intermediate">Intermediate</Option>
-          <Option value="advanced">Advanced</Option>
+          {uniqueSeasons.map((season) => (
+            <Option key={season} value={season}>
+              {season}
+            </Option>
+          ))}
         </Select>
       </div>
 
