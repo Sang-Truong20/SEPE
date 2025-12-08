@@ -56,7 +56,7 @@ const HackathonPhases = () => {
           : null,
       columns: [
         {
-          title: 'Tên Phase',
+          title: 'Tên',
           dataIndex: 'phaseName',
           key: 'phaseName',
           type: 'text',
@@ -160,7 +160,7 @@ const HackathonPhases = () => {
               Chọn Hackathon
             </label>
             <Select
-              placeholder="Chọn hackathon để xem phases"
+              placeholder="Chọn hackathon để xem giai đoạn"
               value={hackathonId}
               onChange={handleHackathonChange}
               loading={hackathonsLoading}
@@ -235,7 +235,7 @@ const HackathonPhases = () => {
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-400">
-              Vui lòng chọn một hackathon để xem các phases
+              Vui lòng chọn một hackathon để xem các giai đoạn
             </p>
           </div>
         )}
@@ -252,7 +252,7 @@ const HackathonPhases = () => {
       >
         <div className="flex items-start gap-3">
           <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
-          <span>Bạn có chắc chắn muốn xóa phase này không?</span>
+          <span>Bạn có chắc chắn muốn xóa giai đoạn này không?</span>
         </div>
       </Modal>
     </ConfigProvider>

@@ -8,10 +8,9 @@ import { usePrizes } from '../../../../hooks/admin/prizes/usePrizes';
 const PrizeDetail = () => {
     const  prizeTypes =  [
       { value: 'Cash', text: 'Tiền mặt' },
-      { value: 'Trophy', text: 'Cúp' },
       { value: 'Certificate', text: 'Chứng nhận' },
-      { value: 'Voucher', text: 'Voucher' },
-      { value: 'Other', text: 'Khác' },
+      { value: 'Medal', text: 'Huy chuong' },
+      { value: 'Gift', text: 'Quà tặng' },
     ]
     const { id } = useParams();
     const navigate = useNavigate();
@@ -34,7 +33,7 @@ const PrizeDetail = () => {
               name: 'prizeType',
               render: (record) => (
                 <Tag color="gold" className=" font-bold">
-                  {prizeTypes.find(p => p.value === record.prizeType).text}
+                  {prizeTypes.find(p => p.value === record.prizeType)?.text || record.prizeType}
                 </Tag>
               ),
             },

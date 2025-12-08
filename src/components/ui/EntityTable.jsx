@@ -178,6 +178,7 @@ const EntityTable = ({
                 type="text"
                 size="small"
                 danger
+                disabled={record.disableDelete || false}
                 loading={handlers.isDeleting?.(record)}
                 className={cfg.className || 'text-white hover:text-red-500'}
                 icon={cfg.icon || <DeleteOutlined />}

@@ -13,6 +13,18 @@ const PrizeForm = ({ mode = 'create' }) => {
 
     const { fetchPrizes, createPrize, updatePrize } = usePrizes();
 
+    const PrizeType = [
+      { value: 'Cash', text: 'Tiền mặt' },
+      { value: 'Medal', text: 'Huy chương' },
+      { value: 'Certificate', text: 'Chứng nhận' },
+      { value: 'Gift', text: 'Quà tặng' },
+    ]
+
+    const PrizeTypeEnum = PrizeType.reduce((acc, p, index) => {
+      acc[p.value] = { ...p, index };
+      return acc;
+    }, {});
+
     // For edit mode, get the prize from the list
     const { data: prizes = [], isLoading } = mode === 'edit'
         ? fetchPrizes(hackathonId)
@@ -40,11 +52,10 @@ const PrizeForm = ({ mode = 'create' }) => {
                 required: true,
                 message: 'Vui lòng chọn loại giải',
                 items: [
-                    { value: 'Cash', text: 'Tiền mặt' },
-                    { value: 'Trophy', text: 'Cúp' },
-                    { value: 'Certificate', text: 'Chứng nhận' },
-                    { value: 'Voucher', text: 'Voucher' },
-                    { value: 'Other', text: 'Khác' },
+                  { value: 'Cash', text: 'Tiền mặt' },
+                  { value: 'Medal', text: 'Huy chương' },
+                  { value: 'Certificate', text: 'Chứng nhận' },
+                  { value: 'Gift', text: 'Quà tặng' },
                 ]
             },
             {
@@ -92,6 +103,7 @@ const PrizeForm = ({ mode = 'create' }) => {
     const handleSubmit = async (values) => {
         try {
             if (mode === 'create') {
+              values.prizeType = PrizeTypeEnum[values.prizeType].index;
                 const payload = {
                     ...values,
                     hackathonId: parseInt(hackathonId),
@@ -102,7 +114,7 @@ const PrizeForm = ({ mode = 'create' }) => {
                 const payload = {
                     prizeId: parseInt(id),
                     prizeName: values.prizeName,
-                    prizeType: values.prizeType,
+                    prizeType: PrizeTypeEnum[prize.prizeType]?.index,
                     rank: parseInt(values.rank),
                     reward: values.reward,
                 };

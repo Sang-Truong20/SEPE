@@ -31,7 +31,7 @@ const Seasons = () => {
                 className: 'font-medium text-white'
             },
             {
-                title: 'Mã Season',
+                title: 'Mã',
                 dataIndex: 'seasonCode',
                 key: 'seasonCode',
                 type: 'tag',
@@ -123,7 +123,7 @@ const Seasons = () => {
             >
                 <div className="flex items-start gap-3">
                     <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
-                    <span>Bạn có chắc chắn muốn xóa season này không?</span>
+                    <span>Bạn có chắc chắn muốn xóa mùa này không?</span>
                 </div>
             </Modal>
         </ConfigProvider>

@@ -41,7 +41,7 @@ const HackathonPhaseDetail = () => {
 
   const { fetchHackathonPhase } = useHackathonPhases();
   const { deleteTrack, fetchTracks, assignRandomChallenge } = useTracks();
-  const { fetchChallenges, fetchCompleteChallenge } = useChallenges();
+  const { fetchCompleteChallenge } = useChallenges();
   const { fetchGroupsByHackathon, autoCreateGroups } = useGroups();
   const { fetchFinalQualified, selectTopTeams } = useQualifications();
 
@@ -53,7 +53,7 @@ const HackathonPhaseDetail = () => {
   const { data: allTracks, isLoading: tracksLoading } = fetchTracks;
   const { data: completesChallenges = [], isLoading: cChallengesLoading } = fetchCompleteChallenge(hackathonId);
   const { data: groupsData = [], isLoading: groupsLoading } = fetchGroupsByHackathon(hackathonId);
-  const { data: qualifiedTeams = [], isLoading: qualifiedLoading } = fetchFinalQualified(id);
+  const { data: qualifiedTeams = [], isLoading: qualifiedLoading, refetch: qualifiedRefetch } = fetchFinalQualified(id);
 
   const phaseTracks =
     allTracks?.filter((track) => track.phaseId === parseInt(id)) || [];
@@ -71,7 +71,7 @@ const HackathonPhaseDetail = () => {
   const [createGroupForm] = Form.useForm();
 
   const model = {
-    modelName: 'HackathonPhases',
+    modelName: 'Giai đoạn',
     fields: [
       { key: 'Tên', type: 'input', name: 'phaseName' },
       {
@@ -191,15 +191,7 @@ const HackathonPhaseDetail = () => {
         className: 'font-medium text-white'
       },
       {
-        title: 'Track ID',
-        dataIndex: 'trackId',
-        key: 'trackId',
-        type: 'tag',
-        tagColor: 'blue',
-        transform: (val) => val || 'N/A'
-      },
-      {
-        title: 'Số Teams',
+        title: 'Mã đội thi',
         dataIndex: 'teamIds',
         key: 'teamIds',
         type: 'text',
@@ -281,12 +273,12 @@ const HackathonPhaseDetail = () => {
         },
         {
           onSuccess: () => {
-            message.success('Gán challenge thành công!');
+            message.success('Gán thử thách thành công!');
             setAssignModal({ open: false, track: null });
             assignForm.resetFields();
           },
           onError: () => {
-            message.error('Gán challenge thất bại!');
+            message.error('Gán thử thách thất bại!');
           },
         },
       );
@@ -335,6 +327,7 @@ const HackathonPhaseDetail = () => {
   };
 
   const handleGetQualifiedTeams = () => {
+    qualifiedRefetch();
     selectTopTeams.mutate(id, {
       onSuccess: () => {
         setShowQualifiedTable(true);

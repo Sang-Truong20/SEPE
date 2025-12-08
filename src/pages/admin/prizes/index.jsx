@@ -23,10 +23,9 @@ const Prizes = () => {
     const selectedHackathon = hackathons.find(h => h.hackathonId === parseInt(hackathonId));
     const  prizeTypes =  [
       { value: 'Cash', text: 'Tiền mặt' },
-      { value: 'Trophy', text: 'Cúp' },
       { value: 'Certificate', text: 'Chứng nhận' },
-      { value: 'Voucher', text: 'Voucher' },
-      { value: 'Other', text: 'Khác' },
+      { value: 'Medal', text: 'Huy chuong' },
+      { value: 'Gift', text: 'Quà tặng' },
     ]
 
 
@@ -54,7 +53,7 @@ const Prizes = () => {
                 type: 'custom',
                 render: (record, _) => (
                   <Tag color="gold" className=" font-bold">
-                    {prizeTypes.find(p => p.value === record)?.text}
+                    {prizeTypes.find(p => p.value === record)?.text || record}
                   </Tag>
                 ),
 

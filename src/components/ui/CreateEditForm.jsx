@@ -32,6 +32,8 @@ const CreateEditForm = ({
                           isBatch,
                           batchLimit = 1,
                           skip = 1,
+                          startRange,    // dayjs | string | null
+                          endRange,      // dayjs | string | null
                         }) => {
   const [form] = Form.useForm();
   const fields = normalizeFields(model?.fields);
@@ -128,65 +130,121 @@ const CreateEditForm = ({
     }
 
     // Custom validation cho batch items
-    const getBatchRules = (baseRules) => {
-      if (!isBatch || batchIndex === null) return baseRules;
+    const getBatchRules = (field, batchIndex, batchCount, isBatchMode, startRange, endRange) => {
+      const baseRules = field.rules && field.rules.length > 0
+        ? field.rules
+        : field.required
+          ? [{ required: true, message: field.message || `Vui lòng nhập ${field.key || field.name}` }]
+          : [];
 
-      // Thêm validation đặc biệt cho startDate và endDate trong batch
-      if (field.name === 'startDate' && batchIndex > 0) {
-        return [
-          ...baseRules,
-          ({ getFieldValue }) => ({
-            validator(_, value) {
-              if (!value) return Promise.resolve();
+      // Nếu không phải field ngày tháng thì trả về nguyên rules
+      if (field.type !== 'datetime' || (field.name !== 'startDate' && field.name !== 'endDate')) {
+        return baseRules;
+      }
 
-              // Validate với endDate của phase trước đó
-              const prevEndDate = getFieldValue(`endDate_batch${batchIndex - 1}`);
-              if (prevEndDate && value.isBefore(prevEndDate)) {
-                return Promise.reject(
-                  new Error(`Ngày bắt đầu phase ${lowerEntity} 1 phải sau ngày kết thúc của ${lowerEntity} 2`)
-                );
+      const newRules = [...baseRules];
+
+      // Helper để lấy tên field đúng theo batch hoặc single
+      const getFieldName = (name, index) => {
+        return isBatchMode && index !== null ? `${name}_batch${index}` : name;
+      };
+
+      // =========== VALIDATE CHO startDate ===========
+      if (field.name === 'startDate') {
+        newRules.push(({ getFieldValue }) => ({
+          validator(_, value) {
+            if (!value) return Promise.resolve();
+
+            const dayjsValue = dayjs.isDayjs(value) ? value : dayjs(value);
+
+            // 1. Phải lớn hơn hoặc bằng startRange (nếu có) - chỉ áp dụng cho phase đầu tiên
+            const isFirstItem = (isBatchMode && batchIndex === 0) || (!isBatchMode && batchIndex === null);
+            if (isFirstItem && startRange) {
+              const sr = dayjs(startRange);
+              if (dayjsValue.isBefore(sr)) {
+                return Promise.reject(new Error('Ngày bắt đầu phải từ ngày cho phép trở đi'));
               }
+            }
 
-              // Validate với endDate của cùng phase
-              const currentEndDate = getFieldValue(`endDate_batch${batchIndex}`);
-              if (currentEndDate && value.isAfter(currentEndDate)) {
+            // 2. Nếu là batch và không phải phase đầu → phải sau endDate của phase trước
+            if (isBatchMode && batchIndex > 0) {
+              const prevEndDate = getFieldValue(getFieldName('endDate', batchIndex - 1));
+              if (prevEndDate) {
+                const prevEnd = dayjs.isDayjs(prevEndDate) ? prevEndDate : dayjs(prevEndDate);
+                if (dayjsValue.isBefore(prevEnd, 'minute')) {
+                  return Promise.reject(new Error(`Ngày bắt đầu phải sau ngày kết thúc của ${lowerEntity} trước đó`));
+                }
+              }
+            }
+
+            // 3. Phải trước endDate của chính nó (cùng batch hoặc single)
+            const currentEndField = getFieldName('endDate', batchIndex);
+            const currentEndDate = getFieldValue(currentEndField);
+            if (currentEndDate) {
+              const end = dayjs.isDayjs(currentEndDate) ? currentEndDate : dayjs(currentEndDate);
+              if (dayjsValue.isAfter(end)) {
                 return Promise.reject(new Error('Ngày bắt đầu phải trước ngày kết thúc'));
               }
+            }
 
-              return Promise.resolve();
-            },
-          }),
-        ];
+            return Promise.resolve();
+          },
+        }));
       }
 
+      // =========== VALIDATE CHO endDate ===========
       if (field.name === 'endDate') {
-        return [
-          ...baseRules,
-          ({ getFieldValue }) => ({
-            validator(_, value) {
-              if (!value) return Promise.resolve();
+        newRules.push(({ getFieldValue }) => ({
+          validator(_, value) {
+            if (!value) return Promise.resolve();
 
-              const currentStartDate = getFieldValue(`startDate_batch${batchIndex}`);
-              if (currentStartDate && value.isBefore(currentStartDate)) {
+            const dayjsValue = dayjs.isDayjs(value) ? value : dayjs(value);
+
+            // 1. Phải sau startDate của chính nó
+            const currentStartField = getFieldName('startDate', batchIndex);
+            const currentStartDate = getFieldValue(currentStartField);
+            if (currentStartDate) {
+              const start = dayjs.isDayjs(currentStartDate) ? currentStartDate : dayjs(currentStartDate);
+              if (dayjsValue.isBefore(start, 'minute')) {
                 return Promise.reject(new Error('Ngày kết thúc phải sau ngày bắt đầu'));
               }
+            }
 
-              return Promise.resolve();
-            },
-          }),
-        ];
+            // 2. Phải nhỏ hơn hoặc bằng endRange (nếu có) - chỉ áp dụng cho phase cuối cùng
+            const isLastItem = (isBatchMode && batchIndex === batchCount - 1) || (!isBatchMode && batchIndex === null);
+            if (isLastItem && endRange) {
+              const er = dayjs(endRange);
+              if (dayjsValue.isAfter(er)) {
+                return Promise.reject(new Error('Ngày kết thúc không được vượt quá ngày' + endRange.format('DD/MM/YYYY HH:mm')));
+              }
+            }
+
+            return Promise.resolve();
+          },
+        }));
       }
 
-      return baseRules;
+      return newRules;
+    };
+
+    const getFieldRules = (field, batchIndex) => {
+      const isBatchMode = isBatch && isBatch.modes.includes(mode);
+
+      return getBatchRules(
+        field,
+        batchIndex,
+        batchCount,
+        isBatchMode,
+        startRange,   // prop mới
+        endRange      // prop mới
+      );
     };
 
     const baseRequiredRule = field.required
       ? [{ required: true, message: field.message || `Vui lòng nhập ${field.key || field.name}` }]
       : [];
 
-    const finalRules = field.rules && field.rules.length > 0
-      ? getBatchRules(field.rules)
-      : getBatchRules(baseRequiredRule);
+    const finalRules = getFieldRules(field, batchIndex);
 
     // Dependencies cho batch
     const batchDependencies = field.dependencies?.map(dep =>
@@ -199,6 +257,15 @@ const CreateEditForm = ({
     }
     if (isBatch && field.name === 'endDate' && batchIndex !== null) {
       batchDependencies.push(`startDate_batch${batchIndex}`);
+    }
+
+    // Additional dependencies for inter-batch validation
+    const isBatchMode = isBatch && isBatch.modes.includes(mode);
+    if (isBatchMode && field.name === 'endDate' && batchIndex < batchCount - 1) {
+      batchDependencies.push(`startDate_batch${batchIndex + 1}`);
+    }
+    if (isBatchMode && field.name === 'startDate' && batchIndex < batchCount - 1) {
+      batchDependencies.push(`startDate_batch${batchIndex + 1}`);
     }
 
     const commonItemProps = {
@@ -305,50 +372,60 @@ const CreateEditForm = ({
                      transition-colors duration-150"
                 style={{ width: '100%' }}
 
-                // ===== PHẦN MỚI: DISABLE NGÀY/GIỜ THEO 2 RULE =====
+                // ==================== DISABLED DATE ====================
                 disabledDate={(current) => {
                   if (!current) return false;
+                  const toDayjs = (v) => v ? (dayjs.isDayjs(v) ? v : dayjs(v)) : null;
 
-                  const toDayjs = (v) => (v ? (dayjs.isDayjs(v) ? v : dayjs(v)) : null);
-
-                  // 1. Giới hạn minDate / maxDate từ config field (nếu có)
+                  // 1. Giới hạn từ field config
                   const minD = toDayjs(field.minDate);
                   const maxD = toDayjs(field.maxDate);
                   if (minD && current.isBefore(minD.startOf('day'))) return true;
                   if (maxD && current.isAfter(maxD.endOf('day'))) return true;
 
-                  // Lấy giá trị hiện tại từ form (có thể thay đổi realtime)
+                  // 2. Giới hạn toàn cục từ props
+                  if (startRange && current.isBefore(toDayjs(startRange))) return true;
+                  if (endRange && current.isAfter(toDayjs(endRange))) return true;
+
                   const formValues = form.getFieldsValue();
 
-                  // 2. Với startDate
+                  // 3. startDate rules
                   if (field.name === 'startDate') {
-                    // - Phải sau endDate của phase trước (nếu batch và không phải phase đầu)
                     if (isBatch && batchIndex > 0) {
                       const prevEnd = toDayjs(formValues[`endDate_batch${batchIndex - 1}`]);
                       if (prevEnd && current.isBefore(prevEnd)) return true;
                     }
+                    const currEnd = toDayjs(formValues[batchIndex !== null ? `endDate_batch${batchIndex}` : 'endDate']);
+                    if (currEnd && current.isAfter(currEnd)) return true;
 
-                    // - Phải trước endDate của chính phase này
-                    const currentEnd = toDayjs(formValues[`endDate_batch${batchIndex}`]);
-                    if (currentEnd && current.isAfter(currentEnd)) return true;
+                    const isFirst = (isBatch && batchIndex === 0) || batchIndex === null;
+                    if (isFirst && startRange && current.isBefore(toDayjs(startRange))) return true;
                   }
 
-                  // 3. Với endDate
+                  // 4. endDate rules
                   if (field.name === 'endDate') {
-                    // - Phải sau startDate của chính phase này
-                    const currentStart = toDayjs(formValues[`startDate_batch${batchIndex}`]);
-                    if (currentStart && current.isBefore(currentStart)) return true;
+                    const currStart = toDayjs(formValues[batchIndex !== null ? `startDate_batch${batchIndex}` : 'startDate']);
+                    if (currStart && current.isBefore(currStart)) return true;
+
+                    const isLast = (isBatch && batchIndex === batchCount - 1) || batchIndex === null;
+                    if (isLast && endRange && current.isAfter(toDayjs(endRange))) return true;
+
+                    // Thêm: không được chọn ngày sau startDate của phase kế tiếp
+                    if (isBatch && batchIndex < batchCount - 1) {
+                      const nextStart = toDayjs(formValues[`startDate_batch${batchIndex + 1}`]);
+                      if (nextStart && current.isAfter(nextStart)) return true;
+                    }
                   }
 
                   return false;
                 }}
 
-                // Disable giờ/phút/giây nếu ngày được chọn là ngày giới hạn
+                // ==================== DISABLED TIME (HOÀN CHỈNH) ====================
                 disabledTime={(current) => {
-                  if (!current) return false;
+                  if (!current) return { disabledHours: () => [], disabledMinutes: () => [], disabledSeconds: () => [] };
 
                   const formValues = form.getFieldsValue();
-                  const toDayjs = (v) => (v ? (dayjs.isDayjs(v) ? v : dayjs(v)) : null);
+                  const toDayjs = (v) => v ? (dayjs.isDayjs(v) ? v : dayjs(v)) : null;
 
                   const disabled = {
                     disabledHours: () => [],
@@ -356,78 +433,125 @@ const CreateEditForm = ({
                     disabledSeconds: () => [],
                   };
 
+                  // Helper để merge nhiều rule (ưu tiên disable nhiều nhất)
+                  const mergeDisable = (base, extra) => {
+                    const hours = new Set(base.disabledHours());
+                    extra.disabledHours().forEach(h => hours.add(h));
+                    disabled.disabledHours = () => Array.from(hours);
+
+                    disabled.disabledMinutes = (h) => {
+                      const mins = new Set(base.disabledMinutes(h));
+                      extra.disabledMinutes(h).forEach(m => mins.add(m));
+                      return Array.from(mins);
+                    };
+
+                    disabled.disabledSeconds = (h, m) => {
+                      const secs = new Set(base.disabledSeconds(h, m));
+                      extra.disabledSeconds(h, m).forEach(s => secs.add(s));
+                      return Array.from(secs);
+                    };
+                  };
+
+                  let baseDisabled = {
+                    disabledHours: () => [],
+                    disabledMinutes: () => [],
+                    disabledSeconds: () => [],
+                  };
+
+                  // 1. startRange (chỉ áp dụng cho phase đầu)
                   if (field.name === 'startDate') {
-                    if (isBatch && batchIndex > 0) {
-                      const prevEnd = toDayjs(formValues[`endDate_batch${batchIndex - 1}`]);
-                      if (prevEnd && current.isSame(prevEnd, 'day')) {
-                        // Nếu cùng ngày với endDate phase trước → chỉ cho chọn sau giờ đó
-                        const h = prevEnd.hour();
-                        const m = prevEnd.minute();
-                        const s = prevEnd.second();
-
-                        disabled.disabledHours = () => Array.from({ length: h }, (_, i) => i);
-                        disabled.disabledMinutes = (selectedHour) => {
-                          if (selectedHour === h) return Array.from({ length: m }, (_, i) => i);
-                          return [];
-                        };
-                        disabled.disabledSeconds = (selectedHour, selectedMinute) => {
-                          if (selectedHour === h && selectedMinute === m)
-                            return Array.from({ length: s + 1 }, (_, i) => i); // +1 để disable cả giây hiện tại
-                          return [];
-                        };
-                      }
-                    }
-
-                    // So với endDate hiện tại
-                    const currentEnd = toDayjs(formValues[`endDate_batch${batchIndex}`]);
-                    if (currentEnd && current.isSame(currentEnd, 'day')) {
-                      const h = currentEnd.hour();
-                      const m = currentEnd.minute();
-                      const s = currentEnd.second();
-
-                      disabled.disabledHours = () => Array.from({ length: 24 }, (_, i) => (i > h ? i : -1)).filter(x => x >= 0);
-                      disabled.disabledMinutes = (selectedHour) => {
-                        if (selectedHour === h) return Array.from({ length: m + 1 }, (_, i) => i);
-                        if (selectedHour > h) return [];
-                        return Array.from({ length: 60 }, () => 0); // disable hết nếu giờ nhỏ hơn
+                    const isFirst = (isBatch && batchIndex === 0) || batchIndex === null;
+                    if (isFirst && startRange && current.isSame(toDayjs(startRange), 'day')) {
+                      const sr = toDayjs(startRange);
+                      const h = sr.hour(), m = sr.minute(), s = sr.second();
+                      const rule = {
+                        disabledHours: () => Array.from({ length: h }, (_, i) => i),
+                        disabledMinutes: (sh) => sh === h ? Array.from({ length: m }, (_, i) => i) : [],
+                        disabledSeconds: (sh, sm) => sh === h && sm === m ? Array.from({ length: s }, (_, i) => i) : [],
                       };
-                      disabled.disabledSeconds = (selectedHour, selectedMinute) => {
-                        if (selectedHour === h && selectedMinute === m)
-                          return Array.from({ length: s + 1 }, (_, i) => i);
-                        return [];
-                      };
+                      mergeDisable(baseDisabled, rule);
+                      baseDisabled = { ...disabled };
                     }
                   }
 
+                  // 2. endRange (chỉ áp dụng cho phase cuối)
                   if (field.name === 'endDate') {
-                    const currentStart = toDayjs(formValues[`startDate_batch${batchIndex}`]);
-                    if (currentStart && current.isSame(currentStart, 'day')) {
-                      const h = currentStart.hour();
-                      const m = currentStart.minute();
-                      const s = currentStart.second() + 1; // cho phép cùng giây
+                    const isLast = (isBatch && batchIndex === batchCount - 1) || batchIndex === null;
+                    if (isLast && endRange && current.isSame(toDayjs(endRange), 'day')) {
+                      const er = toDayjs(endRange);
+                      const h = er.hour(), m = er.minute(), s = er.second();
+                      const rule = {
+                        disabledHours: () => Array.from({ length: 24 }, (_, i) => i > h ? i : -1).filter(x => x >= 0),
+                        disabledMinutes: (sh) => sh === h ? Array.from({ length: 60 - m }, (_, i) => m + i) : [],
+                        disabledSeconds: (sh, sm) => sh === h && sm === m ? Array.from({ length: 60 - s }, (_, i) => s + i) : [],
+                      };
+                      mergeDisable(baseDisabled, rule);
+                      baseDisabled = { ...disabled };
+                    }
+                  }
 
-                      disabled.disabledHours = () => Array.from({ length: h }, (_, i) => i);
-                      disabled.disabledMinutes = (selectedHour) => {
-                        if (selectedHour === h) return Array.from({ length: m }, (_, i) => i);
-                        return [];
+                  // 3. endDate phase trước (cho startDate hiện tại)
+                  if (field.name === 'startDate' && isBatch && batchIndex > 0) {
+                    const prevEnd = toDayjs(formValues[`endDate_batch${batchIndex - 1}`]);
+                    if (prevEnd && current.isSame(prevEnd, 'day')) {
+                      const h = prevEnd.hour(), m = prevEnd.minute(), s = prevEnd.second();
+                      const rule = {
+                        disabledHours: () => Array.from({ length: h }, (_, i) => i),
+                        disabledMinutes: (sh) => sh === h ? Array.from({ length: m }, (_, i) => i) : [],
+                        disabledSeconds: (sh, sm) => sh === h && sm === m ? Array.from({ length: s }, (_, i) => i) : [],
                       };
-                      disabled.disabledSeconds = (selectedHour, selectedMinute) => {
-                        if (selectedHour === h && selectedMinute === m)
-                          return Array.from({ length: s }, (_, i) => i);
-                        return [];
+                      mergeDisable(baseDisabled, rule);
+                      baseDisabled = { ...disabled };
+                    }
+                  }
+
+                  // 4. startDate phase sau (cho endDate hiện tại) ← QUAN TRỌNG NHẤT!
+                  if (field.name === 'endDate' && isBatch && batchIndex < batchCount - 1) {
+                    const nextStart = toDayjs(formValues[`startDate_batch${batchIndex + 1}`]);
+                    if (nextStart && current.isSame(nextStart, 'day')) {
+                      const h = nextStart.hour(), m = nextStart.minute(), s = nextStart.second();
+                      const rule = {
+                        disabledHours: () => Array.from({ length: 24 }, (_, i) => i > h ? i : -1).filter(x => x >= 0),
+                        disabledMinutes: (sh) => sh === h ? Array.from({ length: 60 - m }, (_, i) => m + i) : [],
+                        disabledSeconds: (sh, sm) => sh === h && sm === m ? Array.from({ length: 60 - s }, (_, i) => s + i) : [],
                       };
+                      mergeDisable(baseDisabled, rule);
+                      baseDisabled = { ...disabled };
+                    }
+                  }
+
+                  // 5. endDate hiện tại (cho startDate)
+                  if (field.name === 'startDate') {
+                    const currEnd = toDayjs(formValues[batchIndex !== null ? `endDate_batch${batchIndex}` : 'endDate']);
+                    if (currEnd && current.isSame(currEnd, 'day')) {
+                      const h = currEnd.hour(), m = currEnd.minute(), s = currEnd.second();
+                      const rule = {
+                        disabledHours: () => Array.from({ length: 24 }, (_, i) => i > h ? i : -1).filter(x => x >= 0),
+                        disabledMinutes: (sh) => sh === h ? Array.from({ length: 60 - m }, (_, i) => m + i) : [],
+                        disabledSeconds: (sh, sm) => sh === h && sm === m ? Array.from({ length: 60 - s }, (_, i) => s + i) : [],
+                      };
+                      mergeDisable(baseDisabled, rule);
+                      baseDisabled = { ...disabled };
+                    }
+                  }
+
+                  // 6. startDate hiện tại (cho endDate)
+                  if (field.name === 'endDate') {
+                    const currStart = toDayjs(formValues[batchIndex !== null ? `startDate_batch${batchIndex}` : 'startDate']);
+                    if (currStart && current.isSame(currStart, 'day')) {
+                      const h = currStart.hour(), m = currStart.minute(), s = currStart.second();
+                      const rule = {
+                        disabledHours: () => Array.from({ length: h }, (_, i) => i),
+                        disabledMinutes: (sh) => sh === h ? Array.from({ length: m }, (_, i) => i) : [],
+                        disabledSeconds: (sh, sm) => sh === h && sm === m ? Array.from({ length: s }, (_, i) => i) : [],
+                      };
+                      mergeDisable(baseDisabled, rule);
+                      baseDisabled = { ...disabled };
                     }
                   }
 
                   return disabled;
                 }}
-                // ===== KẾT THÚC PHẦN MỚI =====
-
-                panelRender={(panel) => (
-                  <div className="dark-picker-panel ...">
-                    {panel}
-                  </div>
-                )}
               />
             </Form.Item>
           </div>
@@ -488,7 +612,7 @@ const CreateEditForm = ({
 
           <div className="px-6">
             <h1 className="text-3xl font-bold mb-2 text-white">
-              {mode === 'create' ? `Tạo ${lowerEntity} Mới` : `Chỉnh sửa ${lowerEntity}`}
+              {mode === 'create' ? `Tạo ${lowerEntity} mới` : `Chỉnh sửa ${lowerEntity}`}
             </h1>
             <p className="text-gray-400">
               {mode === 'create'
