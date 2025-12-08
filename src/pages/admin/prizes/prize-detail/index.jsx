@@ -1,10 +1,18 @@
-import { ConfigProvider, theme } from 'antd';
+import { ConfigProvider, Tag, theme } from 'antd';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { PATH_NAME } from '../../../../constants';
 import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
 import { usePrizes } from '../../../../hooks/admin/prizes/usePrizes';
 
+
 const PrizeDetail = () => {
+    const  prizeTypes =  [
+      { value: 'Cash', text: 'Tiền mặt' },
+      { value: 'Trophy', text: 'Cúp' },
+      { value: 'Certificate', text: 'Chứng nhận' },
+      { value: 'Voucher', text: 'Voucher' },
+      { value: 'Other', text: 'Khác' },
+    ]
     const { id } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -20,7 +28,16 @@ const PrizeDetail = () => {
         modelName: 'Prizes',
         fields: [
             { key: 'Tên Giải', type: 'input', name: 'prizeName' },
-            { key: 'Loại Giải', type: 'input', name: 'prizeType' },
+            {
+              key: 'Loại Giải',
+              type: 'custom',
+              name: 'prizeType',
+              render: (record) => (
+                <Tag color="gold" className=" font-bold">
+                  {prizeTypes.find(p => p.value === record.prizeType).text}
+                </Tag>
+              ),
+            },
             {
                 type: 'column',
                 items: [
@@ -35,13 +52,7 @@ const PrizeDetail = () => {
         ]
     };
 
-    if (error) {
-        return (
-            <div className="min-h-screen flex items-center justify-center text-red-400">
-                Lỗi tải dữ liệu.
-            </div>
-        );
-    }
+
 
     if (isLoading) {
         return (

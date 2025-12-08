@@ -24,22 +24,26 @@ import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
 import EntityTable from '../../../../components/ui/EntityTable.jsx';
 import {
   ExclamationCircleOutlined,
+  PlusOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useChallenges } from '../../../../hooks/admin/challanges/useChallenges.js';
+import { useQualifications } from '../../../../hooks/admin/qualification/useQualification.js';
 
 const HackathonPhaseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const hackathonId = searchParams.get('hackathonId');
+  const isLastPhase = searchParams.get('isLastPhase')?.includes('true');
   const queryClient = useQueryClient();
 
   const { fetchHackathonPhase } = useHackathonPhases();
   const { deleteTrack, fetchTracks, assignRandomChallenge } = useTracks();
-  const { fetchChallenges } = useChallenges();
+  const { fetchChallenges, fetchCompleteChallenge } = useChallenges();
   const { fetchGroupsByHackathon, autoCreateGroups } = useGroups();
+  const { fetchFinalQualified, selectTopTeams } = useQualifications();
 
   const {
     data: phase,
@@ -47,20 +51,22 @@ const HackathonPhaseDetail = () => {
     error: phaseError,
   } = fetchHackathonPhase(id);
   const { data: allTracks, isLoading: tracksLoading } = fetchTracks;
-  const { data: allChallenges = [], isLoading: challengesLoading } = fetchChallenges;
+  const { data: completesChallenges = [], isLoading: cChallengesLoading } = fetchCompleteChallenge(hackathonId);
   const { data: groupsData = [], isLoading: groupsLoading } = fetchGroupsByHackathon(hackathonId);
+  const { data: qualifiedTeams = [], isLoading: qualifiedLoading } = fetchFinalQualified(id);
 
   const phaseTracks =
     allTracks?.filter((track) => track.phaseId === parseInt(id)) || [];
 
   const trackIds = phaseTracks.map(t => t.trackId);
   const sortedGroups = [...groupsData]
-    .filter(group => trackIds.includes(group.trackId))
+    .filter(group => trackIds?.includes(group.trackId))
     ?.sort((a, b) => a.groupName.localeCompare(b.groupName));
 
   const [assignModal, setAssignModal] = useState({ open: false, track: null });
   const [createGroupModal, setCreateGroupModal] = useState(false);
   const [confirmModal, setConfirmModal] = useState({ open: false, trackId: null });
+  const [showQualifiedTable, setShowQualifiedTable] = useState(false);
   const [assignForm] = Form.useForm();
   const [createGroupForm] = Form.useForm();
 
@@ -165,7 +171,6 @@ const HackathonPhaseDetail = () => {
     },
   };
 
-  // Model cho bảng groups
   const groupTableModel = useMemo(() => ({
     entityName: 'bảng đấu',
     rowKey: 'groupId',
@@ -210,6 +215,48 @@ const HackathonPhaseDetail = () => {
     ],
     actions: {
       view: true,
+      edit: false,
+      delete: false,
+    }
+  }), []);
+
+  // Model cho bảng Qualification
+  const qualificationTableModel = useMemo(() => ({
+    entityName: 'đội đủ điều kiện',
+    rowKey: 'teamId',
+    columns: [
+      {
+        title: 'Tên đội',
+        dataIndex: 'teamName',
+        key: 'teamName',
+        type: 'text',
+        className: 'font-medium text-white'
+      },
+      {
+        title: 'Bảng đấu',
+        dataIndex: 'groupName',
+        key: 'groupName',
+        type: 'tag',
+        tagColor: 'green',
+        transform: (val) => val || 'N/A'
+      },
+      {
+        title: 'Track',
+        dataIndex: 'trackName',
+        key: 'trackName',
+        type: 'text',
+        className: 'text-gray-300'
+      },
+      {
+        title: 'Group ID',
+        dataIndex: 'groupId',
+        key: 'groupId',
+        type: 'tag',
+        tagColor: 'blue'
+      }
+    ],
+    actions: {
+      view: false,
       edit: false,
       delete: false,
     }
@@ -287,6 +334,18 @@ const HackathonPhaseDetail = () => {
     setConfirmModal({ open: false, trackId: null });
   };
 
+  const handleGetQualifiedTeams = () => {
+    selectTopTeams.mutate(id, {
+      onSuccess: () => {
+        setShowQualifiedTable(true);
+        message.success('Đã lấy danh sách đội đủ điều kiện!');
+      },
+      onError: () => {
+        message.error('Không thể lấy danh sách đội!');
+      }
+    });
+  };
+
   const trackHandlers = {
     onView: (record) =>
       navigate(
@@ -331,7 +390,7 @@ const HackathonPhaseDetail = () => {
     );
   }
 
-  if (phaseLoading || tracksLoading || challengesLoading) {
+  if (phaseLoading || tracksLoading || cChallengesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spin size="large" />
@@ -370,31 +429,73 @@ const HackathonPhaseDetail = () => {
         }
         showEdit
       >
-        <Card className="mt-16 border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm">
-          <EntityTable
-            model={trackTableModel}
-            data={phaseTracks}
-            loading={tracksLoading || challengesLoading}
-            handlers={trackHandlers}
-            emptyText="Không có track nào cho phase này"
-            dateFormatter={(value, fmt) =>
-              value ? dayjs(value).format(fmt) : '--'
-            }
-          />
-        </Card>
+        {/* Track Section - Không hiển thị nếu là phase cuối */}
+        {!isLastPhase && (
+          <Card className="mt-16 border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm">
+            <EntityTable
+              model={trackTableModel}
+              data={phaseTracks}
+              loading={tracksLoading || cChallengesLoading}
+              handlers={trackHandlers}
+              emptyText="Không có track nào cho phase này"
+              dateFormatter={(value, fmt) =>
+                value ? dayjs(value).format(fmt) : '--'
+              }
+            />
+          </Card>
+        )}
 
-        {/* Group Section */}
-        {hackathonId && (
-          <Card className="mt-6 border border-white/10 bg-white/5 rounded-xl">
+        {/* Group Section - Không hiển thị nếu là phase cuối */}
+        {hackathonId && !isLastPhase && (
+          <Card className="mt-16 border border-white/10 bg-white/5 rounded-xl">
             <EntityTable
               model={groupTableModel}
               data={sortedGroups}
               loading={groupsLoading}
               handlers={groupHandlers}
               emptyText="Không có bảng đấu nào"
-              dateFormatter={(value, fmt) => value ? dayjs(value).format(fmt) : '--'}
+              dateFormatter={(value, fmt) =>
+                value ? dayjs(value).format(fmt) : '--'
+              }
             />
           </Card>
+        )}
+
+        {/* Qualification Section - Chỉ hiển thị nếu là phase cuối */}
+        {isLastPhase && (
+          <>
+            { !showQualifiedTable &&
+              ( <div className="mx-6 mb-6">
+                <Button
+                  type="dashed"
+                  icon={<PlusOutlined />}
+                  onClick={handleGetQualifiedTeams}
+                  loading={selectTopTeams.isPending}
+                  disabled={selectTopTeams.isPending}
+                  className="w-full h-12 !text-primary !border-primary/50 hover:!border-primary hover:!bg-primary/5"
+                >
+                  {selectTopTeams.isPending
+                    ? 'Đang xử lý...'
+                    : 'Lấy danh sách đội'}
+                </Button>
+              </div>)
+            }
+
+            {showQualifiedTable && (
+              <Card className="mt-6 border border-white/10 bg-white/5 rounded-xl">
+                <EntityTable
+                  model={qualificationTableModel}
+                  data={qualifiedTeams}
+                  loading={qualifiedLoading}
+                  handlers={{}}
+                  emptyText="Không có đội nào đủ điều kiện"
+                  dateFormatter={(value, fmt) =>
+                    value ? dayjs(value).format(fmt) : '--'
+                  }
+                />
+              </Card>
+            )}
+          </>
         )}
       </EntityDetail>
 
@@ -413,7 +514,8 @@ const HackathonPhaseDetail = () => {
         confirmLoading={assignRandomChallenge.isPending}
       >
         <div className="mb-2 text-sm font-medium">
-          Phần thi: <span className="text-primary">{assignModal.track?.name}</span>
+          Phần thi:{' '}
+          <span className="text-primary">{assignModal.track?.name}</span>
         </div>
         <Form form={assignForm} layout="vertical">
           <Form.Item
@@ -430,7 +532,7 @@ const HackathonPhaseDetail = () => {
               allowClear
               showSearch
             >
-              {allChallenges.map((ch) => (
+              {completesChallenges?.map((ch) => (
                 <Select.Option key={ch.challengeId} value={ch.challengeId}>
                   {ch.title}
                 </Select.Option>

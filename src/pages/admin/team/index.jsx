@@ -26,12 +26,20 @@ const Teams = () => {
                 className: 'font-medium text-white'
             },
             {
+              title: 'Hackathon',
+              dataIndex: 'hackathonName',
+              key: 'hackathon',
+              type: 'tag',
+              tagColor: 'blue',
+              transform: (val) => `${val}`
+            },
+            {
                 title: 'Chương',
-                dataIndex: 'chapterId',
+                dataIndex: 'chapterName',
                 key: 'chapterId',
                 type: 'tag',
                 tagColor: 'blue',
-                transform: (val) => `Chương ${val}`
+                transform: (val) => `${val}`
             },
             {
                 title: 'Leader',

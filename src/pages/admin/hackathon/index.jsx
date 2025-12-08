@@ -125,13 +125,7 @@ const Hackathons = () => {
     isDeleting: (record) => deletingId === record.hackathonId
   };
 
-  if (error) {
-    return (
-      <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md text-red-400">
-        Lỗi tải dữ liệu Hackathons.
-      </div>
-    );
-  }
+
 
   return (
     <ConfigProvider

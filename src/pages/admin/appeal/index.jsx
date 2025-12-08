@@ -128,7 +128,7 @@ const Appeals = () => {
                 dataIndex: 'reviewedByName',
                 key: 'reviewedByName',
                 type: 'text',
-                width: 150,
+                // width: 150,
                 render: (text) => (
                     <Tooltip title={text}>
                         <div className="truncate text-gray-300">
@@ -143,7 +143,7 @@ const Appeals = () => {
                 key: 'createdAt',
                 type: 'datetime',
                 format: 'DD/MM/YYYY HH:mm',
-                width: 150,
+                // width: 150,
             },
             {
                 title: 'Ngày review',
@@ -151,7 +151,7 @@ const Appeals = () => {
                 key: 'reviewedAt',
                 type: 'datetime',
                 format: 'DD/MM/YYYY HH:mm',
-                width: 150,
+                // width: 150,
                 render: (text) => (
                     <span className="text-gray-300">
                         {text ? dayjs(text).format('DD/MM/YYYY HH:mm') : '--'}

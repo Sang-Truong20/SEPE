@@ -1,13 +1,16 @@
 import { GoogleLogin } from '@react-oauth/google';
 import { useMutation } from '@tanstack/react-query';
+import { Spin } from 'antd';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
+import { useState } from 'react';
 import { PATH_NAME } from '../../constants';
 import { loginGoogle } from '../../services/auth';
 import { notify } from '../../utils/index';
+import { useLoading } from '../../context/LoadingContext.jsx';
 
 function Login() {
-  // const navigate = useNavigate();
+  const { showLoading, hideLoading } = useLoading();
 
   const { mutate: mutateLoginGoogle } = useMutation({
     mutationFn: loginGoogle,
@@ -22,22 +25,23 @@ function Login() {
         Cookies.set('accessToken', accessToken);
         Cookies.set('refreshToken', refreshToken);
         const decoded = jwtDecode(accessToken);
-        console.log('chec decoded', decoded);
+        console.log('check decoded', decoded);
         const role =
           decoded[
             'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
-          ];
+            ];
         console.log('check role', role);
+
+        // Giữ spinner hiển thị trong khi chuyển trang
         if (role === 'Admin') {
-          // navigate(PATH_NAME.ADMIN_DASHBOARD);
-          window.location.href = PATH_NAME.ADMIN_DASHBOARD;
+          window.location.href = PATH_NAME.ADMIN;
         } else {
-          // navigate(PATH_NAME.HOME);
           window.location.reload();
         }
       }
     },
     onError: (err) => {
+      hideLoading(); // Tắt spinner khi có lỗi
       if (err && err.status === 401) {
         notify('error', { description: 'Thông tin đăng nhập không hợp lệ' });
         return;
@@ -46,21 +50,24 @@ function Login() {
     },
   });
 
-
   return (
-    <GoogleLogin
-      text="signin_with"
-      theme="outline"
-      size="large"
-      width="400px"
-      onSuccess={(credentialResponse) => {
-        console.log(credentialResponse);
-        mutateLoginGoogle({ token: credentialResponse?.credential });
-      }}
-      onError={() => {
-        console.log('Login Failed');
-      }}
-    />
+    <>
+      <GoogleLogin
+        text="signin_with"
+        theme="outline"
+        size="large"
+        width="400px"
+        onSuccess={(credentialResponse) => {
+          console.log(credentialResponse);
+          showLoading() ;// Bật spinner
+          mutateLoginGoogle({ token: credentialResponse?.credential });
+        }}
+        onError={() => {
+          console.log('Login Failed');
+          hideLoading();
+        }}
+      />
+    </>
   );
 }
 

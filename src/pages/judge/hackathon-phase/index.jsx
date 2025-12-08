@@ -1,4 +1,5 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useMemo } from 'react';
 import { ConfigProvider, theme, Button, Select, Card, Tag } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -9,7 +10,6 @@ import { PATH_NAME } from '../../../constants/index.js';
 import { useHackathonPhases } from '../../../hooks/admin/hackathon-phases/useHackathonPhases.js';
 import { useHackathons } from '../../../hooks/admin/hackathons/useHackathons.js';
 import EntityTable from '../../../components/ui/EntityTable.jsx';
-import { useMemo } from 'react';
 
 const HackathonPhases = () => {
   const navigate = useNavigate();
@@ -20,12 +20,15 @@ const HackathonPhases = () => {
   const { data: hackathons = [], isLoading: hackathonsLoading } =
     fetchHackathons;
 
-  const { fetchHackathonPhases, } = useHackathonPhases();
+  const { fetchHackathonPhases } = useHackathonPhases();
   const {
-    data: phasesData = [],
+    data: phasesDataRaw = [],
     isLoading,
-    error,
   } = fetchHackathonPhases(hackathonId);
+
+  const phasesData = phasesDataRaw.sort(
+    (a, b) => new Date(a.endDate) - new Date(b.endDate)
+  );
 
   const selectedHackathon = hackathons.find(
     (h) => h.hackathonId === parseInt(hackathonId),
@@ -75,21 +78,31 @@ const HackathonPhases = () => {
           ),
         },
       ],
+      actions: hackathonId
+        ? {
+            view: true,
+          }
+        : {},
     }),
     [hackathonId, phasesData, navigate],
   );
+
+  const handlers = {
+    onView: ({ phaseId }) => {
+      const lastPhaseId = phasesData.at(-1)?.phaseId
+      const isLastPhase = phasesData.length > 1 && phaseId === lastPhaseId
+
+      navigate(
+        `/judge/score/phase/${phaseId}?hackathonId=${hackathonId}&isLastPhase=${isLastPhase}`
+      )
+    },
+  };
 
   const handleHackathonChange = (newHackathonId) => {
     setSearchParams({ hackathonId: newHackathonId });
   };
 
-  if (error) {
-    return (
-      <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md text-red-400">
-        Lỗi tải dữ liệu Hackathon Phases.
-      </div>
-    );
-  }
+
 
   return (
     <ConfigProvider
@@ -108,7 +121,7 @@ const HackathonPhases = () => {
       <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
         <div className="mb-6">
           <Button
-            onClick={() => navigate(PATH_NAME.JUDGE_TEAM_SCORES)}
+            onClick={() => navigate(`${PATH_NAME.JUDGE_TEAM_SCORES}/hackathon`)}
             type="link"
             icon={<ArrowLeftOutlined />}
             className="mb-4 !text-light-primary hover:!text-primary"
@@ -187,6 +200,7 @@ const HackathonPhases = () => {
             model={tableModel}
             data={phasesData}
             loading={isLoading}
+            handlers={handlers}
             emptyText="Không có giai đoạn nào cho hackathon này"
             dateFormatter={(value, fmt) =>
               value ? dayjs(value).format(fmt) : '--'

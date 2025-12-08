@@ -25,36 +25,37 @@ const Hackathons = () => {
           dataIndex: 'name',
           key: 'name',
           type: 'text',
-          className: 'font-medium text-white',
+          className: 'font-medium text-white'
         },
         {
           title: 'Mùa',
-          dataIndex: 'season',
-          key: 'season',
+          dataIndex: 'seasonName',
+          key: 'seasonName',
           type: 'tag',
           tagColor: 'gold',
-          transform: (val) => val?.toUpperCase(),
+          transform: (val) => val?.toUpperCase()
         },
         {
-          title: 'Chủ đề',
-          dataIndex: 'theme',
-          key: 'theme',
+          title: 'Mô tả',
+          dataIndex: 'description',
+          key: 'description',
           type: 'text',
-          className: 'text-gray-300',
+          ellipsis: true,
+          className: 'text-gray-300'
         },
         {
           title: 'Ngày bắt đầu',
           dataIndex: 'startDate',
           key: 'startDate',
           type: 'datetime',
-          format: 'DD/MM/YYYY HH:mm',
+          format: 'DD/MM/YYYY'
         },
         {
           title: 'Ngày kết thúc',
           dataIndex: 'endDate',
           key: 'endDate',
           type: 'datetime',
-          format: 'DD/MM/YYYY HH:mm',
+          format: 'DD/MM/YYYY'
         },
         {
           title: 'Quản lý',
@@ -65,6 +66,7 @@ const Hackathons = () => {
               <Button
                 size="small"
                 className="text-xs bg-blue-600/30 text-blue-300 border-blue-600/50 hover:bg-blue-600/50"
+                onClick={() => navigate(`${PATH_NAME.PARTNER_HACKATHON_PHASES}?hackathonId=${record.hackathonId}`)}
               >
                 Giai đoạn
               </Button>
@@ -108,13 +110,7 @@ const Hackathons = () => {
       navigate(`${PATH_NAME.PARTNER_HACKATHONS}/${record.hackathonId}`),
   };
 
-  if (error) {
-    return (
-      <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md text-red-400">
-        Lỗi tải dữ liệu Hackathons.
-      </div>
-    );
-  }
+
 
   return (
     <ConfigProvider

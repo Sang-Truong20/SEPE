@@ -29,13 +29,7 @@ const SeasonDetail = () => {
         ]
     };
 
-    if (error) {
-        return (
-            <div className="min-h-screen flex items-center justify-center text-red-400">
-                Lỗi tải dữ liệu.
-            </div>
-        );
-    }
+
 
     if (isLoading) {
         return (

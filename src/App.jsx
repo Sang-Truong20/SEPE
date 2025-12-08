@@ -3,6 +3,7 @@ import { RouterProvider } from 'react-router-dom';
 import AntdProvider from './components/layouts/AntdProvider';
 import router from './routes';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { LoadingProvider } from './context/LoadingContext.jsx';
 
 const queryClient = new QueryClient();
 
@@ -23,9 +24,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AntdProvider>
-        <GoogleOAuthProvider clientId={import.meta.env.VITE_CLIENT_ID}>
-          <RouterProvider router={router} />
-        </GoogleOAuthProvider>
+        <LoadingProvider>
+          <GoogleOAuthProvider clientId={import.meta.env.VITE_CLIENT_ID}>
+            <RouterProvider router={router} />
+          </GoogleOAuthProvider>
+        </LoadingProvider>
       </AntdProvider>
     </QueryClientProvider>
   );

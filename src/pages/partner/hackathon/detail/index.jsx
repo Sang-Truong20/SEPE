@@ -16,30 +16,20 @@ const HackathonDetail = () => {
     fields: [
       { key: 'Tên Hackathon', type: 'input', name: 'name' },
       { key: 'Mùa', type: 'input', name: 'season' },
-      { key: 'Chủ đề', type: 'input', name: 'theme' },
+      { key: 'Mô tả', type: 'textarea', name: 'description' },
       {
         type: 'column',
         items: [
           [
-            {
-              key: 'Ngày bắt đầu',
-              type: 'datetime',
-              name: 'startDate',
-              format: 'DD/MM/YYYY',
-            },
+            { key: 'Ngày bắt đầu', type: 'datetime', name: 'startDate', format: 'DD/MM/YYYY' }
           ],
           [
-            {
-              key: 'Ngày kết thúc',
-              type: 'datetime',
-              name: 'endDate',
-              format: 'DD/MM/YYYY',
-            },
-          ],
-        ],
+            { key: 'Ngày kết thúc', type: 'datetime', name: 'endDate', format: 'DD/MM/YYYY' }
+          ]
+        ]
       },
-      { key: 'Trạng thái', type: 'dropdown', name: 'status' },
-    ],
+      { key: 'Status', type: 'dropdown', name: 'status' }
+    ]
   };
 
   // Tuỳ biến cách hiển thị giá trị
@@ -81,13 +71,7 @@ const HackathonDetail = () => {
     ),
   };
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-400">
-        Lỗi tải dữ liệu.
-      </div>
-    );
-  }
+
 
   if (isLoading) {
     return (

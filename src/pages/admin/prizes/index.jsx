@@ -21,7 +21,14 @@ const Prizes = () => {
     const { data: prizesData = [], isLoading, error } = fetchPrizes(hackathonId);
 
     const selectedHackathon = hackathons.find(h => h.hackathonId === parseInt(hackathonId));
-    
+    const  prizeTypes =  [
+      { value: 'Cash', text: 'Tiền mặt' },
+      { value: 'Trophy', text: 'Cúp' },
+      { value: 'Certificate', text: 'Chứng nhận' },
+      { value: 'Voucher', text: 'Voucher' },
+      { value: 'Other', text: 'Khác' },
+    ]
+
 
     // Model cho bảng prizes
     const tableModel = useMemo(() => ({
@@ -44,8 +51,13 @@ const Prizes = () => {
                 title: 'Loại Giải',
                 dataIndex: 'prizeType',
                 key: 'prizeType',
-                type: 'tag',
-                tagColor: 'blue',
+                type: 'custom',
+                render: (record, _) => (
+                  <Tag color="gold" className=" font-bold">
+                    {prizeTypes.find(p => p.value === record)?.text}
+                  </Tag>
+                ),
+
             },
             {
                 title: 'Hạng',
@@ -60,13 +72,6 @@ const Prizes = () => {
                 key: 'reward',
                 type: 'text',
                 className: 'text-green-400 font-medium'
-            },
-            {
-                title: 'Hackathon',
-                dataIndex: 'hackathonName',
-                key: 'hackathonName',
-                type: 'text',
-                className: 'text-gray-300'
             }
         ],
         actions: hackathonId ? {

@@ -60,16 +60,16 @@ const items = [
     PATH_NAME.ADMIN_APPEALS,
     <FileOutlined />,
   ),
-  getItem(
-    <Link to={PATH_NAME.ADMIN_FILES}>Files</Link>,
-    PATH_NAME.ADMIN_FILES,
-    <FileOutlined />,
-  ),
-  getItem(
-    <Link to={PATH_NAME.ADMIN_SETTINGS}>Cài đặt</Link>,
-    PATH_NAME.ADMIN_SETTINGS,
-    <SettingOutlined />,
-  ),
+  // getItem(
+  //   <Link to={PATH_NAME.ADMIN_FILES}>Files</Link>,
+  //   PATH_NAME.ADMIN_FILES,
+  //   <FileOutlined />,
+  // ),
+  // getItem(
+  //   <Link to={PATH_NAME.ADMIN_SETTINGS}>Cài đặt</Link>,
+  //   PATH_NAME.ADMIN_SETTINGS,
+  //   <SettingOutlined />,
+  // ),
 ];
 
 const AdminLayout = () => {

@@ -24,36 +24,37 @@ const Hackathons = () => {
           dataIndex: 'name',
           key: 'name',
           type: 'text',
-          className: 'font-medium text-white',
+          className: 'font-medium text-white'
         },
         {
           title: 'Mùa',
-          dataIndex: 'season',
-          key: 'season',
+          dataIndex: 'seasonName',
+          key: 'seasonName',
           type: 'tag',
           tagColor: 'gold',
-          transform: (val) => val?.toUpperCase(),
+          transform: (val) => val?.toUpperCase()
         },
         {
-          title: 'Chủ đề',
-          dataIndex: 'theme',
-          key: 'theme',
+          title: 'Mô tả',
+          dataIndex: 'description',
+          key: 'description',
           type: 'text',
-          className: 'text-gray-300',
+          ellipsis: true,
+          className: 'text-gray-300'
         },
         {
           title: 'Ngày bắt đầu',
           dataIndex: 'startDate',
           key: 'startDate',
           type: 'datetime',
-          format: 'DD/MM/YYYY HH:mm',
+          format: 'DD/MM/YYYY'
         },
         {
           title: 'Ngày kết thúc',
           dataIndex: 'endDate',
           key: 'endDate',
           type: 'datetime',
-          format: 'DD/MM/YYYY HH:mm',
+          format: 'DD/MM/YYYY'
         },
         {
           title: 'Quản lý',
@@ -76,13 +77,6 @@ const Hackathons = () => {
     [navigate],
   );
 
-  if (error) {
-    return (
-      <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md text-red-400">
-        Lỗi tải dữ liệu Hackathons.
-      </div>
-    );
-  }
 
   return (
     <ConfigProvider

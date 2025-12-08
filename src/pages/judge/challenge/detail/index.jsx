@@ -46,7 +46,7 @@ const ChallengeDetail = () => {
           const previewUrl = getPreviewUrl(filePath);
 
           return (
-            <div className="space-y-3">
+            <div className="space-y-3 w-full">
               <Space>
                 <FileOutlined className="text-emerald-400" />
                 <a
@@ -105,13 +105,7 @@ const ChallengeDetail = () => {
     ],
   };
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-400">
-        Lỗi tải dữ liệu thử thách.
-      </div>
-    );
-  }
+
 
   if (isLoading) {
     return (
