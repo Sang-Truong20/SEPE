@@ -28,7 +28,7 @@ export const useCreateChallenge = () => {
             console.log('Submitting challenge data:', formValues);
             console.log('FormData contents:', formData);
 
-            return axiosClient.post('/api/Challenge/create', formData, {
+            return axiosClient.post('/Challenge/create', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

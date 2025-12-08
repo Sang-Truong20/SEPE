@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   UserOutlined,
   ClockCircleOutlined,
@@ -25,9 +25,15 @@ import {
   message,
   Space,
   Tag,
+  Spin,
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../../constants';
+import {
+  useGetPendingOrRejectedStudentVerifications,
+  useApproveStudentVerification,
+  useRejectStudentVerification,
+} from '../../../hooks/chapter/student-verification';
 
 const { TextArea } = Input;
 
@@ -40,65 +46,38 @@ const ChapterVerifyStudents = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
 
-  const verificationRequests = [
-    {
-      id: '1',
-      studentName: 'Nguyễn Văn An',
-      studentId: 'SE123456',
-      email: 'anvn@fpt.edu.vn',
-      major: 'Software Engineering',
-      year: 'Năm 3',
-      semester: 'Spring 2024',
-      submittedAt: '2 giờ trước',
-      status: 'pending',
+  const { data: verificationsData, isLoading } = useGetPendingOrRejectedStudentVerifications();
+  const approveMutation = useApproveStudentVerification();
+  const rejectMutation = useRejectStudentVerification();
+
+  // Transform API data to match component structure
+  const verificationRequests = useMemo(() => {
+    if (!verificationsData) return [];
+    
+    const data = Array.isArray(verificationsData) 
+      ? verificationsData 
+      : Array.isArray(verificationsData?.data) 
+      ? verificationsData.data 
+      : [];
+
+    return data.map((item) => ({
+      id: item.verificationId || item.id,
+      studentName: item.fullName || item.studentName,
+      studentId: item.studentCode || item.studentId,
+      email: item.email,
+      major: item.major,
+      year: item.yearOfAdmission ? `Năm ${item.yearOfAdmission}` : item.year,
+      semester: item.semester || 'N/A',
+      submittedAt: item.submittedAt || item.createdAt || 'N/A',
+      status: item.status?.toLowerCase() || 'pending',
       documents: [
-        { name: 'student_card_front.jpg', type: 'image', url: '#' },
-        { name: 'student_card_back.jpg', type: 'image', url: '#' },
-        { name: 'transcript.pdf', type: 'pdf', url: '#' },
+        ...(item.frontCardImage ? [{ name: 'Mặt trước thẻ SV', type: 'image', url: item.frontCardImage }] : []),
+        ...(item.backCardImage ? [{ name: 'Mặt sau thẻ SV', type: 'image', url: item.backCardImage }] : []),
       ],
-      additionalInfo: 'Sinh viên đang học kỳ 5, chuyên ngành AI',
-    },
-    {
-      id: '2',
-      studentName: 'Trần Thị Bình',
-      studentId: 'AI789012',
-      email: 'binhtt@fpt.edu.vn',
-      major: 'Artificial Intelligence',
-      year: 'Năm 2',
-      semester: 'Spring 2024',
-      submittedAt: '4 giờ trước',
-      status: 'pending',
-      documents: [
-        { name: 'student_id.jpg', type: 'image', url: '#' },
-        { name: 'enrollment_cert.pdf', type: 'pdf', url: '#' },
-      ],
-    },
-    {
-      id: '3',
-      studentName: 'Lê Hoàng Cường',
-      studentId: 'CS345678',
-      email: 'cuonglh@fpt.edu.vn',
-      major: 'Computer Science',
-      year: 'Năm 4',
-      semester: 'Spring 2024',
-      submittedAt: '1 ngày trước',
-      status: 'approved',
-      documents: [{ name: 'student_card.jpg', type: 'image', url: '#' }],
-    },
-    {
-      id: '4',
-      studentName: 'Phạm Minh Đức',
-      studentId: 'IS111222',
-      email: 'ducpm@fpt.edu.vn',
-      major: 'Information Systems',
-      year: 'Năm 1',
-      semester: 'Spring 2024',
-      submittedAt: '2 ngày trước',
-      status: 'rejected',
-      documents: [{ name: 'blurry_card.jpg', type: 'image', url: '#' }],
-      rejectionReason: 'Hình ảnh thẻ sinh viên không rõ ràng, không thể xác thực thông tin',
-    },
-  ];
+      rejectionReason: item.rejectionReason || item.rejectReason,
+      additionalInfo: item.additionalInfo,
+    }));
+  }, [verificationsData]);
 
   const filteredRequests = verificationRequests.filter((request) => {
     const matchesSearch =
@@ -113,21 +92,29 @@ const ChapterVerifyStudents = () => {
   const approvedCount = verificationRequests.filter((r) => r.status === 'approved').length;
   const rejectedCount = verificationRequests.filter((r) => r.status === 'rejected').length;
 
-  const handleApprove = (id) => {
-    message.success('Đã phê duyệt xác thực sinh viên!');
-    console.log('Approved verification:', id);
+  const handleApprove = async (id) => {
+    try {
+      await approveMutation.mutateAsync(id);
+      setIsModalVisible(false);
+      setSelectedVerification(null);
+    } catch (error) {
+      console.error('Approve error:', error);
+    }
   };
 
-  const handleReject = (id) => {
+  const handleReject = async (id) => {
     if (!rejectionReason.trim()) {
       message.warning('Vui lòng nhập lý do từ chối!');
       return;
     }
-    message.success('Đã từ chối xác thực sinh viên!');
-    console.log('Rejected verification:', id, 'Reason:', rejectionReason);
-    setIsModalVisible(false);
-    setSelectedVerification(null);
-    setRejectionReason('');
+    try {
+      await rejectMutation.mutateAsync({ verificationId: id, reason: rejectionReason });
+      setIsModalVisible(false);
+      setSelectedVerification(null);
+      setRejectionReason('');
+    } catch (error) {
+      console.error('Reject error:', error);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -277,8 +264,13 @@ const ChapterVerifyStudents = () => {
             </div>
           }
         >
-          <div className="space-y-4">
-            {filteredRequests.map((request) => (
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Spin size="large" />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredRequests.map((request) => (
               <div
                 key={request.id}
                 className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
@@ -352,13 +344,14 @@ const ChapterVerifyStudents = () => {
               </div>
             ))}
 
-            {filteredRequests.length === 0 && (
-              <div className="text-center py-12">
-                <UserOutlined className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-400">Không có yêu cầu xác thực nào phù hợp</p>
-              </div>
-            )}
-          </div>
+              {filteredRequests.length === 0 && (
+                <div className="text-center py-12">
+                  <UserOutlined className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-400">Không có yêu cầu xác thực nào phù hợp</p>
+                </div>
+              )}
+            </div>
+          )}
         </Card>
 
         {/* Detail Modal */}
@@ -455,6 +448,8 @@ const ChapterVerifyStudents = () => {
                       onClick={() => handleApprove(selectedVerification.id)}
                       icon={<CheckCircleOutlined />}
                       className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
+                      loading={approveMutation.isPending}
+                      disabled={approveMutation.isPending || rejectMutation.isPending}
                     >
                       Phê Duyệt
                     </Button>
@@ -462,6 +457,8 @@ const ChapterVerifyStudents = () => {
                       onClick={() => handleReject(selectedVerification.id)}
                       icon={<CloseCircleOutlined />}
                       className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white border-0"
+                      loading={rejectMutation.isPending}
+                      disabled={approveMutation.isPending || rejectMutation.isPending}
                     >
                       Từ Chối
                     </Button>
