@@ -365,8 +365,8 @@ const TrackDetail = () => {
           confirmModal.type === 'deleteCriteria'
             ? 'Xóa tiêu chí'
             : confirmModal.type === 'blockAssignment'
-            ? 'Block Judge Assignment'
-            : 'Reactivate Judge Assignment'
+            ? 'Khóa giám khảo'
+            : 'Mở lại'
         }
         open={confirmModal.open}
         onOk={handleConfirmOk}
@@ -375,13 +375,13 @@ const TrackDetail = () => {
           confirmModal.type === 'deleteCriteria'
             ? 'Xóa'
             : confirmModal.type === 'blockAssignment'
-            ? 'Block'
-            : 'Reactivate'
+            ? 'Khóa'
+            : 'Mở lại'
         }
         okButtonProps={{
           danger: confirmModal.type === 'deleteCriteria' || confirmModal.type === 'blockAssignment'
         }}
-        cancelText={confirmModal.type === 'deleteCriteria' ? 'Hủy' : 'Cancel'}
+        cancelText={confirmModal.type === 'deleteCriteria' ? 'Hủy' : 'Hủy'}
         centered
       >
         <div className="flex items-start gap-3">
@@ -390,9 +390,9 @@ const TrackDetail = () => {
             {confirmModal.type === 'deleteCriteria' &&
               `Xóa tiêu chí "${confirmModal.record?.name}"? Hành động này không thể hoàn tác.`}
             {confirmModal.type === 'blockAssignment' &&
-              `Block assignment for judge "${confirmModal.record?.judgeName}"?`}
+              `Bạn có muốn khóa "${confirmModal.record?.judgeName}"?`}
             {confirmModal.type === 'reactivateAssignment' &&
-              `Reactivate assignment for judge "${confirmModal.record?.judgeName}"?`}
+              `Bạn có muốn mở lại "${confirmModal.record?.judgeName}"?`}
           </span>
         </div>
       </Modal>

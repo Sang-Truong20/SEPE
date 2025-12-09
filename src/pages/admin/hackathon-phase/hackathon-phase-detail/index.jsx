@@ -1,5 +1,5 @@
 // components/admin/hackathon-phases/HackathonPhaseDetail.jsx
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Spin,
   ConfigProvider,
@@ -69,6 +69,34 @@ const HackathonPhaseDetail = () => {
   const [showQualifiedTable, setShowQualifiedTable] = useState(false);
   const [assignForm] = Form.useForm();
   const [createGroupForm] = Form.useForm();
+  // const { fetchHackathonPhases } = useHackathonPhases();
+  // const { data: phasesDataRaw = [] } = fetchHackathonPhases(hackathonId);
+  //
+  // const lastPhasesData = phasesDataRaw
+  //   .sort((a, b) => new Date(a.endDate) - new Date(b.endDate))
+  //   .map((p, index, arr) => {
+  //     if (arr.length > 1 && index === arr.length - 1 && p.phaseId !== id) {
+  //       // phase cuối cùng
+  //       const now = new Date();
+  //       const startDate = new Date(p.startDate);
+  //
+  //       return {
+  //         ...p,
+  //         disableView: now < startDate,
+  //       };
+  //     }
+  //   }).filter(p => p);
+  // console.log(lastPhasesData);
+  //
+  // useEffect(() => {
+  //   if (phaseLoading) return; // chưa load xong → không check
+  //   if (!phase) return;
+  //   if (!lastPhasesData) return;
+  //
+  //   if (lastPhasesData[0]?.disableView) {
+  //     navigate(`/admin/hackathons/hackathon-phases?hackathonId=${hackathonId}`);
+  //   }
+  // }, [phase, phaseLoading, phaseError, navigate]);
 
   const model = {
     modelName: 'Giai đoạn',

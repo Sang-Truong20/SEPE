@@ -147,6 +147,7 @@ const EntityTable = ({
               <Button
                 type="text"
                 size="small"
+                disabled={record.disableView || false}
                 className={cfg.className || 'text-white hover:text-primary'}
                 icon={cfg.icon || <EyeOutlined />}
                 onClick={() => handlers.onView?.(record)}
@@ -162,6 +163,7 @@ const EntityTable = ({
               <Button
                 type="text"
                 size="small"
+                disabled={record.disableEdit || false}
                 className={cfg.className || 'text-white hover:text-primary'}
                 icon={cfg.icon || <EditOutlined />}
                 onClick={() => handlers.onEdit?.(record)}

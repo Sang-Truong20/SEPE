@@ -1,6 +1,6 @@
 import { Spin, ConfigProvider, theme } from 'antd';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import dayjs from 'dayjs';
 import CreateEditForm from '../../../../components/ui/CreateEditForm.jsx';
 import { useHackathonPhases } from '../../../../hooks/admin/hackathon-phases/useHackathonPhases';
