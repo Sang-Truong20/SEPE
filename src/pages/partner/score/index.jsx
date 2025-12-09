@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Trophy, Users, TrendingUp, Award, Medal, Crown } from 'lucide-react';
 import { useGroups } from '../../../hooks/admin/groups/useGroups.js';
+import { Spin } from 'antd';
 
 // Mock hooks - replace with your actual hooks
 // const useGroups = () => ({
@@ -139,8 +140,8 @@ const HackathonLeaderboard = () => {
 
   if (groupsQuery.isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-dark-primary via-dark-secondary to-dark-primary flex items-center justify-center">
-        <div className="text-text-primary text-xl animate-pulse">Loading leaderboard...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Spin size="large" />
       </div>
     );
   }
@@ -159,14 +160,14 @@ const HackathonLeaderboard = () => {
                 <Trophy className="w-8 h-8 text-dark-primary" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-text-primary">Hackathon Leaderboard</h1>
+                <h1 className="text-3xl font-bold text-text-primary">Bảng xếp hạng</h1>
                 <p className="text-text-secondary text-sm mt-1">Track performance across all groups</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-dark-tertiary px-4 py-2 rounded-lg border border-primary/20">
               <Users className="w-5 h-5 text-primary" />
               <span className="text-text-primary font-semibold">
-                {Object.values(allTeamsData).flat().length} Teams
+                {Object.values(allTeamsData).flat().length} nhóm
               </span>
             </div>
           </div>
@@ -184,7 +185,7 @@ const HackathonLeaderboard = () => {
                 : 'bg-dark-tertiary text-text-secondary hover:bg-dark-accent border border-dark-accent'
             }`}
           >
-            All Groups
+            Tất cả bảng
           </button>
           {groupNames.map(groupName => (
             <button
@@ -196,7 +197,7 @@ const HackathonLeaderboard = () => {
                   : 'bg-dark-tertiary text-text-secondary hover:bg-dark-accent border border-dark-accent'
               }`}
             >
-              Group {groupName}
+              Bảng {groupName}
             </button>
           ))}
         </div>
@@ -213,12 +214,12 @@ const HackathonLeaderboard = () => {
                 {/* Group Header */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className="bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30 px-6 py-3 rounded-xl">
-                    <h2 className="text-2xl font-bold text-text-primary">Group {groupName}</h2>
+                    <h2 className="text-2xl font-bold text-text-primary">Bảng {groupName}</h2>
                   </div>
                   <div className="flex-1 h-px bg-gradient-to-r from-primary/50 to-transparent"></div>
                   <div className="flex items-center gap-2 bg-dark-tertiary px-4 py-2 rounded-lg border border-primary/20">
                     <TrendingUp className="w-4 h-4 text-primary" />
-                    <span className="text-text-secondary text-sm font-medium">{teams.length} teams</span>
+                    <span className="text-text-secondary text-sm font-medium">{teams.length} nhóm</span>
                   </div>
                 </div>
 
@@ -270,10 +271,10 @@ const HackathonLeaderboard = () => {
                     <table className="w-full">
                       <thead className="bg-dark-tertiary border-b border-primary/20">
                       <tr>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-text-primary">Rank</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-text-primary">Team Name</th>
-                        <th className="px-6 py-4 text-right text-sm font-semibold text-text-primary">Score</th>
-                        <th className="px-6 py-4 text-right text-sm font-semibold text-text-primary">Status</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-text-primary">Hạng</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-text-primary">Tên đội thi</th>
+                        <th className="px-6 py-4 text-right text-sm font-semibold text-text-primary">Điểm</th>
+                        <th className="px-6 py-4 text-right text-sm font-semibold text-text-primary"></th>
                       </tr>
                       </thead>
                       <tbody className="divide-y divide-dark-accent">
@@ -306,7 +307,7 @@ const HackathonLeaderboard = () => {
                                   ? 'bg-primary/20 text-primary border border-primary/30'
                                   : 'bg-dark-accent/50 text-text-secondary border border-dark-accent'
                               }`}>
-                                {team.calculatedRank <= 3 ? 'Top 3' : 'Competing'}
+                                {team.calculatedRank <= 3 ? 'Top 3' : 'None'}
                               </span>
                           </td>
                         </tr>

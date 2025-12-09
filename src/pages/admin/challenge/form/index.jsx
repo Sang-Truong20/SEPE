@@ -3,12 +3,13 @@ import { Form, Input, Select, Upload, Button, ConfigProvider, theme, Spin, Card,
 import { UploadOutlined, SaveOutlined, PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useHackathons } from '../../../../hooks/admin/hackathons/useHackathons.js';
 import { useChallenges } from '../../../../hooks/admin/challanges/useChallenges.js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const { TextArea } = Input;
 
-const ChallengeForm = ({ mode = 'create', challengeId = null }) => {
+const ChallengeForm = ({ mode = 'create' }) => {
   const navigate = useNavigate(); // Đã sửa: thêm ()
+  const { id: challengeId } = useParams();
 
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
@@ -17,31 +18,42 @@ const ChallengeForm = ({ mode = 'create', challengeId = null }) => {
   const { createChallenge, updateChallenge, fetchChallenge } = useChallenges();
   const { fetchHackathons } = useHackathons();
   const { data: hackathons = [], isLoading: hackathonsLoading } = fetchHackathons;
+  const isEdit = mode === 'edit';
 
-  const challengeQuery = mode === 'edit' ? fetchChallenge(challengeId) : { data: null, isLoading: false };
+  const challengeQuery = isEdit ? fetchChallenge(challengeId) : { data: null, isLoading: false };
   const { data: challengeData, isLoading: challengeLoading } = challengeQuery;
 
-  const isEdit = mode === 'edit';
   const isLoading = challengeLoading || hackathonsLoading;
 
   useEffect(() => {
     if (isEdit && challengeData) {
-      form.setFieldsValue({
+      const initialValues = {
         title: challengeData.title,
         description: challengeData.description,
         hackathonId: challengeData.hackathonId,
-      });
+      };
 
-      if (challengeData.fileUrl) {
-        setFileList([
-          {
-            uid: '-1',
-            name: challengeData.fileName || 'Tệp hiện tại',
-            status: 'done',
-            url: challengeData.fileUrl,
-          },
-        ]);
+      // QUAN TRỌNG: Nếu có filePath → tạo fileList và set vào cả form + state
+      if (challengeData.filePath) {
+        const fileName = challengeData.filePath.split('/').pop()?.split('_').slice(1).join('_')
+          || challengeData.filePath.split('/').pop()
+          || 'file.pdf';
+
+        const existingFile = {
+          uid: '-1',
+          name: fileName,
+          status: 'done',
+          url: challengeData.filePath,
+          // Đánh dấu để biết đây là file cũ
+          isExisting: true,
+        };
+
+        initialValues.attachment = [existingFile]; // ← Đây là thứ Antd Form cần!
+        setFileList([existingFile]);
       }
+
+      // Set tất cả vào form một lần
+      form.setFieldsValue(initialValues);
     }
   }, [isEdit, challengeData, form]);
 
@@ -52,22 +64,8 @@ const ChallengeForm = ({ mode = 'create', challengeId = null }) => {
   const handleSubmit = async (values) => {
     setUploading(true);
 
-    // Lấy file từ Upload (values.attachment là mảng fileList)
-    const file = values.attachment?.[0]?.originFileObj;
-
-    if (!file && !isEdit) {
-      message.error('Vui lòng tải lên tệp đính kèm!');
-      setUploading(false);
-      return;
-    }
-
-    // Nếu là edit và người dùng xóa file cũ → vẫn cho phép (hoặc bạn có thể bắt buộc giữ file cũ)
-    // Ở đây mình bắt buộc luôn có file mới hoặc giữ file cũ
-    if (isEdit && !file && fileList.length === 0) {
-      message.error('Vui lòng giữ lại hoặc tải lên tệp mới!');
-      setUploading(false);
-      return;
-    }
+    const file = values.attachment?.[0]?.originFileObj; // file mới (nếu có)
+    const existingFile = values.attachment?.[0]?.isExisting; // có phải file cũ không
 
     try {
       if (isEdit) {
@@ -75,27 +73,45 @@ const ChallengeForm = ({ mode = 'create', challengeId = null }) => {
         formData.append('Title', values.title);
         formData.append('Description', values.description);
         formData.append('HackathonId', values.hackathonId);
+
+        // QUAN TRỌNG: Nếu có file mới → gửi File
+        // Nếu không có file mới nhưng có file cũ → gửi FilePath (để backend biết giữ nguyên)
+        // Nếu không có cả 2 → lỗi
+
         if (file) {
           formData.append('File', file);
+        } else if (challengeData?.filePath && (existingFile || fileList.length > 0)) {
+          // Gửi lại đường dẫn file cũ để backend giữ nguyên
+          formData.append('FilePath', challengeData.filePath);
+        } else {
+          message.error('Vui lòng tải lên tệp mới hoặc giữ tệp hiện tại!');
+          setUploading(false);
+          return;
         }
-        // Nếu không có file mới → backend sẽ giữ nguyên file cũ (tùy API của bạn)
 
         await updateChallenge.mutateAsync({ id: challengeId, payload: formData });
         message.success('Cập nhật thử thách thành công!');
       } else {
-        const payload = {
-          title: values.title,
-          description: values.description,
-          hackathonId: values.hackathonId,
-          file: file, // bắt buộc có
-        };
-        await createChallenge.mutateAsync(payload);
+        // Create: bắt buộc có file mới
+        if (!file) {
+          message.error('Vui lòng tải lên tệp đính kèm!');
+          setUploading(false);
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('Title', values.title);
+        formData.append('Description', values.description);
+        formData.append('HackathonId', values.hackathonId);
+        formData.append('File', file);
+
+        await createChallenge.mutateAsync(formData);
         message.success('Tạo thử thách thành công!');
       }
 
       navigate(-1);
     } catch (error) {
-      message.error('Có lỗi xảy ra, vui lòng thử lại');
+      message.error('Có lỗi xảy ra: ' + (error?.response?.data?.message || error.message));
       console.error(error);
     } finally {
       setUploading(false);
@@ -107,7 +123,7 @@ const ChallengeForm = ({ mode = 'create', challengeId = null }) => {
     onChange: handleFileChange,
     beforeUpload: () => false, // Ngăn upload tự động
     maxCount: 1,
-    accept: '.pdf,.doc,.docx,.txt,.zip',
+    accept: '.pdf,.doc,.docx,.txt',
   };
 
   if (isLoading) {
@@ -233,7 +249,7 @@ const ChallengeForm = ({ mode = 'create', challengeId = null }) => {
                   className="upload-list-inline"
                 >
                   <Button icon={<UploadOutlined />} size="large">
-                    Chọn tệp (PDF, DOC, ZIP...)
+                    Chọn tệp (PDF, DOC...)
                   </Button>
                 </Upload>
               </Form.Item>
