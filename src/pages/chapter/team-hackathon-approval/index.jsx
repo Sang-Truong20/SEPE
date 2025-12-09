@@ -7,38 +7,48 @@ import {
   TeamOutlined
 } from '@ant-design/icons';
 import {
+  Alert,
   Avatar,
   Button,
   Card,
   Input,
   message,
   Modal,
+  Select,
   Space,
   Spin,
   Table,
   Tag
 } from 'antd';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PATH_NAME } from '../../../constants';
 import {
   useApproveTeamHackathon,
   useGetPendingTeamHackathonApprovals,
   useRejectTeamHackathon,
 } from '../../../hooks/chapter/useTeamHackathonApproval';
+import { useHackathons } from '../../../hooks/admin/hackathons/useHackathons';
 
 const { TextArea } = Input;
 
 const ChapterTeamHackathonApproval = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const hackathonId = searchParams.get('hackathonId');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedApproval, setSelectedApproval] = useState(null);
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
-  const { data: approvalsData, isLoading } = useGetPendingTeamHackathonApprovals();
-  const approveMutation = useApproveTeamHackathon();
-  const rejectMutation = useRejectTeamHackathon();
+  // Get hackathons for selection
+  const { fetchHackathons } = useHackathons();
+  const { data: hackathons = [], isLoading: hackathonsLoading } = fetchHackathons;
+
+  const { data: approvalsData, isLoading } = useGetPendingTeamHackathonApprovals(hackathonId);
+  const approveMutation = useApproveTeamHackathon(hackathonId);
+  const rejectMutation = useRejectTeamHackathon(hackathonId);
 
   const approvals = approvalsData || [];
 
@@ -55,9 +65,7 @@ const ChapterTeamHackathonApproval = () => {
   const handleApprove = async (approval) => {
     try {
       await approveMutation.mutateAsync({
-        approvalId: approval.id,
-        teamId: approval.teamId,
-        hackathonId: approval.hackathonId,
+        approvalId: approval.registrationId,
       });
     } catch (error) {
       console.error('Error approving:', error);
@@ -72,7 +80,7 @@ const ChapterTeamHackathonApproval = () => {
 
     rejectMutation.mutate(
       {
-        approvalId: selectedApproval.id,
+        approvalId: selectedApproval.registrationId,
         reason: rejectReason,
       },
       {
@@ -95,20 +103,13 @@ const ChapterTeamHackathonApproval = () => {
       title: 'Đội',
       dataIndex: 'teamName',
       key: 'teamName',
-      render: (teamName, record) => (
+      render: (teamName) => (
         <div className="flex items-center gap-3">
-          <Avatar.Group maxCount={3}>
-            {record.members.map((member, idx) => (
-              <Avatar key={member.id || idx} size="small">
-                {member.name.charAt(0).toUpperCase()}
-              </Avatar>
-            ))}
-          </Avatar.Group>
+          <Avatar size="small">
+            {teamName.charAt(0).toUpperCase()}
+          </Avatar>
           <div>
             <div className="font-medium text-white">{teamName}</div>
-            <div className="text-gray-400 text-xs">
-              {record.members.length} thành viên
-            </div>
           </div>
         </div>
       ),
@@ -120,41 +121,24 @@ const ChapterTeamHackathonApproval = () => {
       render: (name) => <span className="text-gray-300">{name}</span>,
     },
     {
-      title: 'Trưởng nhóm',
-      key: 'leader',
-      render: (_, record) => (
-        <div>
-          <div className="text-white">{record.leader.name}</div>
-          <div className="text-gray-400 text-xs">{record.leader.email}</div>
-        </div>
+      title: 'Link Repository',
+      dataIndex: 'link',
+      key: 'link',
+      render: (link) => (
+        <a
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-400 hover:text-blue-300 underline"
+        >
+          Xem Repository
+        </a>
       ),
     },
     {
-      title: 'Thành viên',
-      key: 'members',
-      render: (_, record) => (
-        <div className="space-y-1">
-          {record.members.map((member) => (
-            <div key={member.id} className="flex items-center gap-2 text-xs">
-              <span className="text-gray-300">{member.name}</span>
-              {member.verified ? (
-                <Tag color="green" size="small">
-                  Đã xác thực
-                </Tag>
-              ) : (
-                <Tag color="orange" size="small">
-                  Chưa xác thực
-                </Tag>
-              )}
-            </div>
-          ))}
-        </div>
-      ),
-    },
-    {
-      title: 'Ngày gửi',
-      dataIndex: 'submittedAt',
-      key: 'submittedAt',
+      title: 'Ngày đăng ký',
+      dataIndex: 'registeredAt',
+      key: 'registeredAt',
       render: (date) => (
         <span className="text-gray-400">
           {new Date(date).toLocaleDateString('vi-VN')}
@@ -162,27 +146,49 @@ const ChapterTeamHackathonApproval = () => {
       ),
     },
     {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => {
+        const statusMap = {
+          'Pending': { color: 'orange', text: 'Chờ duyệt' },
+          'Approved': { color: 'green', text: 'Đã duyệt' },
+          'Rejected': { color: 'red', text: 'Đã từ chối' },
+        };
+        const config = statusMap[status] || { color: 'default', text: status };
+        return (
+          <Tag color={config.color}>
+            {config.text}
+          </Tag>
+        );
+      },
+    },
+    {
       title: 'Thao tác',
       key: 'actions',
       render: (_, record) => (
         <Space>
-          <Button
-            type="primary"
-            icon={<CheckCircleOutlined />}
-            onClick={() => handleApprove(record)}
-            loading={approveMutation.isPending}
-            className="bg-green-600 border-green-600"
-          >
-            Duyệt
-          </Button>
-          <Button
-            danger
-            icon={<CloseCircleOutlined />}
-            onClick={() => showRejectModal(record)}
-            loading={rejectMutation.isPending}
-          >
-            Từ chối
-          </Button>
+          {record.status === 'Pending' && (
+            <>
+              <Button
+                type="primary"
+                icon={<CheckCircleOutlined />}
+                onClick={() => handleApprove(record)}
+                loading={approveMutation.isPending}
+                className="bg-green-600 border-green-600"
+              >
+                Duyệt
+              </Button>
+              <Button
+                danger
+                icon={<CloseCircleOutlined />}
+                onClick={() => showRejectModal(record)}
+                loading={rejectMutation.isPending}
+              >
+                Từ chối
+              </Button>
+            </>
+          )}
         </Space>
       ),
     },
@@ -206,6 +212,48 @@ const ChapterTeamHackathonApproval = () => {
           Xem xét và phê duyệt các đội đăng ký tham gia hackathon
         </p>
       </div>
+
+      {/* Hackathon Selector */}
+      <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+        <div className="flex items-center gap-4">
+          <span className="text-white font-medium">Chọn Hackathon:</span>
+          <Select
+            placeholder="Chọn hackathon để xem các yêu cầu duyệt"
+            value={hackathonId || undefined}
+            onChange={(value) => {
+              const params = new URLSearchParams(searchParams);
+              if (value) {
+                params.set('hackathonId', value);
+              } else {
+                params.delete('hackathonId');
+              }
+              setSearchParams(params);
+            }}
+            className="flex-1"
+            loading={hackathonsLoading}
+            allowClear
+            showSearch
+            filterOption={(input, option) =>
+              option?.children?.toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            {hackathons.map((hackathon) => (
+              <Select.Option key={hackathon.hackathonId} value={`${hackathon.hackathonId}`}>
+                {hackathon.name}
+              </Select.Option>
+            ))}
+          </Select>
+        </div>
+        {!hackathonId && (
+          <Alert
+            message="Vui lòng chọn hackathon"
+            description="Bạn cần chọn hackathon để xem các yêu cầu duyệt team tham gia."
+            type="info"
+            showIcon
+            className="mt-3"
+          />
+        )}
+      </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -271,7 +319,7 @@ const ChapterTeamHackathonApproval = () => {
           <Table
             columns={columns}
             dataSource={filteredApprovals}
-            rowKey="id"
+            rowKey="registrationId"
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
@@ -315,6 +363,17 @@ const ChapterTeamHackathonApproval = () => {
               </p>
               <p className="text-gray-300 mb-2">
                 <strong>Hackathon:</strong> {selectedApproval.hackathonName}
+              </p>
+              <p className="text-gray-300 mb-2">
+                <strong>Repository:</strong>{' '}
+                <a
+                  href={selectedApproval.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 underline"
+                >
+                  {selectedApproval.link}
+                </a>
               </p>
             </div>
             <div>
