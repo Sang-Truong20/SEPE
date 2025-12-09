@@ -107,7 +107,7 @@ const ChapterTeamHackathonApproval = () => {
         <div className="flex items-center gap-3">
           <Avatar size="small">
             {teamName.charAt(0).toUpperCase()}
-          </Avatar>
+              </Avatar>
           <div>
             <div className="font-medium text-white">{teamName}</div>
           </div>
@@ -170,23 +170,23 @@ const ChapterTeamHackathonApproval = () => {
         <Space>
           {record.status === 'Pending' && (
             <>
-              <Button
-                type="primary"
-                icon={<CheckCircleOutlined />}
-                onClick={() => handleApprove(record)}
-                loading={approveMutation.isPending}
-                className="bg-green-600 border-green-600"
-              >
-                Duyệt
-              </Button>
-              <Button
-                danger
-                icon={<CloseCircleOutlined />}
-                onClick={() => showRejectModal(record)}
-                loading={rejectMutation.isPending}
-              >
-                Từ chối
-              </Button>
+          <Button
+            type="primary"
+            icon={<CheckCircleOutlined />}
+            onClick={() => handleApprove(record)}
+            loading={approveMutation.isPending}
+            className="bg-green-600 border-green-600"
+          >
+            Duyệt
+          </Button>
+          <Button
+            danger
+            icon={<CloseCircleOutlined />}
+            onClick={() => showRejectModal(record)}
+            loading={rejectMutation.isPending}
+          >
+            Từ chối
+          </Button>
             </>
           )}
         </Space>

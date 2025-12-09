@@ -121,6 +121,12 @@ const MentorLayout = () => {
       icon: Trophy,
       path: PATH_NAME.MENTOR_HACKATHONS,
     },
+    {
+      id: 'assignments',
+      label: 'Yêu cầu mentor',
+      icon: BookOpen,
+      path: PATH_NAME.MENTOR_ASSIGNMENTS,
+    },
   ];
 
   const handleNavigate = (path) => {

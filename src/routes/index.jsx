@@ -83,6 +83,7 @@ const MentorHackathonsPage = lazy(() => import('../pages/mentor/hackathons'));
 const MentorHackathonDetailPage = lazy(() => import('../pages/mentor/hackathon-detail'));
 const MentorNotificationsPage = lazy(() => import('../pages/mentor/notifications'));
 const MentorProfilePage = lazy(() => import('../pages/mentor/profile'));
+const MentorAssignmentsPage = lazy(() => import('../pages/mentor/assignments'));
 
 const withSuspense = (Component) => (
   <Suspense
@@ -426,6 +427,7 @@ const router = createBrowserRouter([
           },
           { path: 'notifications', element: withSuspense(MentorNotificationsPage) },
           { path: 'profile', element: withSuspense(MentorProfilePage) },
+          { path: 'assignments', element: withSuspense(MentorAssignmentsPage) },
         ],
       },
     ],

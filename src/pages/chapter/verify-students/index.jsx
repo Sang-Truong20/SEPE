@@ -402,9 +402,9 @@ const ChapterVerifyStudents = () => {
                 ) : (
                   <Image.PreviewGroup>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {selectedVerification.documents.map((doc, idx) => (
-                        <div
-                          key={idx}
+                  {selectedVerification.documents.map((doc, idx) => (
+                    <div
+                      key={idx}
                           className="p-3 bg-white/5 rounded border border-white/10 flex items-center gap-3"
                         >
                           <div className="w-20 h-14 overflow-hidden rounded border border-white/10 bg-black/20 flex items-center justify-center">
@@ -423,19 +423,19 @@ const ChapterVerifyStudents = () => {
                               <FileTextOutlined className="text-emerald-400" />
                               <span className="text-white text-sm truncate">{doc.name}</span>
                               <Tag>{doc.type?.toUpperCase()}</Tag>
-                            </div>
+                      </div>
                             <a
                               href={doc.url}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-emerald-400 text-xs hover:text-emerald-300 underline"
-                            >
+                      >
                               Mở ảnh
                             </a>
                           </div>
-                        </div>
-                      ))}
                     </div>
+                  ))}
+                </div>
                   </Image.PreviewGroup>
                 )}
               </div>

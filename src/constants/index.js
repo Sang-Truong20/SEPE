@@ -53,6 +53,7 @@ const PATH_NAME = {
   MENTOR_RESOURCES: '/mentor/resources',
   MENTOR_NOTIFICATIONS: '/mentor/notifications',
   MENTOR_PROFILE: '/mentor/profile',
+  MENTOR_ASSIGNMENTS: '/mentor/assignments',
 }
 
 const GROUP = {
