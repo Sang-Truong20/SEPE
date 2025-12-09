@@ -12,6 +12,7 @@ const Hackathons = () => {
   const { fetchHackathons, deleteHackathon } = useHackathons();
   const { data: hackathonData = [], isLoading, error } = fetchHackathons;
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ open: false, hackathonId: null });
 
   // Model cho bảng
   const tableModel = useMemo(() => ({
@@ -32,17 +33,18 @@ const Hackathons = () => {
       },
       {
         title: 'Mùa',
-        dataIndex: 'season',
-        key: 'season',
+        dataIndex: 'seasonName',
+        key: 'seasonName',
         type: 'tag',
         tagColor: 'gold',
         transform: (val) => val?.toUpperCase()
       },
       {
-        title: 'Chủ đề',
-        dataIndex: 'theme',
-        key: 'theme',
+        title: 'Mô tả',
+        dataIndex: 'description',
+        key: 'description',
         type: 'text',
+        ellipsis: true,
         className: 'text-gray-300'
       },
       {
@@ -50,14 +52,14 @@ const Hackathons = () => {
         dataIndex: 'startDate',
         key: 'startDate',
         type: 'datetime',
-        format: 'DD/MM/YYYY HH:mm'
+        format: 'DD/MM/YYYY'
       },
       {
         title: 'Ngày kết thúc',
         dataIndex: 'endDate',
         key: 'endDate',
         type: 'datetime',
-        format: 'DD/MM/YYYY HH:mm'
+        format: 'DD/MM/YYYY'
       },
       {
         title: 'Quản lý',
@@ -70,15 +72,22 @@ const Hackathons = () => {
               className="text-xs bg-blue-600/30 text-blue-300 border-blue-600/50 hover:bg-blue-600/50"
               onClick={() => navigate(`${PATH_NAME.ADMIN_HACKATHON_PHASES}?hackathonId=${record.hackathonId}`)}
             >
-              Phases
+              Giai đoạn
             </Button>
             <Button
               size="small"
               className="text-xs bg-yellow-600/30 text-yellow-300 border-yellow-600/50 hover:bg-yellow-600/50"
               onClick={() => navigate(`${PATH_NAME.ADMIN_PRIZES}?hackathonId=${record.hackathonId}`)}
             >
-              Prizes
+              Giải thưởng
             </Button>
+            {/*<Button*/}
+            {/*  size="small"*/}
+            {/*  className="text-xs bg-purple-600/30 text-purple-300 border-purple-600/50 hover:bg-purple-600/50"*/}
+            {/*  onClick={() => navigate(`${PATH_NAME.ADMIN_GROUPS}?hackathonId=${record.hackathonId}`)}*/}
+            {/*>*/}
+            {/*  Bảng đấu*/}
+            {/*</Button>*/}
           </div>
         )
       }
@@ -91,21 +100,22 @@ const Hackathons = () => {
   }), [navigate]);
 
   const handleDeleteConfirm = (id) => {
-    Modal.confirm({
-      title: 'Xác nhận xóa',
-      icon: <ExclamationCircleOutlined />,
-      content: 'Bạn có chắc chắn muốn xóa hackathon này không?',
-      okText: 'Xóa',
-      okType: 'danger',
-      cancelText: 'Hủy',
-      centered: true,
-      onOk: () => {
-        setDeletingId(id);
-        deleteHackathon.mutate(id, {
-          onSettled: () => setDeletingId(null)
-        });
+    setConfirmModal({ open: true, hackathonId: id });
+  };
+
+  const handleConfirmOk = () => {
+    const { hackathonId } = confirmModal;
+    setDeletingId(hackathonId);
+    deleteHackathon.mutate(hackathonId, {
+      onSettled: () => {
+        setDeletingId(null);
+        setConfirmModal({ open: false, hackathonId: null });
       }
     });
+  };
+
+  const handleConfirmCancel = () => {
+    setConfirmModal({ open: false, hackathonId: null });
   };
 
   const handlers = {
@@ -115,13 +125,7 @@ const Hackathons = () => {
     isDeleting: (record) => deletingId === record.hackathonId
   };
 
-  if (error) {
-    return (
-      <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md text-red-400">
-        Lỗi tải dữ liệu Hackathons.
-      </div>
-    );
-  }
+
 
   return (
     <ConfigProvider
@@ -148,6 +152,21 @@ const Hackathons = () => {
           dateFormatter={(value, fmt) => value ? dayjs(value).format(fmt) : '--'}
         />
       </div>
+      <Modal
+        title="Xác nhận xóa"
+        open={confirmModal.open}
+        onOk={handleConfirmOk}
+        onCancel={handleConfirmCancel}
+        okText="Xóa"
+        okButtonProps={{ danger: true }}
+        cancelText="Hủy"
+        centered
+      >
+        <div className="flex items-start gap-3">
+          <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
+          <span>Bạn có chắc chắn muốn xóa hackathon này không?</span>
+        </div>
+      </Modal>
     </ConfigProvider>
   );
 };

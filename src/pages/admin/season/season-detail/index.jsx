@@ -11,10 +11,10 @@ const SeasonDetail = () => {
     const { data: season, isLoading, error } = fetchSeason(id);
 
     const model = {
-        modelName: 'Seasons',
+        modelName: 'Mùa',
         fields: [
-            { key: 'Tên Season', type: 'input', name: 'name' },
-            { key: 'Mã Season', type: 'input', name: 'seasonCode' },
+            { key: 'Tên mùa', type: 'input', name: 'name' },
+            { key: 'Mã', type: 'input', name: 'seasonCode' },
             {
                 type: 'column',
                 items: [
@@ -29,13 +29,7 @@ const SeasonDetail = () => {
         ]
     };
 
-    if (error) {
-        return (
-            <div className="min-h-screen flex items-center justify-center text-red-400">
-                Lỗi tải dữ liệu.
-            </div>
-        );
-    }
+
 
     if (isLoading) {
         return (

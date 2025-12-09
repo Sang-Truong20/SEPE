@@ -31,7 +31,7 @@ const items = [
     <TrophyOutlined />,
   ),
   getItem(
-    <Link to={PATH_NAME.PARTNER_TEAM_SCORES}>Điểm nhóm</Link>,
+    <Link to={`${PATH_NAME.PARTNER_TEAM_SCORES}/hackathon`}>Điểm nhóm</Link>,
     PATH_NAME.PARTNER_TEAM_SCORES,
     <TeamOutlined />,
   ),
@@ -130,7 +130,11 @@ const PartnerLayout = () => {
 
         <div className="demo-logo-vertical p-4">
           <div className="flex items-center space-x-3">
-            <Avatar size="large" icon={<TrophyOutlined />} />
+            <Avatar
+              size="large"
+              src={userInfo?.partnerProfile?.logoUrl}
+              icon={<TrophyOutlined />}
+            />
             {!collapsed && (
               <div>
                 <div className="text-white font-semibold">Partner Panel</div>

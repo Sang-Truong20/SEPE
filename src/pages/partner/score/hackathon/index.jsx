@@ -1,0 +1,111 @@
+import { useNavigate } from 'react-router-dom';
+import { useState, useMemo } from 'react';
+import { ConfigProvider, theme, Modal, Button } from 'antd';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
+import { PATH_NAME } from '../../../../constants';
+import { useHackathons } from '../../../../hooks/admin/hackathons/useHackathons';
+import EntityTable from '../../../../components/ui/EntityTable.jsx';
+
+const Hackathons = () => {
+  const navigate = useNavigate();
+  const { fetchHackathons, deleteHackathon } = useHackathons();
+  const { data: hackathonData = [], isLoading, error } = fetchHackathons;
+  const [deletingId, setDeletingId] = useState(null);
+
+  // Model cho bảng
+  const tableModel = useMemo(
+    () => ({
+      entityName: 'Hackathon',
+      rowKey: 'hackathonId',
+      columns: [
+        {
+          title: 'Tên',
+          dataIndex: 'name',
+          key: 'name',
+          type: 'text',
+          className: 'font-medium text-white'
+        },
+        {
+          title: 'Mùa',
+          dataIndex: 'seasonName',
+          key: 'seasonName',
+          type: 'tag',
+          tagColor: 'gold',
+          transform: (val) => val?.toUpperCase()
+        },
+        {
+          title: 'Mô tả',
+          dataIndex: 'description',
+          key: 'description',
+          type: 'text',
+          ellipsis: true,
+          className: 'text-gray-300'
+        },
+        {
+          title: 'Ngày bắt đầu',
+          dataIndex: 'startDate',
+          key: 'startDate',
+          type: 'datetime',
+          format: 'DD/MM/YYYY'
+        },
+        {
+          title: 'Ngày kết thúc',
+          dataIndex: 'endDate',
+          key: 'endDate',
+          type: 'datetime',
+          format: 'DD/MM/YYYY'
+        },
+        {
+          title: 'Quản lý',
+          key: 'management',
+          type: 'custom',
+          render: (value, record) => (
+            <div className="flex gap-2">
+              <Button
+                size="small"
+                className="text-xs bg-blue-600/30 text-blue-300 border-blue-600/50 hover:bg-blue-600/50"
+                onClick={() => navigate(`${PATH_NAME.PARTNER_TEAM_SCORES}?hackathonId=${record.hackathonId}`)}
+              >
+                Xem thứ hạng
+              </Button>
+            </div>
+          ),
+        },
+      ],
+    }),
+    [navigate],
+  );
+
+
+  return (
+    <ConfigProvider
+      theme={{
+        algorithm: theme.darkAlgorithm,
+        token: {
+          colorBgContainer: '#111111',
+          colorBorder: '#2f2f2f',
+          colorText: '#ffffff',
+          colorTextPlaceholder: '#9ca3af',
+          colorPrimary: '#10b981',
+          borderRadius: 6,
+        },
+      }}
+    >
+      <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
+        <EntityTable
+          model={tableModel}
+          data={hackathonData}
+          loading={isLoading}
+          emptyText="Không có dữ liệu"
+          // optional override format sử dụng dayjs toàn cục
+          dateFormatter={(value, fmt) =>
+            value ? dayjs(value).format(fmt) : '--'
+          }
+        />
+      </div>
+    </ConfigProvider>
+  );
+};
+
+export default Hackathons;

@@ -11,6 +11,7 @@ const Users = () => {
     const { fetchUsers, toggleBlockUser } = useUsers();
     const { data: usersData = [], isLoading, error } = fetchUsers;
     const [blockingId, setBlockingId] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ open: false, userId: null, isBlocked: false });
 
     // Model cho bảng users
     const tableModel = useMemo(() => ({
@@ -87,36 +88,28 @@ const Users = () => {
     }), [blockingId]);
 
     const handleToggleBlock = (id, isBlocked) => {
-        Modal.confirm({
-            title: isBlocked ? 'Xác nhận khóa tài khoản' : 'Xác nhận mở khóa tài khoản',
-            icon: <ExclamationCircleOutlined />,
-            content: isBlocked
-                ? 'Bạn có chắc chắn muốn khóa tài khoản người dùng này không?'
-                : 'Bạn có chắc chắn muốn mở khóa tài khoản người dùng này không?',
-            okText: isBlocked ? 'Khóa' : 'Mở khóa',
-            okType: isBlocked ? 'danger' : 'primary',
-            cancelText: 'Hủy',
-            centered: true,
-            onOk: () => {
-                setBlockingId(id);
-                toggleBlockUser.mutate({ id, isBlocked }, {
-                    onSettled: () => setBlockingId(null)
-                });
+        setConfirmModal({ open: true, userId: id, isBlocked });
+    };
+
+    const handleConfirmOk = () => {
+        const { userId, isBlocked } = confirmModal;
+        setBlockingId(userId);
+        toggleBlockUser.mutate({ id: userId, isBlocked }, {
+            onSettled: () => {
+                setBlockingId(null);
+                setConfirmModal({ open: false, userId: null, isBlocked: false });
             }
         });
+    };
+
+    const handleConfirmCancel = () => {
+        setConfirmModal({ open: false, userId: null, isBlocked: false });
     };
 
     const handlers = {
         onEdit: (record) => navigate(`/admin/users/edit/${record.userId}`),
     };
 
-    if (error) {
-        return (
-            <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md text-red-400">
-                Lỗi tải dữ liệu Users.
-            </div>
-        );
-    }
 
     return (
         <ConfigProvider
@@ -142,6 +135,25 @@ const Users = () => {
                     dateFormatter={(value, fmt) => value ? dayjs(value).format(fmt) : '--'}
                 />
             </div>
+            <Modal
+                title={confirmModal.isBlocked ? 'Xác nhận khóa tài khoản' : 'Xác nhận mở khóa tài khoản'}
+                open={confirmModal.open}
+                onOk={handleConfirmOk}
+                onCancel={handleConfirmCancel}
+                okText={confirmModal.isBlocked ? 'Khóa' : 'Mở khóa'}
+                okButtonProps={{ danger: confirmModal.isBlocked }}
+                cancelText="Hủy"
+                centered
+            >
+                <div className="flex items-start gap-3">
+                    <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
+                    <span>
+                        {confirmModal.isBlocked
+                            ? 'Bạn có chắc chắn muốn khóa tài khoản người dùng này không?'
+                            : 'Bạn có chắc chắn muốn mở khóa tài khoản người dùng này không?'}
+                    </span>
+                </div>
+            </Modal>
         </ConfigProvider>
     );
 };

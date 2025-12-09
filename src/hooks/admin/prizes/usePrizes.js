@@ -2,6 +2,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
 
+/**
+ * API: GET /api/Prize/hackathon/{hackathonId}
+ * method: GET
+ * path: /api/Prize/hackathon/{hackathonId}
+ * request: path param hackathonId: integer (required)
+ * response: 200 OK -> list of Prize objects
+ *   - Prize properties (inferred from CreatePrizeDTO):
+ *       - prizeId?: integer
+ *       - prizeName: string | null
+ *       - prizeType: string | null
+ *       - rank: integer | null
+ *       - reward: string | null
+ *       - hackathonId: integer
+ * describe: Get prizes for a hackathon
+ * example: GET /api/Prize/hackathon/5
+ */
 export const prizeQueryKeys = {
     all: ['Prizes'],
     lists: () => [...prizeQueryKeys.all, 'list'],
@@ -23,6 +39,26 @@ export const usePrizes = () => {
         enabled: !!hackathonId,
     });
 
+    /**
+     * API: POST /api/Prize
+     * method: POST
+     * path: /api/Prize
+     * request body: CreatePrizeDTO (OpenAPI component)
+     *   - prizeName: string | null
+     *   - prizeType: string | null
+     *   - rank: integer | null
+     *   - reward: string | null
+     *   - hackathonId: integer
+     * response: 200 OK -> created Prize
+     * example payload:
+     * {
+     *   "prizeName": "First Prize",
+     *   "prizeType": "cash",
+     *   "rank": 1,
+     *   "reward": "1000$",
+     *   "hackathonId": 3
+     * }
+     */
     // Create prize
     const createPrize = useMutation({
         mutationFn: (payload) => axiosClient.post('/Prize', payload),
@@ -38,6 +74,18 @@ export const usePrizes = () => {
         },
     });
 
+    /**
+     * API: PUT /api/Prize
+     * method: PUT
+     * path: /api/Prize
+     * request body: UpdatePrizeDTO (OpenAPI component)
+     *   - prizeId: integer
+     *   - prizeName: string | null
+     *   - prizeType: string | null
+     *   - rank: integer | null
+     *   - reward: string | null
+     * response: 200 OK -> updated Prize
+     */
     // Update prize
     const updatePrize = useMutation({
         mutationFn: (payload) => axiosClient.put('/Prize', payload),
@@ -51,6 +99,14 @@ export const usePrizes = () => {
         },
     });
 
+    /**
+     * API: DELETE /api/Prize/{prizeId}
+     * method: DELETE
+     * path: /api/Prize/{prizeId}
+     * request: path param prizeId: integer
+     * response: 200 OK
+     * describe: Delete a prize by id
+     */
     // Delete prize
     const deletePrize = useMutation({
         mutationFn: (id) => axiosClient.delete(`/Prize/${id}`),

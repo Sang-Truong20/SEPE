@@ -2,6 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import axiosClient from '../../../configs/axiosClient';
 
+/**
+ * API: Track endpoints
+ * OpenAPI components:
+ *  - CreateTrackDto: { name?: string, description?: string, phaseId: integer }
+ *  - UpdateTrackDto: { name?: string, description?: string, phaseId: integer }
+ *  - RandomChallengeTrackRequest: { trackId: integer, challengeIds?: integer[], quantity: integer }
+ */
 // -------------------------------------------------------------------
 // Query Keys cho Track
 // -------------------------------------------------------------------
@@ -20,6 +27,13 @@ export const useTracks = () => {
   const queryClient = useQueryClient();
 
   // 1. Lấy danh sách tất cả tracks
+  /**
+   * API: GET /api/Track
+   * method: GET
+   * path: /api/Track
+   * request: none
+   * response: 200 OK -> array of Track objects
+   */
   const fetchTracks = useQuery({
     queryKey: trackQueryKeys.list(),
     queryFn: async () => {
@@ -28,6 +42,13 @@ export const useTracks = () => {
     },
   });
 
+  /**
+   * API: GET /api/Track/{id}
+   * method: GET
+   * path: /api/Track/{id}
+   * request: path param id: integer
+   * response: 200 OK -> Track object
+   */
   // 2. Lấy chi tiết một track theo id
   const fetchTrackById = (id) =>
     useQuery({
@@ -39,6 +60,16 @@ export const useTracks = () => {
       enabled: !!id,
     });
 
+  /**
+   * API: POST /api/Track
+   * method: POST
+   * path: /api/Track
+   * request body: CreateTrackDto
+   *   - name: string | null
+   *   - description: string | null
+   *   - phaseId: integer
+   * response: 200 OK -> created Track
+   */
   // 3. Tạo track mới
   const createTrack = useMutation({
     mutationFn: (payload) => axiosClient.post('/Track', payload),
@@ -52,6 +83,16 @@ export const useTracks = () => {
     },
   });
 
+  /**
+   * API: PUT /api/Track/{id}
+   * method: PUT
+   * path: /api/Track/{id}
+   * request body: UpdateTrackDto
+   *   - name: string | null
+   *   - description: string | null
+   *   - phaseId: integer
+   * response: 200 OK -> updated Track
+   */
   // 4. Cập nhật track
   const updateTrack = useMutation({
     mutationFn: ({ id, payload }) => axiosClient.put(`/Track/${id}`, payload),
@@ -68,6 +109,13 @@ export const useTracks = () => {
     },
   });
 
+  /**
+   * API: DELETE /api/Track/{id}
+   * method: DELETE
+   * path: /api/Track/{id}
+   * request: path param id: integer
+   * response: 200 OK
+   */
   // 5. Xóa track
   const deleteTrack = useMutation({
     mutationFn: (id) => axiosClient.delete(`/Track/${id}`),
@@ -81,6 +129,16 @@ export const useTracks = () => {
     },
   });
 
+  /**
+   * API: POST /api/Track/assign-random-challenge
+   * method: POST
+   * path: /api/Track/assign-random-challenge
+   * request body: RandomChallengeTrackRequest
+   *   - trackId: integer
+   *   - challengeIds?: integer[]
+   *   - quantity: integer
+   * response: 200 OK
+   */
   // 6. Gán challenge ngẫu nhiên cho track
   const assignRandomChallenge = useMutation({
     mutationFn: (payload) =>
@@ -93,6 +151,15 @@ export const useTracks = () => {
     },
   });
 
+  /**
+   * API: POST /api/TeamTrack/select
+   * method: POST
+   * path: /api/TeamTrack/select
+   * request body: TeamSelectTrackRequest
+   *   - teamId: integer
+   *   - trackId: integer
+   * response: 200 OK
+   */
   // 7. Team chọn track (TeamTrack/select)
   const selectTrackForTeam = useMutation({
     mutationFn: (payload) => axiosClient.post('/TeamTrack/select', payload),

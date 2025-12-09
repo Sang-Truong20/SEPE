@@ -15,8 +15,8 @@ const HackathonDetail = () => {
     modelName: 'Hackathons',
     fields: [
       { key: 'Tên Hackathon', type: 'input', name: 'name' },
-      { key: 'Season', type: 'input', name: 'season' },
-      { key: 'Theme', type: 'input', name: 'theme' },
+      { key: 'Mùa', type: 'input', name: 'season' },
+      { key: 'Mô tả', type: 'textarea', name: 'description' },
       {
         type: 'column',
         items: [
@@ -57,13 +57,6 @@ const HackathonDetail = () => {
     endDate: (val) => <span className="text-gray-300">{val ? dayjs(val).format('DD/MM/YYYY') : '--'}</span>
   };
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-400">
-        Lỗi tải dữ liệu.
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (
@@ -95,6 +88,7 @@ const HackathonDetail = () => {
         onBack={() => navigate(PATH_NAME.ADMIN_HACKATHONS)}
         onEdit={(rec) => navigate(`${PATH_NAME.ADMIN_HACKATHONS}/edit/${rec.hackathonId}`)}
         showEdit
+        dateFormatMap={'DD/MM/YYYY'}
         valueRenders={valueRenders}
       />
     </ConfigProvider>

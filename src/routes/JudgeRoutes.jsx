@@ -6,9 +6,7 @@ import { useUserData } from '../hooks/useUserData';
 const JudgeRoutes = () => {
   const { isLoading, userInfo } = useUserData();
 
-  // Giả lập: role 2 = Judge
-  // const isJudge = userInfo && userInfo.role === 2;
-  const isJudge = true;
+  const isJudge = userInfo && userInfo.roleName?.toLowerCase() === "judge";
 
   if (isLoading) {
     return (
@@ -23,7 +21,7 @@ const JudgeRoutes = () => {
       <Outlet />
     </JudgeLayout>
   ) : (
-    <Navigate to="/login" replace />
+    <Navigate to="/" replace />
   );
 };
 

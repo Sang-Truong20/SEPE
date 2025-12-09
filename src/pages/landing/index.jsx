@@ -551,7 +551,9 @@ const SEALLandingPage = () => {
                   của chúng tôi
                 </p>
               </div> */}
-                <Login/>
+                <div className="flex justify-center w-full">
+                  <Login/>
+                </div>
 
 
               {/* Lợi ích */}

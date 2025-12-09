@@ -17,6 +17,7 @@ const HackathonPhases = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const hackathonId = searchParams.get('hackathonId');
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ open: false, phaseId: null });
 
   const { fetchHackathons } = useHackathons();
   const { data: hackathons = [], isLoading: hackathonsLoading } =
@@ -24,10 +25,14 @@ const HackathonPhases = () => {
 
   const { fetchHackathonPhases, deleteHackathonPhase } = useHackathonPhases();
   const {
-    data: phasesData = [],
+    data: phasesDataRaw = [],
     isLoading,
     error,
   } = fetchHackathonPhases(hackathonId);
+
+  const phasesData = phasesDataRaw.sort(
+    (a, b) => new Date(a.endDate) - new Date(b.endDate)
+  );
 
   const selectedHackathon = hackathons.find(
     (h) => h.hackathonId === parseInt(hackathonId),
@@ -41,17 +46,17 @@ const HackathonPhases = () => {
       createButton:
         hackathonId && phasesData.length < 2
           ? {
-              label: 'Tạo mới Phase',
+              label: 'Tạo mới phần thi',
               action: () =>
                 navigate(
-                  `/admin/hackathons/hackathon-phases/create?hackathonId=${hackathonId}`,
+                  `/admin/hackathons/hackathon-phases/create?hackathonId=${hackathonId}&existingPhaseId=${phasesData[0]?.phaseId}`,
                 ),
               icon: true,
             }
           : null,
       columns: [
         {
-          title: 'Tên Phase',
+          title: 'Tên',
           dataIndex: 'phaseName',
           key: 'phaseName',
           type: 'text',
@@ -84,28 +89,33 @@ const HackathonPhases = () => {
   );
 
   const handleDeleteConfirm = (id) => {
-    Modal.confirm({
-      title: 'Xác nhận xóa',
-      icon: <ExclamationCircleOutlined />,
-      content: 'Bạn có chắc chắn muốn xóa phase này không?',
-      okText: 'Xóa',
-      okType: 'danger',
-      cancelText: 'Hủy',
-      centered: true,
-      onOk: () => {
-        setDeletingId(id);
-        deleteHackathonPhase.mutate(id, {
-          onSettled: () => setDeletingId(null),
-        });
+    setConfirmModal({ open: true, phaseId: id });
+  };
+
+  const handleConfirmOk = () => {
+    const { phaseId } = confirmModal;
+    setDeletingId(phaseId);
+    deleteHackathonPhase.mutate(phaseId, {
+      onSettled: () => {
+        setDeletingId(null);
+        setConfirmModal({ open: false, phaseId: null });
       },
     });
   };
 
+  const handleConfirmCancel = () => {
+    setConfirmModal({ open: false, phaseId: null });
+  };
+
   const handlers = {
-    onView: (record) =>
+    onView: ({ phaseId }) => {
+      const lastPhaseId = phasesData.at(-1)?.phaseId
+      const isLastPhase = phasesData.length > 1 && phaseId === lastPhaseId
+
       navigate(
-        `/admin/hackathons/hackathon-phases/${record.phaseId}?hackathonId=${hackathonId}`,
-      ),
+        `/admin/hackathons/hackathon-phases/${phaseId}?hackathonId=${hackathonId}&isLastPhase=${isLastPhase}`
+      )
+    },
     onEdit: (record) =>
       navigate(
         `/admin/hackathons/hackathon-phases/edit/${record.phaseId}?hackathonId=${hackathonId}`,
@@ -118,13 +128,7 @@ const HackathonPhases = () => {
     setSearchParams({ hackathonId: newHackathonId });
   };
 
-  if (error) {
-    return (
-      <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md text-red-400">
-        Lỗi tải dữ liệu Hackathon Phases.
-      </div>
-    );
-  }
+
 
   return (
     <ConfigProvider
@@ -156,7 +160,7 @@ const HackathonPhases = () => {
               Chọn Hackathon
             </label>
             <Select
-              placeholder="Chọn hackathon để xem phases"
+              placeholder="Chọn hackathon để xem giai đoạn"
               value={hackathonId}
               onChange={handleHackathonChange}
               loading={hackathonsLoading}
@@ -231,11 +235,26 @@ const HackathonPhases = () => {
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-400">
-              Vui lòng chọn một hackathon để xem các phases
+              Vui lòng chọn một hackathon để xem các giai đoạn
             </p>
           </div>
         )}
       </div>
+      <Modal
+        title="Xác nhận xóa"
+        open={confirmModal.open}
+        onOk={handleConfirmOk}
+        onCancel={handleConfirmCancel}
+        okText="Xóa"
+        okButtonProps={{ danger: true }}
+        cancelText="Hủy"
+        centered
+      >
+        <div className="flex items-start gap-3">
+          <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
+          <span>Bạn có chắc chắn muốn xóa giai đoạn này không?</span>
+        </div>
+      </Modal>
     </ConfigProvider>
   );
 };

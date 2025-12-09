@@ -15,7 +15,7 @@ function getItem(label, key, icon) {
 // === MENU CHỈ CÓ 1 CHỨC NĂNG: ĐIỂM NHÓM ===
 const items = [
   getItem(
-    <Link to={PATH_NAME.JUDGE_TEAM_SCORES}>Điểm nhóm</Link>,
+    <Link to={`${PATH_NAME.JUDGE_TEAM_SCORES}/hackathon`}>Điểm nhóm</Link>,
     PATH_NAME.JUDGE_TEAM_SCORES,
     <TeamOutlined />,
   ),

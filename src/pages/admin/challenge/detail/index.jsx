@@ -4,14 +4,33 @@ import { PATH_NAME } from '../../../../constants/index.js';
 import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
 import { DownloadOutlined, FileOutlined } from '@ant-design/icons';
 import { useChallenges } from '../../../../hooks/admin/challanges/useChallenges.js';
+import { useMemo } from 'react';
+import { useUsers } from '../../../../hooks/admin/users/useUsers.js';
+import { useHackathons } from '../../../../hooks/admin/hackathons/useHackathons.js';
 
 const ChallengeDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { fetchChallenge } = useChallenges();
+  const { fetchUsers,  } = useUsers();
+  const { fetchHackathons  } = useHackathons();
   const { data: challenge, isLoading, error } = fetchChallenge(id);
+  const { data: userData = [] } = fetchUsers;
+  const { data: hackData = [] } = fetchHackathons;
 
   const safe = (val, fallback = 'N/A') => val ?? fallback;
+
+  const modelData = useMemo(() => {
+    if (!challenge) return null;
+      const user = userData.find((u) => u.userId === challenge.userId);
+      const hackathon = hackData.find((h) => h.hackathonId === challenge.hackathonId);
+
+      return {
+        ...challenge,
+        user: user || { fullName: 'Ẩn danh' },        // fallback nếu không tìm thấy
+        hackathon: hackathon || { name: 'N/A' },      // fallback nếu không tìm thấy
+      };
+  }, [challenge, userData, hackData]);
 
   // Xác định loại file để preview
   const getPreviewUrl = (filePath) => {
@@ -46,7 +65,7 @@ const ChallengeDetail = () => {
           const previewUrl = getPreviewUrl(filePath);
 
           return (
-            <div className="space-y-3">
+            <div className="space-y-3 w-full">
               <Space>
                 <FileOutlined className="text-emerald-400" />
                 <a
@@ -85,16 +104,26 @@ const ChallengeDetail = () => {
 
       {
         key: 'Trạng thái',
-        type: 'tag',
+        type: 'status',
         name: 'status',
-        tagColor: (v) => (v === 'Complete' ? 'success' : 'processing'),
+        statusMap: {
+          Complete: { text: 'Hoàn thành', color: 'success' },
+          Pending: { text: 'Chờ xử lý', color: 'warning' },
+          Cancel: { text: 'Đã hủy', color: 'error' },
+        }
       },
 
       // === CHỈ 2 CỘT CHO MÙA & NGƯỜI TẠO ===
       {
+        key: 'Hackathon',
+        type: 'input',
+        name: ['hackathon', 'name'],
+        transform: (v) => (v ? v : 'Ẩn danh'),
+      },
+      {
         key: 'Người tạo',
         type: 'input',
-        name: 'userName',
+        name: ['user', 'fullName'],
         transform: (v) => (v ? v : 'Ẩn danh'),
       },
       {
@@ -106,13 +135,7 @@ const ChallengeDetail = () => {
     ],
   };
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-400">
-        Lỗi tải dữ liệu thử thách.
-      </div>
-    );
-  }
+
 
   if (isLoading) {
     return (
@@ -140,7 +163,7 @@ const ChallengeDetail = () => {
       <EntityDetail
         entityName="Thử thách"
         model={model}
-        data={challenge || {}}
+        data={modelData || {}}
         onBack={() =>
           navigate(PATH_NAME.ADMIN_CHALLENGES || '/admin/challenges')
         }

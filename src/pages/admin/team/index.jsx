@@ -11,6 +11,7 @@ const Teams = () => {
     const { fetchTeams, deleteTeam } = useTeams(); // Đổi hook
     const { data: teamsData = [], isLoading, error } = fetchTeams;
     const [deletingId, setDeletingId] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ open: false, teamId: null });
 
     // Model cho bảng Teams
     const tableModel = useMemo(() => ({
@@ -25,19 +26,27 @@ const Teams = () => {
                 className: 'font-medium text-white'
             },
             {
+              title: 'Hackathon',
+              dataIndex: 'hackathonName',
+              key: 'hackathon',
+              type: 'tag',
+              tagColor: 'blue',
+              transform: (val) => `${val}`
+            },
+            {
                 title: 'Chương',
-                dataIndex: 'chapterId',
+                dataIndex: 'chapterName',
                 key: 'chapterId',
                 type: 'tag',
                 tagColor: 'blue',
-                transform: (val) => `Chương ${val}`
+                transform: (val) => `${val}`
             },
             {
-                title: 'Leader ID',
-                dataIndex: 'leaderId',
+                title: 'Leader',
+                dataIndex: 'teamLeaderName',
                 key: 'leaderId',
-                type: 'text',
-                transform: (val) => `User #${val}`
+                type: 'tag',
+                tagColor: 'green',
             },
             {
                 title: 'Ngày tạo',
@@ -55,21 +64,21 @@ const Teams = () => {
     }), [navigate]);
 
     const handleDeleteConfirm = (id) => {
-        Modal.confirm({
-            title: 'Xác nhận xóa',
-            icon: <ExclamationCircleOutlined />,
-            content: 'Bạn có chắc chắn muốn xóa đội này không?',
-            okText: 'Xóa',
-            okType: 'danger',
-            cancelText: 'Hủy',
-            centered: true,
-            onOk: () => {
-                setDeletingId(id);
-                deleteTeam.mutate(id, {
-                    onSettled: () => setDeletingId(null)
-                });
+        setConfirmModal({ open: true, teamId: id });
+    };
+
+    const handleConfirmOk = () => {
+        setDeletingId(confirmModal.teamId);
+        deleteTeam.mutate(confirmModal.teamId, {
+            onSettled: () => {
+                setDeletingId(null);
+                setConfirmModal({ open: false, teamId: null });
             }
         });
+    };
+
+    const handleConfirmCancel = () => {
+        setConfirmModal({ open: false, teamId: null });
     };
 
     const handlers = {
@@ -79,13 +88,6 @@ const Teams = () => {
         isDeleting: (record) => deletingId === record.teamId
     };
 
-    if (error) {
-        return (
-            <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md text-red-400">
-                Lỗi tải dữ liệu Teams.
-            </div>
-        );
-    }
 
     return (
         <ConfigProvider
@@ -111,6 +113,21 @@ const Teams = () => {
                     dateFormatter={(value, fmt) => value ? dayjs(value).format(fmt) : '--'}
                 />
             </div>
+            <Modal
+                title="Xác nhận xóa"
+                open={confirmModal.open}
+                onOk={handleConfirmOk}
+                onCancel={handleConfirmCancel}
+                okText="Xóa"
+                okButtonProps={{ danger: true }}
+                cancelText="Hủy"
+                centered
+            >
+                <div className="flex items-start gap-3">
+                    <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
+                    <span>Bạn có chắc chắn muốn xóa đội này không?</span>
+                </div>
+            </Modal>
         </ConfigProvider>
     );
 };

@@ -3,6 +3,7 @@ import AntdProvider from './components/layouts/AntdProvider';
 import { ReactQueryClientProvider } from './providers/react-query-provider';
 import router from './routes';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { LoadingProvider } from './context/LoadingContext.jsx';
 
 function App() {
   // if ('serviceWorker' in navigator) {
@@ -21,9 +22,11 @@ function App() {
   return (
     <ReactQueryClientProvider>
       <AntdProvider>
-        <GoogleOAuthProvider clientId={import.meta.env.VITE_CLIENT_ID}>
-          <RouterProvider router={router} />
-        </GoogleOAuthProvider>
+        <LoadingProvider>
+          <GoogleOAuthProvider clientId={import.meta.env.VITE_CLIENT_ID}>
+            <RouterProvider router={router} />
+          </GoogleOAuthProvider>
+        </LoadingProvider>
       </AntdProvider>
     </ReactQueryClientProvider>
   );

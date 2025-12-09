@@ -26,6 +26,7 @@ import TrackForm from '../pages/admin/track/form/index.jsx';
 import TrackDetail from '../pages/admin/track/detail/index.jsx';
 import CriterionForm from '../pages/admin/criteria/form/index.jsx';
 import CriterionDetail from '../pages/admin/criteria/detail/index.jsx';
+import GroupDetail from '../pages/admin/group/group-detail/index.jsx';
 
 const LandingPage = lazy(() => import('../pages/landing'));
 const MemberPage = lazy(() => import('../pages/member'));
@@ -35,15 +36,30 @@ const HackathonPhases = lazy(() => import('../pages/admin/hackathon-phase'));
 const Challenges = lazy(() => import('../pages/admin/challenge/index.jsx'));
 const Prizes = lazy(() => import('../pages/admin/prizes'));
 const Seasons = lazy(() => import('../pages/admin/season'));
+const Appeals = lazy(() => import('../pages/admin/appeal'));
+const Groups = lazy(() => import('../pages/admin/group'));
 const Users = lazy(() => import('../pages/admin/users'));
 const Teams = lazy(() => import('../pages/admin/team/index.jsx'));
 
 const PChallenges = lazy(() => import('../pages/partner/challenge/index.jsx'));
 const PHackathons = lazy(() => import('../pages/partner/hackathon'));
+const PHackathonPhases = lazy(() => import('../pages/partner/hackathon-phase'));
 import PHackathonDetail from '../pages/partner/hackathon/detail/index.jsx';
+import PHackathonPhaseDetail from '../pages/partner/hackathon-phase/hackathon-phase-detail';
 import PChallengeDetail from '../pages/partner/challenge/detail/index.jsx';
 import PChallengeForm from '../pages/partner/challenge/form/index.jsx';
+const PSHackathons = lazy(() => import('../pages/partner/score/hackathon'));
+const PSHackathonPhases = lazy(() => import('../pages/partner/score/hackathon-phase'));
+const PScore = lazy(() => import('../pages/partner/score'));
+import PScoreDetail from '../pages/partner/score/detail/index.jsx';
+
 import JudgeRoutes from './JudgeRoutes.jsx';
+const JHackathons = lazy(() => import('../pages/judge/hackathon'));
+const JHackathonPhases = lazy(() => import('../pages/judge/hackathon-phase'));
+import JHackathonPhaseDetail from '../pages/judge/hackathon-phase/hackathon-phase-detail';
+const JScore = lazy(() => import('../pages/judge/score'));
+import JScoreDetail from '../pages/judge/score/detail/index.jsx';
+import JChallengeDetail from '../pages/judge/challenge/detail/index.jsx';
 
 const StudentDashboardPage = lazy(() => import('../pages/student/dashboard'));
 const StudentHackathonsPage = lazy(() => import('../pages/student/hackathons'));
@@ -117,7 +133,7 @@ const router = createBrowserRouter([
               { path: ':id', element: withSuspense(ChallengeDetail) },
               {
                 path: 'edit/:id',
-                element: withSuspense(() => <ChallengeForm mode="edit" />),
+                element: withSuspense(() => <ChallengeForm mode="edit"  />),
               },
               {
                 path: 'create',
@@ -218,10 +234,23 @@ const router = createBrowserRouter([
             ],
           },
           {
+            path: 'groups',
+            children: [
+              { index: true, element: withSuspense(Groups) },
+              { path: ':id', element: withSuspense(GroupDetail) },
+            ],
+          },
+          {
             path: 'users',
             children: [
               { index: true, element: withSuspense(Users) },
               { path: 'edit/:id', element: withSuspense(UserForm) },
+            ],
+          },
+          {
+            path: 'appeal',
+            children: [
+              { index: true, element: withSuspense(Appeals) },
             ],
           },
           {
@@ -246,6 +275,13 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: withSuspense(PHackathons) },
               { path: ':id', element: withSuspense(PHackathonDetail) },
+              {
+                path: 'hackathon-phases',
+                children: [
+                  { index: true, element: withSuspense(PHackathonPhases) },
+                  { path: ':id', element: withSuspense(PHackathonPhaseDetail) },
+                ],
+              },
             ],
           },
           {
@@ -266,10 +302,21 @@ const router = createBrowserRouter([
               },
             ],
           },
-          // {
-          //   path: 'hackathons/:hackathonId/scores',
-          //   element: withSuspense(PartnerTeamScores),
-          // },
+          {
+            path: 'score',
+            children: [
+              { index: true, element: withSuspense(PScore) },
+              {
+                path:  'phase',
+                element: withSuspense(PSHackathonPhases)
+              },
+              {
+                path:  'hackathon',
+                element: withSuspense(PSHackathons)
+              },
+              { path: ':id', element: withSuspense(PScoreDetail) },
+            ],
+          },
         ],
       },
     ],
@@ -278,11 +325,31 @@ const router = createBrowserRouter([
     element: <JudgeRoutes />,
     children: [
       {
-        path: PATH_NAME.PARTNER,
+        path: PATH_NAME.JUDGE,
         children: [
           {
-            path: 'hackathons',
-            children: [{ index: true, element: withSuspense(Hackathons) }],
+            path: 'score',
+            children: [
+              { index: true, element: withSuspense(JScore) },
+              {
+                path:  'phase',
+                children: [
+                  { index: true, element: withSuspense(JHackathonPhases) },
+                  { path: ':id', element: withSuspense(JHackathonPhaseDetail) },
+                ],
+              },
+              {
+                path:  'hackathon',
+                element: withSuspense(JHackathons)
+              },
+              { path: ':id', element: withSuspense(JScoreDetail) },
+            ],
+          },
+          {
+            path: 'challenges',
+            children: [
+              { path: ':id', element: withSuspense(JChallengeDetail) },
+            ],
           },
         ],
       },

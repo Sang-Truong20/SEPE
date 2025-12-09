@@ -21,11 +21,6 @@ function getItem(label, key, icon, children) {
 }
 
 const items = [
-  getItem(
-    <Link to={PATH_NAME.ADMIN_DASHBOARD}>Dashboard</Link>,
-    PATH_NAME.ADMIN_DASHBOARD,
-    <PieChartOutlined />,
-  ),
   getItem('Hackathons', 'sub-hackathons', <RocketOutlined />, [
     getItem(
       <Link to={PATH_NAME.ADMIN_HACKATHONS}>Hackathons</Link>,
@@ -61,15 +56,20 @@ const items = [
     <TeamOutlined />,
   ),
   getItem(
-    <Link to={PATH_NAME.ADMIN_FILES}>Files</Link>,
-    PATH_NAME.ADMIN_FILES,
+    <Link to={PATH_NAME.ADMIN_APPEALS}>Khiếu nại</Link>,
+    PATH_NAME.ADMIN_APPEALS,
     <FileOutlined />,
   ),
-  getItem(
-    <Link to={PATH_NAME.ADMIN_SETTINGS}>Cài đặt</Link>,
-    PATH_NAME.ADMIN_SETTINGS,
-    <SettingOutlined />,
-  ),
+  // getItem(
+  //   <Link to={PATH_NAME.ADMIN_FILES}>Files</Link>,
+  //   PATH_NAME.ADMIN_FILES,
+  //   <FileOutlined />,
+  // ),
+  // getItem(
+  //   <Link to={PATH_NAME.ADMIN_SETTINGS}>Cài đặt</Link>,
+  //   PATH_NAME.ADMIN_SETTINGS,
+  //   <SettingOutlined />,
+  // ),
 ];
 
 const AdminLayout = () => {
@@ -168,7 +168,7 @@ const AdminLayout = () => {
             {!collapsed && (
               <div>
                 <div className="text-white font-semibold">Admin Panel</div>
-                <div className="text-gray-400 text-sm">Administrator</div>
+                <div className="text-gray-400 text-sm">Admin</div>
               </div>
             )}
           </div>

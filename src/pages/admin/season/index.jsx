@@ -11,6 +11,7 @@ const Seasons = () => {
     const { fetchSeasons, deleteSeason } = useSeasons();
     const { data: seasonsData = [], isLoading, error } = fetchSeasons;
     const [deletingId, setDeletingId] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ open: false, seasonId: null });
 
     // Model cho bảng seasons
     const tableModel = useMemo(() => ({
@@ -30,7 +31,7 @@ const Seasons = () => {
                 className: 'font-medium text-white'
             },
             {
-                title: 'Mã Season',
+                title: 'Mã',
                 dataIndex: 'seasonCode',
                 key: 'seasonCode',
                 type: 'tag',
@@ -60,21 +61,22 @@ const Seasons = () => {
     }), [navigate]);
 
     const handleDeleteConfirm = (id) => {
-        Modal.confirm({
-            title: 'Xác nhận xóa',
-            icon: <ExclamationCircleOutlined />,
-            content: 'Bạn có chắc chắn muốn xóa season này không?',
-            okText: 'Xóa',
-            okType: 'danger',
-            cancelText: 'Hủy',
-            centered: true,
-            onOk: () => {
-                setDeletingId(id);
-                deleteSeason.mutate(id, {
-                    onSettled: () => setDeletingId(null)
-                });
+        setConfirmModal({ open: true, seasonId: id });
+    };
+
+    const handleConfirmOk = () => {
+        const { seasonId } = confirmModal;
+        setDeletingId(seasonId);
+        deleteSeason.mutate(seasonId, {
+            onSettled: () => {
+                setDeletingId(null);
+                setConfirmModal({ open: false, seasonId: null });
             }
         });
+    };
+
+    const handleConfirmCancel = () => {
+        setConfirmModal({ open: false, seasonId: null });
     };
 
     const handlers = {
@@ -84,13 +86,6 @@ const Seasons = () => {
         isDeleting: (record) => deletingId === record.seasonId
     };
 
-    if (error) {
-        return (
-            <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md text-red-400">
-                Lỗi tải dữ liệu Seasons.
-            </div>
-        );
-    }
 
     return (
         <ConfigProvider
@@ -116,6 +111,21 @@ const Seasons = () => {
                     dateFormatter={(value, fmt) => value ? dayjs(value).format(fmt) : '--'}
                 />
             </div>
+            <Modal
+                title="Xác nhận xóa"
+                open={confirmModal.open}
+                onOk={handleConfirmOk}
+                onCancel={handleConfirmCancel}
+                okText="Xóa"
+                okButtonProps={{ danger: true }}
+                cancelText="Hủy"
+                centered
+            >
+                <div className="flex items-start gap-3">
+                    <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
+                    <span>Bạn có chắc chắn muốn xóa mùa này không?</span>
+                </div>
+            </Modal>
         </ConfigProvider>
     );
 };
