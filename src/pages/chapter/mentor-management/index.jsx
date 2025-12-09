@@ -12,7 +12,7 @@ import {
   UserAddOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Button, Card, Input, message, Modal, Select, Tabs, Tag } from 'antd';
+import { Button, Card, Image, Input, message, Modal, Select, Tabs, Tag, Table } from 'antd';
 import {
   AlertCircle,
   Briefcase,
@@ -214,6 +214,11 @@ const ChapterMentorManagement = () => {
       rejectReason: item.rejectReason,
       availableTime: item.availableTime || '',
       previousMentoring: item.previousMentoring || '',
+      documents: [
+        ...(item.idCardFront ? [{ name: 'CMND/CCCD mặt trước', type: 'image', url: item.idCardFront }] : []),
+        ...(item.idCardBack ? [{ name: 'CMND/CCCD mặt sau', type: 'image', url: item.idCardBack }] : []),
+        ...(item.cv ? [{ name: 'CV / Portfolio', type: 'file', url: item.cv }] : []),
+      ],
     }));
   }, [mentorVerificationsData]);
 
@@ -363,36 +368,127 @@ const ChapterMentorManagement = () => {
                     </div>
                   </Card>
 
-                   {/* Applications List */}
-                   <Card
-                     className="bg-white/5 border-white/10 backdrop-blur-xl"
-                     title={
-                       <div className="flex items-center">
-                         <UserAddOutlined className="w-5 h-5 mr-2 text-emerald-400" />
-                         <span className="text-white">
-                           Đăng Ký Mentor ({filteredApplications.length})
-                         </span>
-                       </div>
-                     }
-                   >
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       {filteredApplications.map((application) => (
-                         <RequestCard
-                           key={application.id}
-                           item={application}
-                           onApprove={(app) => handleApprove(app.id)}
-                           onReject={(app) => showModal(app)}
-                         />
-                       ))}
-
-                       {filteredApplications.length === 0 && (
-                         <div className="col-span-full text-center py-12">
-                           <UserAddOutlined className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                           <p className="text-gray-400">Không có đăng ký mentor nào phù hợp</p>
-                         </div>
-                       )}
-                     </div>
-                   </Card>
+                  {/* Applications List as Table */}
+                  <Card
+                    className="bg-white/5 border-white/10 backdrop-blur-xl"
+                    title={
+                      <div className="flex items-center">
+                        <UserAddOutlined className="w-5 h-5 mr-2 text-emerald-400" />
+                        <span className="text-white">
+                          Đăng Ký Mentor ({filteredApplications.length})
+                        </span>
+                      </div>
+                    }
+                  >
+                    <Table
+                      columns={[
+                        {
+                          title: 'Tên',
+                          dataIndex: 'name',
+                          key: 'name',
+                          render: (value, record) => (
+                            <div className="flex items-center gap-2 text-white">
+                              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">
+                                {value?.charAt(0)?.toUpperCase() || '?'}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{value}</span>
+                                <span className="text-gray-400 text-xs">{record.department}</span>
+                              </div>
+                            </div>
+                          ),
+                        },
+                        {
+                          title: 'Email',
+                          dataIndex: 'email',
+                          key: 'email',
+                          render: (val) => <span className="text-gray-300">{val}</span>,
+                        },
+                          {
+                          title: 'Điện thoại',
+                          dataIndex: 'phone',
+                          key: 'phone',
+                          render: (val) => <span className="text-gray-300">{val}</span>,
+                        },
+                        {
+                          title: 'Chức vụ',
+                          dataIndex: 'position',
+                          key: 'position',
+                          render: (val) => <Tag color="purple">{val}</Tag>,
+                        },
+                        {
+                          title: 'Trạng thái',
+                          dataIndex: 'status',
+                          key: 'status',
+                          render: (status) => <StatusBadge status={status} />,
+                        },
+                        {
+                          title: 'CV/Portfolio',
+                          key: 'cv',
+                          render: (_, record) =>
+                            record.cv ? (
+                              <a
+                                href={record.cv}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-emerald-400 hover:text-emerald-300"
+                              >
+                                Xem
+                              </a>
+                            ) : (
+                              <span className="text-gray-500 text-xs italic">Chưa có</span>
+                            ),
+                        },
+                        {
+                          title: 'Ngày gửi',
+                          dataIndex: 'submittedAt',
+                          key: 'submittedAt',
+                          render: (val) => <span className="text-gray-300">{val}</span>,
+                        },
+                        {
+                          title: 'Thao tác',
+                          key: 'actions',
+                          render: (_, record) => {
+                            const isPending = record.status === 'pending';
+                            return (
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="small"
+                                  icon={<EyeOutlined />}
+                                  onClick={() => showModal(record)}
+                                  className="bg-white/5 text-white border-white/20"
+                                >
+                                  Xem
+                                </Button>
+                                {isPending && (
+                                  <>
+                                    <Button
+                                      size="small"
+                                      icon={<CheckCircleOutlined />}
+                                      onClick={() => handleApprove(record.id)}
+                                      className="bg-emerald-600 text-white border-0"
+                                      loading={approveMutation.isPending}
+                                    />
+                                    <Button
+                                      size="small"
+                                      icon={<CloseCircleOutlined />}
+                                      onClick={() => showModal(record)}
+                                      className="bg-red-600 text-white border-0"
+                                      loading={rejectMutation.isPending}
+                                    />
+                                  </>
+                                )}
+                              </div>
+                            );
+                          },
+                        },
+                      ]}
+                      dataSource={filteredApplications}
+                      rowKey="id"
+                      pagination={{ pageSize: 8, showSizeChanger: true }}
+                      className="[&_.ant-table]:bg-transparent [&_th]:!bg-white/5 [&_th]:!text-white [&_td]:!text-gray-300 [&_td]:border-white/10 [&_th]:border-white/10 [&_tr:hover_td]:!bg-white/5"
+                    />
+                  </Card>
                 </div>
               ),
             },
@@ -550,20 +646,54 @@ const ChapterMentorManagement = () => {
                 </div>
               </div>
 
-              {/* Links */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-white block mb-1">CV</label>
-                  <p className="text-emerald-400 cursor-pointer">
-                    {selectedApplication.cv || 'Chưa cung cấp'}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-white block mb-1">Portfolio</label>
-                  <p className="text-emerald-400 cursor-pointer">
-                    {selectedApplication.portfolio || 'Chưa cung cấp'}
-                  </p>
-                </div>
+              {/* Documents & Links */}
+              <div>
+                <label className="text-white mb-2 block">Tài liệu đính kèm</label>
+                {selectedApplication.documents?.length === 0 ? (
+                  <p className="text-gray-400 text-sm">Không có tài liệu</p>
+                ) : (
+                  <Image.PreviewGroup>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {selectedApplication.documents.map((doc, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 bg-white/5 rounded border border-white/10 flex items-center gap-3"
+                        >
+                          <div className="w-20 h-14 overflow-hidden rounded border border-white/10 bg-black/20 flex items-center justify-center">
+                            {doc.type === 'image' ? (
+                              <Image
+                                src={doc.url}
+                                alt={doc.name}
+                                width={80}
+                                height={56}
+                                style={{ objectFit: 'cover' }}
+                                preview={{ src: doc.url }}
+                                fallback=""
+                              />
+                            ) : (
+                              <FileText size={20} className="text-emerald-400" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <FileText size={14} className="text-emerald-400" />
+                              <span className="text-white text-sm truncate">{doc.name}</span>
+                              <Tag>{doc.type?.toUpperCase()}</Tag>
+                            </div>
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-emerald-400 text-xs hover:text-emerald-300 underline"
+                            >
+                              Mở tài liệu
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Image.PreviewGroup>
+                )}
               </div>
 
               {/* Mentor Info */}
