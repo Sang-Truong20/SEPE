@@ -6,12 +6,14 @@ import {
   PhaseInfoCard, 
   TracksSelection, 
   PhaseInfoSidebar,
+  SubmissionSection,
   getPhaseStatus 
 } from '../../components/features/student/phase-detail';
 import { useGetHackathon } from '../../hooks/student/hackathon';
 import { useGetHackathonPhases } from '../../hooks/student/hackathon-phase';
 import { useGetTeamHackathonRegistration } from '../../hooks/student/hackathon-registration';
 import { useGetTeams } from '../../hooks/student/team';
+import { useGetTeamMembers } from '../../hooks/student/team-member';
 import { useSelectTeamTrack } from '../../hooks/student/team-track';
 import { useGetTracksByPhase } from '../../hooks/student/track';
 import { useUserData } from '../../hooks/useUserData';
@@ -30,7 +32,34 @@ const StudentPhaseDetail = () => {
   const userTeam = teamsData && Array.isArray(teamsData) 
     ? teamsData.find(t => t.leaderId === (userInfo?.id || userInfo?.userId))
     : null;
-  const teamId = userTeam?.id || 'team-1';
+  const teamId = userTeam?.id || userTeam?.teamId || null;
+
+  // Get team members to check if user is leader
+  const { data: teamMembersResponse } = useGetTeamMembers(teamId, {
+    enabled: !!teamId,
+  });
+
+  const apiMembers = Array.isArray(teamMembersResponse?.data) 
+    ? teamMembersResponse.data 
+    : Array.isArray(teamMembersResponse)
+      ? teamMembersResponse
+      : [];
+
+  // Check if user is leader
+  const currentUserId = userInfo?.id || userInfo?.userId;
+  const currentUserName = userInfo?.name || userInfo?.fullName || userInfo?.userName;
+  const isLeader = React.useMemo(() => {
+    if (!userTeam || !currentUserId) return false;
+    
+    // Check from team leaderId
+    if (userTeam.leaderId === currentUserId) return true;
+    
+    // Check from members list
+    return apiMembers.some(m => 
+      (m.userId === currentUserId || m.id === currentUserId) && 
+      m.roleInTeam === 'TeamLeader'
+    ) || (userTeam.leaderName && currentUserName && userTeam.leaderName === currentUserName);
+  }, [userTeam, currentUserId, currentUserName, apiMembers]);
   
   const { data: registration } = useGetTeamHackathonRegistration(hackathonId);
   const {
@@ -139,6 +168,16 @@ const StudentPhaseDetail = () => {
             onFinish={handleSelectTrack}
             phaseId={phaseId}
           />
+
+          {teamId && (
+            <SubmissionSection
+              teamId={teamId}
+              phaseId={phaseId}
+              selectedTrack={selectedTrack}
+              isLeader={isLeader}
+              userInfo={userInfo}
+            />
+          )}
         </div>
 
         {/* Sidebar */}
