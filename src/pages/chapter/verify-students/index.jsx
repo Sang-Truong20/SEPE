@@ -26,6 +26,7 @@ import {
   Space,
   Tag,
   Spin,
+  Image,
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../../constants';
@@ -396,27 +397,47 @@ const ChapterVerifyStudents = () => {
               {/* Documents */}
               <div>
                 <label className="text-white mb-2 block">Tài liệu đính kèm</label>
-                <div className="space-y-2">
-                  {selectedVerification.documents.map((doc, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between p-3 bg-white/5 rounded border border-white/10"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <FileTextOutlined className="w-4 h-4 text-emerald-400" />
-                        <span className="text-white text-sm">{doc.name}</span>
-                        <Tag>{doc.type.toUpperCase()}</Tag>
-                      </div>
-                      <Button
-                        size="small"
-                        icon={<DownloadOutlined />}
-                        className="text-emerald-400 hover:bg-emerald-400/10 border-0"
-                      >
-                        Tải
-                      </Button>
+                {selectedVerification.documents.length === 0 ? (
+                  <p className="text-gray-400 text-sm">Không có tài liệu</p>
+                ) : (
+                  <Image.PreviewGroup>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {selectedVerification.documents.map((doc, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 bg-white/5 rounded border border-white/10 flex items-center gap-3"
+                        >
+                          <div className="w-20 h-14 overflow-hidden rounded border border-white/10 bg-black/20 flex items-center justify-center">
+                            <Image
+                              src={doc.url}
+                              alt={doc.name}
+                              width={80}
+                              height={56}
+                              style={{ objectFit: 'cover' }}
+                              preview={{ src: doc.url }}
+                              fallback=""
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <FileTextOutlined className="text-emerald-400" />
+                              <span className="text-white text-sm truncate">{doc.name}</span>
+                              <Tag>{doc.type?.toUpperCase()}</Tag>
+                            </div>
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-emerald-400 text-xs hover:text-emerald-300 underline"
+                            >
+                              Mở ảnh
+                            </a>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </Image.PreviewGroup>
+                )}
               </div>
 
               {/* Additional Info */}
