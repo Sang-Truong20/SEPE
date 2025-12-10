@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
+import useMessage from "../../util/getError";
 
 /**
  * API: Team endpoints
@@ -18,6 +19,7 @@ export const teamQueryKeys = {
 
 export const useTeams = () => {
     const queryClient = useQueryClient();
+    const { getMessage } = useMessage();
 
     // Fetch all teams - GET /api/Team
     /**
@@ -67,11 +69,11 @@ export const useTeams = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: teamQueryKeys.all });
             queryClient.invalidateQueries({ queryKey: teamQueryKeys.lists() });
-            message.success('Team created successfully!');
+            message.success('Tạo đội thi thành công!');
         },
         onError: (error) => {
             console.error('Error creating team:', error);
-            message.error('Failed to create team. Please try again.');
+            message.error(getMessage(error));
         },
     });
 
@@ -91,11 +93,11 @@ export const useTeams = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: teamQueryKeys.all });
             queryClient.invalidateQueries({ queryKey: teamQueryKeys.lists() });
-            message.success('Team updated successfully!');
+            message.success('Cập nhật đội thi thành công!');
         },
         onError: (error) => {
             console.error('Error updating team:', error);
-            message.error('Failed to update team. Please try again.');
+            message.error(getMessage(error));
         },
     });
 
@@ -112,11 +114,11 @@ export const useTeams = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: teamQueryKeys.lists() });
             queryClient.invalidateQueries({ queryKey: teamQueryKeys.all });
-            message.success('Team deleted successfully!');
+            message.success('Xóa đội thi thành công!');
         },
         onError: (error) => {
             console.error('Error deleting team:', error);
-            message.error('Failed to delete team. Please try again.');
+            message.error(getMessage(error));
         },
     });
 

@@ -90,7 +90,6 @@ const ChallengeForm = ({ mode = 'create' }) => {
         }
 
         await updateChallenge.mutateAsync({ id: challengeId, payload: formData });
-        message.success('Cập nhật thử thách thành công!');
       } else {
         // Create: bắt buộc có file mới
         if (!file) {
@@ -106,12 +105,10 @@ const ChallengeForm = ({ mode = 'create' }) => {
         formData.append('File', file);
 
         await createChallenge.mutateAsync(formData);
-        message.success('Tạo thử thách thành công!');
       }
 
       navigate(-1);
     } catch (error) {
-      message.error('Có lỗi xảy ra: ' + (error?.response?.data?.message || error.message));
       console.error(error);
     } finally {
       setUploading(false);

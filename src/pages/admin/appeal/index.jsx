@@ -105,6 +105,7 @@ const Appeals = () => {
                 dataIndex: 'status',
                 key: 'status',
                 type: 'status',
+                statusType: 'appeal',
                 statusMap: statusMap,
                 transform: (val) => val || 'Pending',
             },

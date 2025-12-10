@@ -35,8 +35,15 @@ function Login() {
         // Giữ spinner hiển thị trong khi chuyển trang
         if (role === 'Admin') {
           window.location.href = PATH_NAME.ADMIN;
-        } else {
-          window.location.reload();
+        }
+        if (role === 'Partner') {
+          window.location.href = PATH_NAME.PARTNER;
+        }
+        if (role === 'Judge') {
+          window.location.href = PATH_NAME.JUDGE;
+        }
+        else {
+          window.location.href = PATH_NAME.HOME;
         }
       }
     },

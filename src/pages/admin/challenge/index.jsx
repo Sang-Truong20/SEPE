@@ -95,6 +95,7 @@ const Challenges = () => {
           dataIndex: 'status',
           key: 'status',
           type: 'status',
+          statusType: 'challenge',
           transform: (val) => val?.toLowerCase(), // Chuẩn hóa
           statusMap: {
             pending: { text: 'Đang chờ', color: 'warning' },
@@ -200,13 +201,11 @@ const Challenges = () => {
         },
         {
           onSuccess: () => {
-            message.success('Cập nhật trạng thái thành công!');
             setStatusModal({ open: false, challengeId: null, status: null });
             statusForm.resetFields();
           },
           onError: (error) => {
             console.error(error);
-            message.error('Cập nhật trạng thái thất bại!');
           },
         }
       );

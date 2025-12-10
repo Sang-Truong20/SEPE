@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
+import useMessage from "../../util/getError";
 
 /**
  * API Documentation:
@@ -50,6 +51,7 @@ export const groupQueryKeys = {
 
 export const useGroups = () => {
     const queryClient = useQueryClient();
+    const { getMessage } = useMessage();
 
     /**
      * API: GET /api/Group/Group/{hackathonId}
@@ -87,12 +89,12 @@ export const useGroups = () => {
         onSuccess: (data) => {
             // Invalidate groups list if hackathonId is available
             queryClient.invalidateQueries({ queryKey: groupQueryKeys.lists() });
-            message.success('Groups created successfully!');
+            message.success('Tạo bảng đấu thành công!');
             return data;
         },
         onError: (error) => {
             console.error('Error creating groups:', error);
-            message.error('Failed to create groups. Please try again.');
+            message.error(getMessage(error));
         },
     });
 

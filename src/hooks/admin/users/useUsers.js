@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
+import useMessage from "../../util/getError";
 
 /**
  * API: Auth user endpoints
@@ -15,6 +16,7 @@ export const userQueryKeys = {
 
 export const useUsers = () => {
   const queryClient = useQueryClient();
+  const { getMessage } = useMessage();
 
   // Fetch all users
   /**
@@ -58,11 +60,11 @@ export const useUsers = () => {
       axiosClient.put(`/Auth/update-info/${id}`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userQueryKeys.all });
-      message.success('User updated successfully!');
+      message.success('Cập nhật người dùng thành công!');
     },
     onError: (error) => {
       console.error('Error updating user:', error);
-      message.error('Failed to update user. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -82,13 +84,13 @@ export const useUsers = () => {
       queryClient.invalidateQueries({ queryKey: userQueryKeys.all });
       message.success(
         variables.isBlocked
-          ? 'User blocked successfully!'
-          : 'User unblocked successfully!',
+          ? 'Khóa tài khoản thành công!'
+          : 'Mở khóa tài khoản thành công!',
       );
     },
     onError: (error) => {
       console.error('Error toggling user block status:', error);
-      message.error('Failed to update user status. Please try again.');
+      message.error(getMessage(error));
     },
   });
 

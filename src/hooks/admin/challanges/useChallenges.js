@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
+import useMessage from "../../util/getError";
 
 /**
  * API: GET /api/Challenge
@@ -21,6 +22,7 @@ export const challengeQueryKeys = {
 
 export const useChallenges = () => {
     const queryClient = useQueryClient();
+    const { getMessage } = useMessage();
 
     // Fetch all challenges
     const fetchChallenges = useQuery({
@@ -41,22 +43,23 @@ export const useChallenges = () => {
      * example: formData -> Title='X', Description='Y', HackathonId=1, File=Blob
      */
     const createChallenge = useMutation({
-        mutationFn: async (payload) => {
-            const formData = new FormData();
+      mutationFn: async (payload) => {
+        return axiosClient.post(`/Challenge/create`, payload, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      },
+      onSuccess: (response) => {
+        queryClient.invalidateQueries({ queryKey: challengeQueryKeys.lists() });
+        message.success('Tạo thử thách thành công!');
+      },
+      onError: (error) => {
+        console.error('Lỗi tạo challenge:', error);
 
-            formData.append("Title", payload.title);
-            formData.append("Description", payload.description);
-            formData.append("HackathonId", Number(payload.hackathonId));
-            if (payload.file) formData.append("File", payload.file);
+        console.log('Backend response:', error.response?.data);
+        console.log('Status code:', error.response?.status);
 
-            return axiosClient.post(`/Challenge/create`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-            });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: challengeQueryKeys.lists() });
-            message.success("Challenge created!");
-        },
+        message.error(getMessage(error));
+      },
     });
 
     // Fetch single challenge
@@ -115,75 +118,75 @@ export const useChallenges = () => {
                 const fileVal = payload.File ?? payload.file;
                 if (fileVal) fd.append('File', fileVal instanceof File ? fileVal : fileVal[0]?.originFileObj ?? fileVal);
 
-                return axiosClient.put(`/Challenge/${id}/partner`, fd, { headers: { 'Content-Type': undefined } });
-            }
+        return axiosClient.put(`/Challenge/${id}/partner`, fd, { headers: { 'Content-Type': undefined } });
+      }
 
-            // fallback: send JSON for simple updates without files
-            return axiosClient.put(`/Challenge/${id}/partner`, payload);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: challengeQueryKeys.all });
-            message.success('Challenge updated successfully!');
-        },
-        onError: (error) => {
-            console.error('Error updating challenge:', error);
-            message.error('Failed to update challenge. Please try again.');
-        },
-    });
+      // fallback: send JSON for simple updates without files
+      return axiosClient.put(`/Challenge/${id}/partner`, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: challengeQueryKeys.all });
+      message.success('Cập nhật thử thách thành công!');
+    },
+    onError: (error) => {
+      console.error('Error updating challenge:', error);
+      message.error(getMessage(error));
+    },
+  });
 
-    // Update challenge status only (PATCH)
-    /**
-     * API: PATCH /api/Challenge/{id}/status
-     * method: PATCH
-     * path: /api/Challenge/{id}/status
-     * request: { status: string }
-     * response: 200 OK
-     * describe: Update only the status of a challenge
-     * example: PATCH /api/Challenge/123/status { status: 'active' }
-     */
-    const updateChallengeStatus = useMutation({
-        mutationFn: ({ id, status }) =>
-            axiosClient.patch(`/Challenge/${id}/status`, { status }),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: challengeQueryKeys.all });
-            queryClient.invalidateQueries({ queryKey: challengeQueryKeys.lists() });
-            message.success('Challenge status updated successfully!');
-        },
-        onError: (error) => {
-            console.error('Error updating challenge status:', error);
-            message.error('Failed to update status. Please try again.');
-        },
-    });
+  // Update challenge status only (PATCH)
+  /**
+   * API: PATCH /api/Challenge/{id}/status
+   * method: PATCH
+   * path: /api/Challenge/{id}/status
+   * request: { status: string }
+   * response: 200 OK
+   * describe: Update only the status of a challenge
+   * example: PATCH /api/Challenge/123/status { status: 'active' }
+   */
+  const updateChallengeStatus = useMutation({
+    mutationFn: ({ id, status }) =>
+      axiosClient.patch(`/Challenge/${id}/status`, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: challengeQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: challengeQueryKeys.lists() });
+      message.success('Cập nhật trạng thái thử thách thành công!');
+    },
+    onError: (error) => {
+      console.error('Error updating challenge status:', error);
+      message.error(getMessage(error));
+    },
+  });
 
-    // Delete challenge
-    /**
-     * API: DELETE /api/Challenge/{id}
-     * method: DELETE
-     * path: /api/Challenge/{id}
-     * request: none (path param id)
-     * response: 200 OK
-     * describe: Delete challenge by id
-     * example: DELETE /api/Challenge/123
-     */
-    const deleteChallenge = useMutation({
-        mutationFn: (id) => axiosClient.delete(`/Challenge/${id}`),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: challengeQueryKeys.lists() });
-            message.success('Challenge deleted successfully!');
-        },
-        onError: (error) => {
-            console.error('Error deleting challenge:', error);
-            message.error('Failed to delete challenge. Please try again.');
-        },
-    });
+  // Delete challenge
+  /**
+   * API: DELETE /api/Challenge/{id}
+   * method: DELETE
+   * path: /api/Challenge/{id}
+   * request: none (path param id)
+   * response: 200 OK
+   * describe: Delete challenge by id
+   * example: DELETE /api/Challenge/123
+   */
+  const deleteChallenge = useMutation({
+    mutationFn: (id) => axiosClient.delete(`/Challenge/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: challengeQueryKeys.lists() });
+      message.success('Xóa thử thách thành công!');
+    },
+    onError: (error) => {
+      console.error('Error deleting challenge:', error);
+      message.error(getMessage(error));
+    },
+  });
 
-    return {
-        fetchChallenges,
-        fetchChallenge,
-        createChallenge,
-        fetchCompleteChallenge,
-        updateChallenge,
-        updateChallengeStatus,
-        deleteChallenge,
-    };
+  return {
+    fetchChallenges,
+    fetchChallenge,
+    createChallenge,
+    fetchCompleteChallenge,
+    updateChallenge,
+    updateChallengeStatus,
+    deleteChallenge,
+  };
 };

@@ -45,27 +45,27 @@ const HackathonDashboard = () => {
 
   const activities = [
     {
-      text: 'New user registration: Alex Johnson',
-      time: '2 minutes ago',
+      text: 'Người dùng mới đăng ký: Alex Johnson',
+      time: '2 phút trước',
       color: 'bg-primary/20',
     },
     {
-      text: 'Submission received: AI Code Assistant',
-      time: '15 minutes ago',
+      text: 'Đã nhận bài nộp: AI Code Assistant',
+      time: '15 phút trước',
       color: 'bg-secondary/20',
     },
     {
-      text: 'Judge completed review: SmartCity AI',
-      time: '1 hour ago',
+      text: 'Giám khảo đã chấm: SmartCity AI',
+      time: '1 giờ trước',
       color: 'bg-tertiary/20',
     },
   ];
 
   const systemHealth = [
-    { label: 'Server Status', status: 'Online', color: 'text-primary' },
-    { label: 'Database', status: 'Healthy', color: 'text-primary' },
-    { label: 'File Storage', status: '85% Full', color: 'text-secondary' },
-    { label: 'API Status', status: 'Operational', color: 'text-primary' },
+    { label: 'Trạng thái máy chủ', status: 'Hoạt động', color: 'text-primary' },
+    { label: 'Cơ sở dữ liệu', status: 'Ổn định', color: 'text-primary' },
+    { label: 'Lưu trữ tệp', status: 'Đang dùng 85%', color: 'text-secondary' },
+    { label: 'Trạng thái API', status: 'Hoạt động tốt', color: 'text-primary' },
   ];
 
   return (
@@ -138,7 +138,7 @@ const HackathonDashboard = () => {
           {/* System Health */}
           <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
             <h2 className="text-xl font-semibold mb-6 text-text-primary">
-              System Health
+              Tình trạng hệ thống
             </h2>
             <div className="space-y-4">
               {systemHealth.map((item, idx) => (

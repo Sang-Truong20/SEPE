@@ -12,7 +12,7 @@ const HackathonDetail = () => {
   const { data: hackathon, isLoading, error } = fetchHackathon(id);
 
   const model = {
-    modelName: 'Hackathons',
+    modelName: 'Cuộc thi',
     fields: [
       { key: 'Tên Hackathon', type: 'input', name: 'name' },
       { key: 'Mùa', type: 'input', name: 'season' },
@@ -28,7 +28,7 @@ const HackathonDetail = () => {
           ]
         ]
       },
-      { key: 'Status', type: 'dropdown', name: 'status' }
+      { key: 'Trạng thái', type: 'dropdown', name: 'status' }
     ]
   };
 

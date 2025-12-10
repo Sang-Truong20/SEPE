@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
+import useMessage from "../../util/getError";
 
 /**
  * API Group: JudgeAssignment
@@ -19,6 +20,7 @@ export const judgeAssignmentQueryKeys = {
 
 export const useJudgeAssignment = () => {
   const queryClient = useQueryClient();
+  const { getMessage } = useMessage();
 
   /**
    * API: GET /api/JudgeAssignment/hackathon/{hackathonId}
@@ -70,11 +72,11 @@ export const useJudgeAssignment = () => {
       axiosClient.post('/JudgeAssignment/Adminassignjugde', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: judgeAssignmentQueryKeys.all });
-      message.success('Judge assigned successfully!');
+      message.success('Phân công giám khảo thành công!');
     },
     onError: (error) => {
       console.error('Error assigning judge:', error);
-      message.error('Failed to assign judge. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -90,11 +92,11 @@ export const useJudgeAssignment = () => {
       axiosClient.put(`/JudgeAssignment/block/${assignmentId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: judgeAssignmentQueryKeys.all });
-      message.success('Judge assignment blocked successfully!');
+      message.success('Đã khóa phân công giám khảo!');
     },
     onError: (error) => {
       console.error('Error blocking judge assignment:', error);
-      message.error('Failed to block judge assignment. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -110,11 +112,11 @@ export const useJudgeAssignment = () => {
       axiosClient.put(`/JudgeAssignment/reactivate/${assignmentId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: judgeAssignmentQueryKeys.all });
-      message.success('Judge assignment reactivated successfully!');
+      message.success('Khôi phục phân công giám khảo thành công!');
     },
     onError: (error) => {
       console.error('Error reactivating judge assignment:', error);
-      message.error('Failed to reactivate judge assignment. Please try again.');
+      message.error(getMessage(error));
     },
   });
 

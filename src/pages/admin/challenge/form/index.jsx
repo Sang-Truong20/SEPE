@@ -61,11 +61,68 @@ const ChallengeForm = ({ mode = 'create' }) => {
     setFileList(newFileList);
   };
 
+  // const handleSubmit = async (values) => {
+  //   setUploading(true);
+  //
+  //   const file = values.attachment?.[0]?.originFileObj; // file mới (nếu có)
+  //   const existingFile = values.attachment?.[0]?.isExisting; // có phải file cũ không
+  //
+  //   try {
+  //     if (isEdit) {
+  //       const formData = new FormData();
+  //       formData.append('Title', values.title);
+  //       formData.append('Description', values.description);
+  //       formData.append('HackathonId', values.hackathonId);
+  //
+  //       // QUAN TRỌNG: Nếu có file mới → gửi File
+  //       // Nếu không có file mới nhưng có file cũ → gửi FilePath (để backend biết giữ nguyên)
+  //       // Nếu không có cả 2 → lỗi
+  //
+  //       if (file) {
+  //         formData.append('File', file);
+  //       } else if (challengeData?.filePath && (existingFile || fileList.length > 0)) {
+  //         // Gửi lại đường dẫn file cũ để backend giữ nguyên
+  //         formData.append('FilePath', challengeData.filePath);
+  //       } else {
+  //         message.error('Vui lòng tải lên tệp mới hoặc giữ tệp hiện tại!');
+  //         setUploading(false);
+  //         return;
+  //       }
+  //
+  //       await updateChallenge.mutateAsync({ id: challengeId, payload: formData });
+  //       message.success('Cập nhật thử thách thành công!');
+  //     } else {
+  //       // Create: bắt buộc có file mới
+  //       if (!file) {
+  //         message.error('Vui lòng tải lên tệp đính kèm!');
+  //         setUploading(false);
+  //         return;
+  //       }
+  //
+  //       const formData = new FormData();
+  //       formData.append('Title', values.title);
+  //       formData.append('Description', values.description);
+  //       formData.append('HackathonId1', values.hackathonId);
+  //       formData.append('File', file);
+  //
+  //       await createChallenge.mutateAsync(formData);
+  //       message.success('Tạo thử thách thành công!');
+  //     }
+  //
+  //     navigate(-1);
+  //   } catch (error) {
+  //     message.error('Có lỗi xảy ra: ' + (error?.response?.data?.message || error.message));
+  //     console.error(error);
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
+
   const handleSubmit = async (values) => {
     setUploading(true);
 
-    const file = values.attachment?.[0]?.originFileObj; // file mới (nếu có)
-    const existingFile = values.attachment?.[0]?.isExisting; // có phải file cũ không
+    const file = values.attachment?.[0]?.originFileObj;
+    const existingFile = values.attachment?.[0]?.isExisting;
 
     try {
       if (isEdit) {
@@ -74,14 +131,9 @@ const ChallengeForm = ({ mode = 'create' }) => {
         formData.append('Description', values.description);
         formData.append('HackathonId', values.hackathonId);
 
-        // QUAN TRỌNG: Nếu có file mới → gửi File
-        // Nếu không có file mới nhưng có file cũ → gửi FilePath (để backend biết giữ nguyên)
-        // Nếu không có cả 2 → lỗi
-
         if (file) {
           formData.append('File', file);
         } else if (challengeData?.filePath && (existingFile || fileList.length > 0)) {
-          // Gửi lại đường dẫn file cũ để backend giữ nguyên
           formData.append('FilePath', challengeData.filePath);
         } else {
           message.error('Vui lòng tải lên tệp mới hoặc giữ tệp hiện tại!');
@@ -89,10 +141,11 @@ const ChallengeForm = ({ mode = 'create' }) => {
           return;
         }
 
+        // Không cần try-catch ở đây nữa, để hook xử lý
         await updateChallenge.mutateAsync({ id: challengeId, payload: formData });
-        message.success('Cập nhật thử thách thành công!');
+        navigate(-1);
+
       } else {
-        // Create: bắt buộc có file mới
         if (!file) {
           message.error('Vui lòng tải lên tệp đính kèm!');
           setUploading(false);
@@ -106,13 +159,11 @@ const ChallengeForm = ({ mode = 'create' }) => {
         formData.append('File', file);
 
         await createChallenge.mutateAsync(formData);
-        message.success('Tạo thử thách thành công!');
+        navigate(-1);
       }
-
-      navigate(-1);
     } catch (error) {
-      message.error('Có lỗi xảy ra: ' + (error?.response?.data?.message || error.message));
-      console.error(error);
+      // Lỗi đã được xử lý trong hook, chỉ cần log
+      console.error('Submit error:', error);
     } finally {
       setUploading(false);
     }

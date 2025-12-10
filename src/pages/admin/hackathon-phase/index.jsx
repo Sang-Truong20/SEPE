@@ -40,7 +40,7 @@ const HackathonPhases = () => {
 
         return {
           ...p,
-          disableView: now < startDate,
+          // disableView: now < startDate,
         };
       }
       return p;
@@ -184,7 +184,7 @@ const HackathonPhases = () => {
                   key={hackathon.hackathonId}
                   value={hackathon.hackathonId.toString()}
                 >
-                  {hackathon.name} ({hackathon.season})
+                  {hackathon.name} ({hackathon.seasonName})
                 </Select.Option>
               ))}
             </Select>

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
+import useMessage from "../../util/getError";
 
 /**
  * API: GET /api/Hackathons
@@ -30,6 +31,7 @@ export const hackathonQueryKeys = {
 
 export const useHackathons = () => {
   const queryClient = useQueryClient();
+  const { getMessage } = useMessage();
 
   // Fetch all hackathons
   const fetchHackathons = useQuery({
@@ -87,11 +89,11 @@ export const useHackathons = () => {
     mutationFn: (payload) => axiosClient.post('/Hackathons', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: hackathonQueryKeys.lists() });
-      message.success('Hackathon created successfully!');
+      message.success('Tạo hackathon thành công!');
     },
     onError: (error) => {
       console.error('Error creating hackathon:', error);
-      message.error('Failed to create hackathon. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -109,11 +111,11 @@ export const useHackathons = () => {
     mutationFn: ({ id, payload }) => axiosClient.put(`/Hackathons/${id}`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: hackathonQueryKeys.all });
-      message.success('Hackathon updated successfully!');
+      message.success('Cập nhật hackathon thành công!');
     },
     onError: (error) => {
       console.error('Error updating hackathon:', error);
-      message.error('Failed to update hackathon. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -131,11 +133,11 @@ export const useHackathons = () => {
     mutationFn: (id) => axiosClient.delete(`/Hackathons/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: hackathonQueryKeys.lists() });
-      message.success('Hackathon deleted successfully!');
+      message.success('Xóa hackathon thành công!');
     },
     onError: (error) => {
       console.error('Error deleting hackathon:', error);
-      message.error('Failed to delete hackathon. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
