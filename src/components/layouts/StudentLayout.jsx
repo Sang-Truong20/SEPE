@@ -1,14 +1,13 @@
 import {
   BarChart3,
+  Bell,
   ChevronDown,
-  FileText,
   Home,
   LogOut,
   Settings,
   Trophy,
   User,
   Users,
-  Bell,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -64,12 +63,6 @@ const StudentLayout = () => {
       path: PATH_NAME.STUDENT_HACKATHONS,
     },
     { id: 'teams', label: 'Teams', icon: Users, path: PATH_NAME.STUDENT_TEAMS },
-    {
-      id: 'submissions',
-      label: 'Submissions',
-      icon: FileText,
-      path: PATH_NAME.STUDENT_SUBMISSIONS,
-    },
     {
       id: 'leaderboard',
       label: 'Leaderboard',
