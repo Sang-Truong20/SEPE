@@ -174,12 +174,6 @@ const StudentDashboard = () => {
                 >
                   Xem Dự Án
                 </Button>
-                <Button
-                  onClick={() => navigate(PATH_NAME.STUDENT_SUBMISSIONS)}
-                  className="border-white/20 bg-white/5 hover:bg-white/10 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-                >
-                  Nộp Bài
-                </Button>
               </div>
             </div>
           </Card>
@@ -242,15 +236,6 @@ const StudentDashboard = () => {
                 <TeamOutlined className="w-6 h-6 text-white" />
               </div>
               <span className="font-medium">Quản Lý Đội</span>
-            </Button>
-            <Button
-              onClick={() => navigate(PATH_NAME.STUDENT_SUBMISSIONS)}
-              className="border-white/10 bg-white/5 hover:bg-gradient-to-br hover:from-purple-500/10 hover:to-pink-500/10 hover:border-purple-400/30 text-white h-auto py-6 px-4 flex flex-col items-center transition-all duration-200 hover:scale-105 hover:shadow-lg group"
-            >
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                <FileTextOutlined className="w-6 h-6 text-white" />
-              </div>
-              <span className="font-medium">Nộp Dự Án</span>
             </Button>
             <Button
               onClick={() => navigate(PATH_NAME.STUDENT_LEADERBOARD)}
