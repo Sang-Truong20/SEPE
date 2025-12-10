@@ -6,6 +6,7 @@ import {
   FileTextOutlined,
   PlusOutlined,
   SendOutlined,
+  ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import { Button, Card, Form, Input, Modal, Space, Spin, Table, Tag, Tooltip, message } from 'antd';
 import dayjs from 'dayjs';
@@ -15,12 +16,34 @@ import {
   useGetSubmissionsByTeam,
   useSetFinalSubmission,
 } from '../../../../hooks/student/submission';
+import { useIsTeamLeader } from '../../../../hooks/student/team-member';
 
-const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo }) => {
+// eslint-disable-next-line no-unused-vars
+const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader: propIsLeader, userInfo }) => {
   const [form] = Form.useForm();
   const [submissionModalVisible, setSubmissionModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [finalSubmissionModalVisible, setFinalSubmissionModalVisible] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [pendingSubmissionId, setPendingSubmissionId] = useState(null);
+  
+  
+  // Check if user is leader using API
+  const { data: isLeaderData, isLoading: isLeaderLoading } = useIsTeamLeader(teamId, {
+    enabled: !!teamId,
+  });
+  
+  // Determine isLeader: use API result if available, fallback to prop
+  const isLeader = React.useMemo(() => {
+    if (isLeaderData !== undefined && isLeaderData !== null) {
+      // API returns boolean or object with isLeader property
+      return typeof isLeaderData === 'boolean' 
+        ? isLeaderData 
+        : isLeaderData.isLeader || false;
+    }
+    // Fallback to prop if API not available
+    return propIsLeader || false;
+  }, [isLeaderData, propIsLeader]);
 
   // Get submissions for this team - API: /api/Submission/team/{teamId}
   // Currently hardcoded to teamId = 8 for testing
@@ -83,27 +106,29 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo 
     }
   };
 
-  const handleSetFinal = async (submissionId) => {
+  const handleSetFinal = (submissionId) => {
     if (!isLeader) {
       message.error('Chỉ team leader mới có thể nộp bài final');
       return;
     }
 
-    Modal.confirm({
-      title: 'Xác nhận nộp bài',
-      content: 'Bạn có chắc chắn muốn nộp bài này làm bài nộp chính thức? Sau khi nộp, bạn không thể chỉnh sửa.',
-      okText: 'Xác nhận',
-      cancelText: 'Hủy',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          await setFinalMutation.mutateAsync(submissionId);
-          refetchSubmissions();
-        } catch (error) {
-          console.error('Set final error:', error);
-        }
-      },
-    });
+    setPendingSubmissionId(submissionId);
+    setFinalSubmissionModalVisible(true);
+  };
+
+  const handleConfirmFinalSubmission = async () => {
+    if (!pendingSubmissionId) return;
+
+    try {
+      await setFinalMutation.mutateAsync(pendingSubmissionId);
+      message.success('Nộp bài final thành công!');
+      setFinalSubmissionModalVisible(false);
+      setPendingSubmissionId(null);
+      refetchSubmissions();
+    } catch (error) {
+      console.error('Set final error:', error);
+      message.error(error?.response?.data?.message || 'Không thể nộp bài final. Vui lòng thử lại.');
+    }
   };
 
   const handleViewDetail = (submission) => {
@@ -201,7 +226,7 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo 
                 onClick={() => handleSetFinal(record.submissionId || record.id)}
               />
             </Tooltip>
-          )}
+          )} 
         </Space>
       ),
     },
@@ -237,11 +262,18 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo 
         </div>
 
         <div className="mb-4">
-          <p className="text-sm text-muted-foreground">
-            {isLeader
-              ? 'Bạn là team leader. Bạn có thể tạo bản nháp và nộp bài final.'
-              : 'Bạn là team member. Bạn chỉ có thể tạo bản nháp. Chỉ team leader mới có thể nộp bài final.'}
-          </p>
+          {isLeaderLoading ? (
+            <div className="flex items-center gap-2">
+              <Spin size="small" />
+              <p className="text-sm text-muted-foreground">Đang kiểm tra quyền...</p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {isLeader
+                ? 'Bạn là team leader. Bạn có thể tạo bản nháp và nộp bài final.'
+                : 'Bạn là team member. Bạn chỉ có thể tạo bản nháp. Chỉ team leader mới có thể nộp bài final.'}
+            </p>
+          )}
         </div>
 
         {submissionsError ? (
@@ -419,6 +451,39 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo 
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Final Submission Confirmation Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-3">
+            <ExclamationCircleOutlined className="text-yellow-500 text-xl" />
+            <span className="text-white">Xác nhận nộp bài</span>
+          </div>
+        }
+        open={finalSubmissionModalVisible}
+        onOk={handleConfirmFinalSubmission}
+        onCancel={() => {
+          setFinalSubmissionModalVisible(false);
+          setPendingSubmissionId(null);
+        }}
+        okText="Xác nhận"
+        cancelText="Hủy"
+        okButtonProps={{
+          loading: setFinalMutation.isPending,
+          className: 'bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 text-white border-0',
+        }}
+        cancelButtonProps={{
+          className: 'bg-white/10 hover:bg-white/20 text-white border-white/20',
+        }}
+        width={500}
+        className="[&_.ant-modal-content]:bg-gray-900/95 [&_.ant-modal-content]:backdrop-blur-xl [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white [&_.ant-modal-mask]:bg-black/50"
+      >
+        <div className="py-4">
+          <p className="text-text-secondary text-base leading-relaxed">
+            Bạn có chắc chắn muốn nộp bài này làm bài nộp chính thức? Sau khi nộp, bạn không thể chỉnh sửa.
+          </p>
+        </div>
       </Modal>
     </>
   );

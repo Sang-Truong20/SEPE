@@ -5,6 +5,7 @@ export const teamMemberQueryKeys = {
     origin: ['student', 'team-member'],
     leader: ['student', 'team-member', 'leader'],
     members: (teamId) => [...teamMemberQueryKeys.origin, 'members', teamId],
+    isLeader: (teamId) => [...teamMemberQueryKeys.origin, 'is-leader', teamId],
     kick: (teamId, memberId) => [...teamMemberQueryKeys.leader, 'kick', teamId, memberId],
     leave: (teamId) => [...teamMemberQueryKeys.origin, 'leave', teamId],
     invite: (teamId) => [...teamMemberQueryKeys.leader, 'invite', teamId],
@@ -20,6 +21,20 @@ export const useGetTeamMembers = (teamId, options = {}) => {
         },
         enabled: !!teamId && (options.enabled !== false),
         staleTime: 2 * 60 * 1000, // 2 minutes - team members can change frequently
+        ...options,
+    });
+};
+
+// Check if current user is team leader
+export const useIsTeamLeader = (teamId, options = {}) => {
+    return useQuery({
+        queryKey: teamMemberQueryKeys.isLeader(teamId),
+        queryFn: async () => {
+            const response = await axiosClient.get(`/TeamMember/${teamId}/is-leader`);
+            return response.data;
+        },
+        enabled: !!teamId && (options.enabled !== false),
+        staleTime: 2 * 60 * 1000, // 2 minutes
         ...options,
     });
 };
