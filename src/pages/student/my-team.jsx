@@ -579,9 +579,12 @@ const MyTeamPage = () => {
                 {/* Chat Messages */}
                 <div className="lg:col-span-2">
                   {selectedChatGroup ? (
-                    <Card className="bg-white/5 border-white/10 h-[600px] flex flex-col">
-                      {/* Chat Header */}
-                      <div className="border-b border-white/10 pb-4 mb-4">
+                    <Card 
+                      className="bg-white/5 border-white/10 h-[600px]"
+                      bodyStyle={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column' }}
+                    >
+                      {/* Chat Header - Fixed at top */}
+                      <div className="border-b border-white/10 p-4 flex-shrink-0">
                         <h4 className="text-white font-medium">
                           {selectedChatGroup.groupName || selectedChatGroup.teamName || 'Group Chat'}
                         </h4>
@@ -592,8 +595,8 @@ const MyTeamPage = () => {
                         )}
                       </div>
 
-                      {/* Messages Area */}
-                      <div className="flex-1 overflow-y-auto mb-4 space-y-3">
+                      {/* Messages Area - Scrollable */}
+                      <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
                         {messagesLoading ? (
                           <div className="text-center py-8">
                             <Spin size="large" />
@@ -631,8 +634,8 @@ const MyTeamPage = () => {
                         )}
                       </div>
 
-                      {/* Message Input */}
-                      <div className="flex gap-2">
+                      {/* Message Input - Fixed at bottom */}
+                      <div className="border-t border-white/10 p-4 flex-shrink-0 flex gap-2">
                         <AntInput
                           placeholder="Nhập tin nhắn..."
                           value={messageContent}
