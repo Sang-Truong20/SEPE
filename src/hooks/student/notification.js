@@ -26,7 +26,7 @@ export const useGetUnreadCount = () => {
     return useQuery({
         queryKey: notificationQueryKeys.unread(),
         queryFn: async () => {
-            const response = await axiosClient.get('/Notification/unread/count');
+            const response = await axiosClient.get('/Notification/unread-count');
             return response.data;
         },
         retry: false,
