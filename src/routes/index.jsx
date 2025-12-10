@@ -78,11 +78,10 @@ const ChapterMentorManagementPage = lazy(() => import('../pages/chapter/mentor-m
 const ChapterTeamHackathonApprovalPage = lazy(() => import('../pages/chapter/team-hackathon-approval'));
 
 const MentorDashboardPage = lazy(() => import('../pages/mentor/dashboard'));
-const MentorHackathonsPage = lazy(() => import('../pages/mentor/hackathons'));
-const MentorHackathonDetailPage = lazy(() => import('../pages/mentor/hackathon-detail'));
 const MentorNotificationsPage = lazy(() => import('../pages/mentor/notifications'));
 const MentorProfilePage = lazy(() => import('../pages/mentor/profile'));
 const MentorAssignmentsPage = lazy(() => import('../pages/mentor/assignments'));
+const MentorGroupChatPage = lazy(() => import('../pages/mentor/group-chat'));
 
 const withSuspense = (Component) => (
   <Suspense
@@ -415,14 +414,10 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="dashboard" replace /> },
           { path: 'dashboard', element: withSuspense(MentorDashboardPage) },
-          { path: 'hackathons', element: withSuspense(MentorHackathonsPage) },
-          {
-            path: 'hackathons/:hackathonId',
-            element: withSuspense(MentorHackathonDetailPage),
-          },
           { path: 'notifications', element: withSuspense(MentorNotificationsPage) },
           { path: 'profile', element: withSuspense(MentorProfilePage) },
           { path: 'assignments', element: withSuspense(MentorAssignmentsPage) },
+          { path: 'group-chat', element: withSuspense(MentorGroupChatPage) },
         ],
       },
     ],

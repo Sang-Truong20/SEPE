@@ -10,7 +10,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 import { useGetHackathons } from '../../hooks/student/hackathon';
-import { useUserData } from '../../hooks/useUserData';
+import { useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
 
 const { Option } = Select;
 
@@ -19,14 +19,37 @@ const MentorHackathons = () => {
   const [hackathonSearchQuery, setHackathonSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
+  // Get hackathons from API
   const { data: hackathonsData, isLoading: hackathonsLoading } = useGetHackathons();
+  
+  // Get mentor's hackathon registrations
+  const { data: myRegistrationsData, isLoading: registrationsLoading } = useGetMyHackathonRegistrations();
 
-  // Filter hackathons: exclude completed, filter by search and status
+  // Extract hackathon IDs from registrations
+  const registeredHackathonIds = useMemo(() => {
+    if (!myRegistrationsData) return [];
+    const registrations = Array.isArray(myRegistrationsData) 
+      ? myRegistrationsData 
+      : Array.isArray(myRegistrationsData?.data) 
+        ? myRegistrationsData.data 
+        : [];
+    
+    return registrations
+      .map(reg => reg.hackathonId || reg.hackathon?.hackathonId || reg.hackathon?.id)
+      .filter(id => id !== undefined && id !== null);
+  }, [myRegistrationsData]);
+
+  // Filter hackathons: only show hackathons that mentor is registered in
   const filteredHackathons = useMemo(() => {
-    if (!hackathonsData) return [];
+    if (!hackathonsData || registeredHackathonIds.length === 0) return [];
     const hackathons = Array.isArray(hackathonsData) ? hackathonsData : hackathonsData?.data || [];
     
     return hackathons.filter((hack) => {
+      const hackathonId = hack.hackathonId ?? hack.id;
+      
+      // Only show hackathons that mentor is registered in
+      if (!registeredHackathonIds.includes(hackathonId)) return false;
+      
       // Exclude completed
       if (hack.status?.toLowerCase() === 'completed') return false;
       
@@ -47,11 +70,13 @@ const MentorHackathons = () => {
       
       return true;
     });
-  }, [hackathonsData, statusFilter, hackathonSearchQuery]);
+  }, [hackathonsData, registeredHackathonIds, statusFilter, hackathonSearchQuery]);
+
+  const isLoading = hackathonsLoading || registrationsLoading;
 
   const handleHackathonClick = (hackathonId) => {
     if (!hackathonId) return;
-    navigate(`${PATH_NAME.MENTOR_HACKATHONS}/${hackathonId}`);
+    navigate(PATH_NAME.MENTOR_DASHBOARD);
   };
 
   const getStatusBadge = (status) => {
@@ -138,7 +163,7 @@ const MentorHackathons = () => {
       </Card>
 
       {/* Hackathons Grid */}
-      {hackathonsLoading ? (
+      {isLoading ? (
         <Card className="border-0 bg-white/5 backdrop-blur-xl">
           <div className="flex justify-center py-8">
             <Spin size="large" />

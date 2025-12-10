@@ -12,10 +12,10 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 import {
-  useGetHackathonChatGroups,
   useGetChatGroupMessages,
   useSendChatMessage,
 } from '../../hooks/student/chat';
+import { useMentorChatGroups } from '../../hooks/mentor/chat';
 import { useGetHackathon } from '../../hooks/student/hackathon';
 import { useUserData } from '../../hooks/useUserData';
 
@@ -144,26 +144,41 @@ const MentorHackathonDetail = () => {
   const [activeChatGroup, setActiveChatGroup] = useState(null);
   const { userInfo } = useUserData();
 
-  const currentMentorId = userInfo?.id || userInfo?.userId || null;
+  // Try multiple possible fields for mentorId
+  const currentMentorId = userInfo?.mentorId || userInfo?.id || userInfo?.userId || null;
 
   const { data: hackathonData, isLoading: hackathonLoading } = useGetHackathon(hackathonId);
+  
+  // Get chat groups for mentor using /api/Chat/mentor/{mentorId}/groups
   const {
-    data: hackathonChatGroupsData,
+    data: mentorChatGroupsData,
     isLoading: hackathonChatGroupsLoading,
-  } = useGetHackathonChatGroups(hackathonId);
+  } = useMentorChatGroups(currentMentorId);
 
-  // Hackathon chat groups for this mentor
+  // Filter chat groups by hackathonId
   const hackathonChatGroups = useMemo(() => {
-    if (!hackathonChatGroupsData) return [];
+    if (!mentorChatGroupsData) return [];
 
-    const rawGroups = Array.isArray(hackathonChatGroupsData)
-      ? hackathonChatGroupsData
-      : hackathonChatGroupsData?.data || [];
+    const rawGroups = Array.isArray(mentorChatGroupsData)
+      ? mentorChatGroupsData
+      : Array.isArray(mentorChatGroupsData?.data)
+        ? mentorChatGroupsData.data
+        : [];
 
-    if (!currentMentorId) return rawGroups;
+    if (!hackathonId) return rawGroups;
 
-    return rawGroups.filter((g) => String(g.mentorId) === String(currentMentorId));
-  }, [hackathonChatGroupsData, currentMentorId]);
+    // Convert hackathonId from URL (string) to number for comparison
+    const currentHackathonId = parseInt(hackathonId, 10);
+    
+    if (isNaN(currentHackathonId)) return rawGroups;
+
+    // Filter groups that belong to the current hackathon
+    return rawGroups.filter((g) => {
+      const groupHackathonId = g.hackathonId;
+      // Compare as numbers to handle type mismatch
+      return Number(groupHackathonId) === currentHackathonId;
+    });
+  }, [mentorChatGroupsData, hackathonId]);
 
   const filteredHackathonChatGroups = useMemo(() => {
     if (!chatGroupSearchQuery) return hackathonChatGroups;
@@ -308,7 +323,7 @@ const MentorHackathonDetail = () => {
       {/* Back Button */}
       <Button
         icon={<ArrowLeftOutlined />}
-        onClick={() => navigate(PATH_NAME.MENTOR_HACKATHONS)}
+        onClick={() => navigate(PATH_NAME.MENTOR_DASHBOARD)}
         className="mb-4"
       >
         Quay lại danh sách Hackathon
@@ -384,7 +399,16 @@ const MentorHackathonDetail = () => {
           />
         </Card>
 
-        {hackathonChatGroupsLoading ? (
+        {!currentMentorId ? (
+          <Card className="border-0 bg-white/5 backdrop-blur-xl">
+            <div className="p-12 text-center">
+              <MessageOutlined className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-400">
+                Không thể xác định mentor ID. Vui lòng đăng nhập lại.
+              </p>
+            </div>
+          </Card>
+        ) : hackathonChatGroupsLoading ? (
           <Card className="border-0 bg-white/5 backdrop-blur-xl">
             <div className="flex justify-center py-8">
               <Spin size="large" />

@@ -143,7 +143,7 @@ const ChapterDashboard = () => {
             <Card
               key={index}
               className="bg-white/5 border-white/10 backdrop-blur-xl"
-              bodyStyle={{ padding: '24px' }}
+              styles={{ body: { padding: '24px' } }}
             >
               <div className="flex items-center justify-between">
                 <div>

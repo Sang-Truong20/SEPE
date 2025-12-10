@@ -581,7 +581,7 @@ const MyTeamPage = () => {
                   {selectedChatGroup ? (
                     <Card 
                       className="bg-white/5 border-white/10 h-[600px]"
-                      bodyStyle={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column' }}
+                      styles={{ body: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column' } }}
                     >
                       {/* Chat Header - Fixed at top */}
                       <div className="border-b border-white/10 p-4 flex-shrink-0">

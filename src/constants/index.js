@@ -47,12 +47,11 @@ const PATH_NAME = {
   CHAPTER_NOTIFICATIONS: '/chapter/notifications',
   MENTOR: '/mentor',
   MENTOR_DASHBOARD: '/mentor/dashboard',
-  MENTOR_HACKATHONS: '/mentor/hackathons',
-  MENTOR_HACKATHON_DETAIL: '/mentor/hackathons/:hackathonId',
   MENTOR_RESOURCES: '/mentor/resources',
   MENTOR_NOTIFICATIONS: '/mentor/notifications',
   MENTOR_PROFILE: '/mentor/profile',
   MENTOR_ASSIGNMENTS: '/mentor/assignments',
+  MENTOR_GROUP_CHAT: '/mentor/group-chat',
 }
 
 const GROUP = {

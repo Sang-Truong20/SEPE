@@ -6,6 +6,7 @@ import {
   ChevronDown,
   Home,
   LogOut,
+  MessageSquare,
   Settings,
   Target,
   Trophy,
@@ -116,10 +117,10 @@ const MentorLayout = () => {
       path: PATH_NAME.MENTOR_DASHBOARD,
     },
     {
-      id: 'hackathons',
-      label: 'Hackathon',
-      icon: Trophy,
-      path: PATH_NAME.MENTOR_HACKATHONS,
+      id: 'group-chat',
+      label: 'Group Chat',
+      icon: MessageSquare,
+      path: PATH_NAME.MENTOR_GROUP_CHAT,
     },
     {
       id: 'assignments',

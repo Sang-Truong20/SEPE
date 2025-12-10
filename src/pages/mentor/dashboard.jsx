@@ -191,7 +191,7 @@ const MentorDashboard = () => {
             extra={
               <Button
                 type="link"
-                onClick={() => navigate(PATH_NAME.MENTOR_HACKATHONS)}
+                onClick={() => navigate(PATH_NAME.MENTOR_GROUP_CHAT)}
                 className="text-green-400"
               >
                 Xem tất cả
@@ -204,7 +204,7 @@ const MentorDashboard = () => {
                 <div
                   key={team.id}
                   className="p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all cursor-pointer"
-                  onClick={() => navigate(PATH_NAME.MENTOR_HACKATHONS)}
+                  onClick={() => navigate(PATH_NAME.MENTOR_GROUP_CHAT)}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -305,7 +305,7 @@ const MentorDashboard = () => {
         <h3 className="text-xl mb-4 text-white">Thao Tác Nhanh</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Button
-            onClick={() => navigate(PATH_NAME.MENTOR_HACKATHONS)}
+            onClick={() => navigate(PATH_NAME.MENTOR_GROUP_CHAT)}
             className="h-auto py-4 flex flex-col items-center border-white/20 bg-white/5 hover:bg-white/10"
           >
             <TrophyOutlined className="w-6 h-6 mb-2 text-green-400" />
