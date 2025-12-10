@@ -18,9 +18,13 @@ export const useCreateAppeal = () => {
         mutationKey: appealQueryKeys.create(),
         mutationFn: async (appealData) => {
             const response = await axiosClient.post('/Appeal', {
+                appealType: appealData.appealType || 'Penalty',
                 adjustmentId: appealData.adjustmentId,
+                submissionId: appealData.submissionId,
+                judgeId: appealData.judgeId,
                 teamId: appealData.teamId,
                 message: appealData.message,
+                reason: appealData.reason,
             });
 
             return response.data;
@@ -30,7 +34,9 @@ export const useCreateAppeal = () => {
             queryClient.invalidateQueries({ queryKey: appealQueryKeys.appeals() });
 
             // Invalidate team appeals for the specific team
-            queryClient.invalidateQueries({ queryKey: appealQueryKeys.teamAppeals(variables.teamId) });
+            if (variables.teamId) {
+                queryClient.invalidateQueries({ queryKey: appealQueryKeys.teamAppeals(variables.teamId) });
+            }
         },
     });
 };
