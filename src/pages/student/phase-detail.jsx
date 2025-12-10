@@ -11,7 +11,7 @@ import {
 } from '../../components/features/student/phase-detail';
 import { useGetHackathon } from '../../hooks/student/hackathon';
 import { useGetHackathonPhases } from '../../hooks/student/hackathon-phase';
-import { useGetTeamHackathonRegistration, useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
+import { useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
 import { useGetTeams } from '../../hooks/student/team';
 import { useGetTeamMembers } from '../../hooks/student/team-member';
 import { useSelectTeamTrack } from '../../hooks/student/team-track';
@@ -84,7 +84,13 @@ const StudentPhaseDetail = () => {
     ) || (userTeam.leaderName && currentUserName && userTeam.leaderName === currentUserName);
   }, [userTeam, currentUserId, currentUserName, apiMembers]);
   
-  const { data: registration } = useGetTeamHackathonRegistration(hackathonId);
+  const { data: myRegistrations } = useGetMyHackathonRegistrations();
+  
+  // Tìm registration của user cho hackathon hiện tại
+  const registration = React.useMemo(() => {
+    if (!myRegistrations || !Array.isArray(myRegistrations)) return null;
+    return myRegistrations.find(reg => reg.hackathonId === parseInt(hackathonId)) || null;
+  }, [myRegistrations, hackathonId]);
   const {
     data: tracksData = [],
     isLoading: tracksLoading,

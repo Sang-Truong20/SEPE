@@ -6,10 +6,10 @@ import {
   UserOutlined
 } from '@ant-design/icons';
 import { Alert, Avatar, Button, Card, Empty, Form, Input, Select, Spin, Table, Tag } from 'antd';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
-import { useGetTeamHackathonRegistration } from '../../hooks/student/hackathon-registration';
+import { useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
 import { useGetAvailableMentors, useGetTeamMentor, useRegisterMentor } from '../../hooks/student/mentor-registration';
 import { useGetTeams } from '../../hooks/student/team';
 import { useUserData } from '../../hooks/useUserData';
@@ -29,7 +29,13 @@ const MentorRegistration = () => {
     : null;
   const teamId = userTeam?.id || 'team-1';
   
-  const { data: registration } = useGetTeamHackathonRegistration(hackathonId);
+  const { data: myRegistrations } = useGetMyHackathonRegistrations();
+  
+  // Tìm registration của user cho hackathon hiện tại
+  const registration = useMemo(() => {
+    if (!myRegistrations || !Array.isArray(myRegistrations)) return null;
+    return myRegistrations.find(reg => reg.hackathonId === parseInt(hackathonId)) || null;
+  }, [myRegistrations, hackathonId]);
   const { data: teamMentor } = useGetTeamMentor(teamId, hackathonId);
   const { data: availableMentors = [], isLoading: mentorsLoading } = useGetAvailableMentors(hackathonId);
   const registerMentorMutation = useRegisterMentor();

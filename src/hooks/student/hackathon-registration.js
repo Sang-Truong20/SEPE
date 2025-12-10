@@ -4,25 +4,8 @@ import { message } from 'antd';
 
 export const hackathonRegistrationQueryKeys = {
     origin: ['student', 'hackathon-registration'],
-    registration: (hackathonId) => [
-        ...hackathonRegistrationQueryKeys.origin, 
-        'hackathon', 
-        hackathonId
-    ],
     register: () => [...hackathonRegistrationQueryKeys.origin, 'register'],
     myRegistrations: () => [...hackathonRegistrationQueryKeys.origin, 'my-registrations'],
-};
-
-// Get hackathon registration
-export const useGetTeamHackathonRegistration = (hackathonId) => {
-    return useQuery({
-        queryKey: hackathonRegistrationQueryKeys.registration(hackathonId),
-        queryFn: async () => {
-            const response = await axiosClient.get(`/HackathonRegistration/${hackathonId}`);
-            return response.data;
-        },
-        enabled: !!hackathonId,
-    });
 };
 
 // Get my hackathon registrations

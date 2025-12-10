@@ -1,21 +1,26 @@
 import {
   ArrowLeftOutlined,
+  BankOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
+  EnvironmentOutlined,
+  MailOutlined,
+  SearchOutlined,
   TeamOutlined,
   TrophyOutlined,
   UserOutlined
 } from '@ant-design/icons';
-import { Alert, Button, Card, Divider, Form, Input, Modal, Space, Spin, Table, Tag } from 'antd';
+import { Alert, Avatar, Button, Card, Divider, Form, Input, Modal, Space, Spin, Table, Tag } from 'antd';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import HackathonPhases from '../../components/features/student/HackathonPhases';
 import PrizeList from '../../components/features/student/PrizeList';
 import { PATH_NAME } from '../../constants';
 import { useGetHackathon } from '../../hooks/student/hackathon';
-import { useGetMyHackathonRegistrations, useGetTeamHackathonRegistration, useRegisterHackathon } from '../../hooks/student/hackathon-registration';
+import { useGetMyHackathonRegistrations, useRegisterHackathon } from '../../hooks/student/hackathon-registration';
+import { useAssignMentor } from '../../hooks/student/mentor-assignment';
 import { useGetTeams } from '../../hooks/student/team';
 import { useGetTrackRanking } from '../../hooks/student/team-ranking';
 import { useUserData } from '../../hooks/useUserData';
@@ -38,7 +43,6 @@ const StudentHackathonDetail = () => {
       })
     : null;
   
-  const { data: registration } = useGetTeamHackathonRegistration(id);
   const { data: myRegistrations } = useGetMyHackathonRegistrations();
   
   // Tìm registration của user cho hackathon hiện tại
@@ -47,12 +51,37 @@ const StudentHackathonDetail = () => {
     return myRegistrations.find(reg => reg.hackathonId === parseInt(id)) || null;
   }, [myRegistrations, id]);
   
+  // Alias để giữ tương thích với code cũ
+  const registration = myRegistration;
+  
   const registerMutation = useRegisterHackathon();
+  const assignMentorMutation = useAssignMentor();
   
   const [rankingModalVisible, setRankingModalVisible] = useState(false);
   const [registerModalVisible, setRegisterModalVisible] = useState(false);
+  const [mentorSelectModalVisible, setMentorSelectModalVisible] = useState(false);
   const [selectedPhaseId, setSelectedPhaseId] = useState(null);
+  const [selectedMentorId, setSelectedMentorId] = useState(null);
+  const [mentorSearchQuery, setMentorSearchQuery] = useState('');
   const [registerForm] = Form.useForm();
+
+  // Mock mentors data
+  const mockMentors = [
+    { 
+      mentorId: 1, 
+      username: 'quangtrung89000', 
+      email: '0583301@gmail.com',
+      chapterName: 'FPT University',
+      position: 'SE'
+    },
+    { 
+      mentorId: 13, 
+      username: 'vy94307', 
+      email: 'vy94307@donga.edu.vn',
+      chapterName: 'FPT University',
+      position: 'SE'
+    },
+  ];
   
   // Get ranking data when phase is selected
   const { data: rankingData = [] } = useGetTrackRanking(
@@ -84,10 +113,42 @@ const StudentHackathonDetail = () => {
     }
   };
 
+  const handleSelectMentor = async () => {
+    if (!selectedMentorId || !myRegistration?.teamId) {
+      return;
+    }
+    try {
+      await assignMentorMutation.mutateAsync({
+        mentorId: selectedMentorId,
+        hackathonId: parseInt(id),
+        teamId: myRegistration.teamId,
+      });
+      setMentorSelectModalVisible(false);
+      setSelectedMentorId(null);
+      setMentorSearchQuery('');
+    } catch (error) {
+      console.error('Assign mentor error:', error);
+    }
+  };
+
+  // Filter mentors by search query
+  const filteredMentors = useMemo(() => {
+    if (!mentorSearchQuery.trim()) return mockMentors;
+    const query = mentorSearchQuery.toLowerCase();
+    return mockMentors.filter(
+      (mentor) =>
+        mentor.username.toLowerCase().includes(query) ||
+        mentor.email.toLowerCase().includes(query) ||
+        mentor.chapterName?.toLowerCase().includes(query) ||
+        mentor.position?.toLowerCase().includes(query)
+    );
+  }, [mentorSearchQuery]);
+
   const getRegistrationStatusTag = () => {
     if (!registration) return null;
     
-    switch (registration.status) {
+    const status = registration.status?.toLowerCase();
+    switch (status) {
       case 'pending':
         return (
           <Tag icon={<ClockCircleOutlined />} color="orange">
@@ -100,6 +161,12 @@ const StudentHackathonDetail = () => {
             Đã được duyệt
           </Tag>
         );
+      case 'waitingmentor':
+        return (
+          <Tag icon={<ClockCircleOutlined />} color="blue">
+            Đang chờ mentor
+          </Tag>
+        );
       case 'rejected':
         return (
           <Tag icon={<CloseCircleOutlined />} color="red">
@@ -108,6 +175,45 @@ const StudentHackathonDetail = () => {
         );
       default:
         return null;
+    }
+  };
+
+  const getMyRegistrationStatusTag = (status) => {
+    if (!status) return null;
+    
+    const normalizedStatus = status?.toLowerCase();
+    
+    switch (normalizedStatus) {
+      case 'approved':
+        return {
+          icon: <CheckCircleOutlined />,
+          color: 'green',
+          text: 'Đã tham gia hackathon'
+        };
+      case 'pending':
+        return {
+          icon: <ClockCircleOutlined />,
+          color: 'orange',
+          text: 'Đang chờ duyệt'
+        };
+      case 'waitingmentor':
+        return {
+          icon: <ClockCircleOutlined />,
+          color: 'blue',
+          text: 'Đang chờ mentor'
+        };
+      case 'rejected':
+        return {
+          icon: <CloseCircleOutlined />,
+          color: 'red',
+          text: 'Bị từ chối'
+        };
+      default:
+        return {
+          icon: <ClockCircleOutlined />,
+          color: 'default',
+          text: status
+        };
     }
   };
 
@@ -324,34 +430,40 @@ const StudentHackathonDetail = () => {
               Hành động
             </h3>
             <Space direction="vertical" className="w-full" style={{ width: '100%' }}>
-              {myRegistration && (
-                <div className="mb-2">
-                  <Tag 
-                    icon={myRegistration.status === 'Approved' ? <CheckCircleOutlined /> : <ClockCircleOutlined />} 
-                    color={myRegistration.status === 'Approved' ? 'green' : myRegistration.status === 'Pending' ? 'orange' : 'red'}
-                  >
-                    {myRegistration.status === 'Approved' 
-                      ? 'Đã tham gia hackathon' 
-                      : myRegistration.status === 'Pending' 
-                      ? 'Đang chờ duyệt' 
-                      : 'Bị từ chối'}
-                  </Tag>
-                  {myRegistration.teamName && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Đội: {myRegistration.teamName}
-                    </p>
-                  )}
-                </div>
-              )}
+              {myRegistration && (() => {
+                const statusInfo = getMyRegistrationStatusTag(myRegistration.status);
+                if (!statusInfo) return null;
+                const isWaitingMentor = myRegistration.status?.toLowerCase() === 'waitingmentor';
+                return (
+                  <div className="mb-2">
+                    <Tag icon={statusInfo.icon} color={statusInfo.color}>
+                      {statusInfo.text}
+                    </Tag>
+                    {myRegistration.teamName && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Đội: {myRegistration.teamName}
+                      </p>
+                    )}
+                    {isWaitingMentor && (
+                      <Button
+                        type="primary"
+                        size="large"
+                        icon={<UserOutlined />}
+                        onClick={() => setMentorSelectModalVisible(true)}
+                        className="w-full mt-3 bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 text-white border-0"
+                      >
+                        Chọn Mentor
+                      </Button>
+                    )}
+                  </div>
+                );
+              })()}
               
-              {registration && (
+              {myRegistration?.chapterResponse && (
                 <div className="mb-2">
-                  {getRegistrationStatusTag()}
-                  {registration.chapterResponse && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {registration.chapterResponse}
-                    </p>
-                  )}
+                  <p className="text-sm text-muted-foreground">
+                    {myRegistration.chapterResponse}
+                  </p>
                 </div>
               )}
               
@@ -373,7 +485,7 @@ const StudentHackathonDetail = () => {
                 </Button>
               )}
 
-              {myRegistration?.status === 'Approved' && registration?.status === 'approved' && registration.selectedPhaseId && registration.selectedTrackId && (
+              {myRegistration && (myRegistration.status?.toLowerCase() === 'approved' || myRegistration.status?.toLowerCase() === 'waitingmentor') && registration?.status?.toLowerCase() === 'approved' && registration.selectedPhaseId && registration.selectedTrackId && (
                 <>
                   <Button
                     size="large"
@@ -558,6 +670,110 @@ const StudentHackathonDetail = () => {
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Select Mentor Modal */}
+      <Modal
+        title="Chọn Mentor"
+        open={mentorSelectModalVisible}
+        onOk={handleSelectMentor}
+        onCancel={() => {
+          setMentorSelectModalVisible(false);
+          setSelectedMentorId(null);
+          setMentorSearchQuery('');
+        }}
+        okText="Gửi yêu cầu"
+        cancelText="Hủy"
+        okButtonProps={{
+          disabled: !selectedMentorId,
+          loading: assignMentorMutation.isPending,
+          className: 'bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 text-white border-0',
+        }}
+        width={700}
+        className="[&_.ant-modal-content]:bg-gray-900/95 [&_.ant-modal-content]:backdrop-blur-xl [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white [&_.ant-modal-mask]:bg-black/50"
+      >
+        <div className="space-y-4">
+          <p className="text-muted-foreground mb-2">
+            Vui lòng chọn một mentor để hỗ trợ đội của bạn trong hackathon này.
+          </p>
+          
+          {/* Search Input */}
+          <Input
+            placeholder="Tìm kiếm mentor theo tên, email, chapter..."
+            prefix={<SearchOutlined className="text-muted-foreground" />}
+            value={mentorSearchQuery}
+            onChange={(e) => setMentorSearchQuery(e.target.value)}
+            size="large"
+            allowClear
+            className="[&_.ant-input]:bg-white/5 [&_.ant-input]:border-white/10 [&_.ant-input]:text-white [&_.ant-input]:placeholder:text-gray-500 [&_.ant-input]:focus:border-green-500/50 [&_.ant-input]:hover:border-green-500/30"
+          />
+          
+          {filteredMentors.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4">
+              {filteredMentors.map((mentor) => (
+                <div
+                  key={mentor.mentorId}
+                  onClick={() => setSelectedMentorId(mentor.mentorId)}
+                  className={`relative p-5 rounded-xl transition-all duration-200 border-2 cursor-pointer ${
+                    selectedMentorId === mentor.mentorId
+                      ? 'bg-green-500/10 border-green-500 shadow-lg shadow-green-500/20'
+                      : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-green-500/30 hover:shadow-md'
+                  }`}
+                >
+                  {/* Avatar - Top Left */}
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="relative">
+                      <Avatar
+                        size={64}
+                        className="bg-gradient-to-r from-green-400 to-emerald-400 flex-shrink-0 shadow-lg border-2 border-green-500/50"
+                      >
+                        <span className="text-2xl font-bold text-white">
+                          {mentor.username.charAt(0).toUpperCase()}
+                        </span>
+                      </Avatar>
+                    </div>
+                    
+                    {/* Name and Position */}
+                    <div className="flex-1 pt-1">
+                      <div className="text-green-400 font-semibold text-xl mb-2">
+                        {mentor.username}
+                      </div>
+                      {mentor.position && (
+                        <div className="flex items-center gap-2 text-green-400">
+                          <BankOutlined className="text-sm" />
+                          <span className="text-sm">{mentor.position}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Separator */}
+                  <Divider className="my-3 border-green-500/30" />
+
+                  {/* Email and Location */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-green-400">
+                      <MailOutlined className="text-sm" />
+                      <span className="text-sm truncate">{mentor.email}</span>
+                    </div>
+                    {mentor.chapterName && (
+                      <div className="flex items-center gap-2 text-green-400">
+                        <EnvironmentOutlined className="text-sm" />
+                        <span className="text-sm truncate">{mentor.chapterName}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <SearchOutlined className="text-4xl mb-3 opacity-50" />
+              <p className="text-base">Không tìm thấy mentor nào phù hợp</p>
+              <p className="text-sm mt-1">Vui lòng thử lại với từ khóa khác</p>
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );
