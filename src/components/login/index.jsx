@@ -1,6 +1,6 @@
 import { GoogleLogin } from '@react-oauth/google';
 import { useMutation } from '@tanstack/react-query';
-import { Spin } from 'antd';
+import { message, Spin } from 'antd';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { useState } from 'react';
@@ -36,10 +36,10 @@ function Login() {
         if (role === 'Admin') {
           window.location.href = PATH_NAME.ADMIN;
         }
-        if (role === 'Partner') {
+        else if (role === 'Partner') {
           window.location.href = PATH_NAME.PARTNER;
         }
-        if (role === 'Judge') {
+        else if (role === 'Judge') {
           window.location.href = PATH_NAME.JUDGE;
         }
         else {
@@ -50,10 +50,10 @@ function Login() {
     onError: (err) => {
       hideLoading(); // Tắt spinner khi có lỗi
       if (err && err.status === 401) {
-        notify('error', { description: 'Thông tin đăng nhập không hợp lệ' });
+        message('error', { description: 'Thông tin đăng nhập không hợp lệ' });
         return;
       }
-      notify('error', { description: 'Lỗi hệ thống' });
+      message('error', { description: 'Lỗi hệ thống' });
     },
   });
 
