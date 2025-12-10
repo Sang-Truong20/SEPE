@@ -32,14 +32,13 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 import { useGetTeam } from '../../hooks/student/team';
-import { useGetPendingMembers, useApproveTeamMember, useRejectTeamMember } from '../../hooks/student/team-member-approval';
-import { useGetTeamPenalties, useAppealTeamPenalty } from '../../hooks/student/team-penalty';
+import { useApproveTeamMember, useRejectTeamMember } from '../../hooks/student/team-member-approval';
 import { useUserData } from '../../hooks/useUserData';
-import { useGetSubmissionsByTeam } from '../../hooks/student/submission';
 import { useInviteTeamMember } from '../../hooks/student/team-invitation';
+import { useGetTeamChatGroups, useGetChatGroupMessages, useSendChatMessage } from '../../hooks/student/chat';
 import { useGetTeamMembers } from '../../hooks/student/team-member';
-import { Table, Tooltip, Button as AntButton } from 'antd';
-import { EyeOutlined, DownloadOutlined, FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Table, Tooltip, Button as AntButton, Input as AntInput } from 'antd';
+import { EyeOutlined, DownloadOutlined, FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, MessageOutlined, SendOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 const { TabPane } = Tabs;
@@ -122,122 +121,44 @@ const MyTeamPage = () => {
   (teamData?.leaderName && currentUserName && teamData.leaderName === currentUserName);
 
   // Member approval hooks
-  const { data: pendingMembers = [] } = useGetPendingMembers(id, {
-    enabled: isLeader && !!id,
-  });
   const approveMemberMutation = useApproveTeamMember();
   const rejectMemberMutation = useRejectTeamMember();
 
-  // Team penalty hooks
-  const { data: teamPenalties = [], isLoading: penaltiesLoading } = useGetTeamPenalties(id, {
-    enabled: !!id,
-  });
-  const appealPenaltyMutation = useAppealTeamPenalty();
-  const [appealModalVisible, setAppealModalVisible] = useState(false);
-  const [selectedPenalty, setSelectedPenalty] = useState(null);
-  const [appealForm] = Form.useForm();
-  const displayPenalties = teamPenalties || [];
+  // Chat hooks
+  const { data: chatGroupsData = [], isLoading: chatGroupsLoading } = useGetTeamChatGroups(id);
+  const [selectedChatGroup, setSelectedChatGroup] = useState(null);
+  const [messageContent, setMessageContent] = useState('');
+  const sendMessageMutation = useSendChatMessage();
+  
+  const chatGroups = Array.isArray(chatGroupsData) 
+    ? chatGroupsData 
+    : Array.isArray(chatGroupsData?.data) 
+      ? chatGroupsData.data 
+      : [];
+  
+  const { data: messagesData = [], isLoading: messagesLoading } = useGetChatGroupMessages(
+    selectedChatGroup?.chatGroupId
+  );
+  
+  const messages = Array.isArray(messagesData) 
+    ? messagesData 
+    : Array.isArray(messagesData?.data) 
+      ? messagesData.data 
+      : [];
 
-  // Submissions hooks
-  const {
-    data: submissionsData = [],
-    isLoading: submissionsLoading,
-  } = useGetSubmissionsByTeam(id, {
-    enabled: !!id,
-  });
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
-
-  const getSubmissionStatusColor = (isFinal) => {
-    return isFinal ? 'green' : 'default';
-  };
-
-  const getSubmissionStatusIcon = (isFinal) => {
-    return isFinal ? <CheckCircleOutlined /> : <ClockCircleOutlined />;
-  };
-
-  const getSubmissionStatusText = (isFinal) => {
-    return isFinal ? 'Đã nộp' : 'Bản nháp';
-  };
-
-  const handleDownloadFile = (filePath) => {
-    if (filePath) {
-      window.open(filePath, '_blank');
-    } else {
-      message.warning('Không có file để tải xuống');
+  const handleSendMessage = async () => {
+    if (!messageContent.trim() || !selectedChatGroup?.chatGroupId) return;
+    
+    try {
+      await sendMessageMutation.mutateAsync({
+        chatGroupId: selectedChatGroup.chatGroupId,
+        content: messageContent.trim(),
+      });
+      setMessageContent('');
+    } catch (error) {
+      console.error('Send message error:', error);
     }
   };
-
-  const submissionColumns = [
-    {
-      title: 'Tiêu đề',
-      dataIndex: 'title',
-      key: 'title',
-      render: (text) => (
-        <span className="font-medium text-white">{text || 'Chưa có tiêu đề'}</span>
-      ),
-    },
-    {
-      title: 'Phase',
-      dataIndex: 'phaseName',
-      key: 'phaseName',
-      render: (text) => <span className="text-gray-300">{text || 'N/A'}</span>,
-    },
-    {
-      title: 'Track',
-      dataIndex: 'trackName',
-      key: 'trackName',
-      render: (text) => <span className="text-gray-300">{text || 'N/A'}</span>,
-    },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'isFinal',
-      key: 'isFinal',
-      render: (isFinal) => (
-        <Tag
-          color={getSubmissionStatusColor(isFinal)}
-          icon={getSubmissionStatusIcon(isFinal)}
-        >
-          {getSubmissionStatusText(isFinal)}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Đã nộp',
-      dataIndex: 'submittedAt',
-      key: 'submittedAt',
-      render: (date) => (
-        <span className="text-gray-400">
-          {date ? dayjs(date).format('DD/MM/YYYY HH:mm') : 'Chưa nộp'}
-        </span>
-      ),
-    },
-    {
-      title: 'Thao tác',
-      key: 'actions',
-      render: (_, record) => (
-        <Space size="middle">
-          <Tooltip title="Xem chi tiết">
-            <AntButton
-              type="text"
-              className="text-white hover:text-green-400"
-              icon={<EyeOutlined />}
-              onClick={() => setSelectedSubmission(record)}
-            />
-          </Tooltip>
-          {record.filePath && (
-            <Tooltip title="Tải xuống file">
-              <AntButton
-                type="text"
-                className="text-white hover:text-green-400"
-                icon={<DownloadOutlined />}
-                onClick={() => handleDownloadFile(record.filePath)}
-              />
-            </Tooltip>
-          )}
-        </Space>
-      ),
-    },
-  ];
 
   const handleInvite = async (values) => {
     try {
@@ -299,20 +220,6 @@ const MyTeamPage = () => {
     });
   };
 
-  const handleAppealPenalty = async (values) => {
-    try {
-      await appealPenaltyMutation.mutateAsync({
-        penaltyId: selectedPenalty.id,
-        teamId: id,
-        message: values.message,
-      });
-      setAppealModalVisible(false);
-      appealForm.resetFields();
-      setSelectedPenalty(null);
-    } catch (error) {
-      console.error('Appeal penalty error:', error);
-    }
-  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -451,82 +358,6 @@ const MyTeamPage = () => {
         onChange={setActiveTab}
         className="[&_.ant-tabs-tab]:text-gray-400 [&_.ant-tabs-tab-active]:text-white [&_.ant-tabs-ink-bar]:bg-gradient-to-r [&_.ant-tabs-ink-bar]:from-green-500 [&_.ant-tabs-ink-bar]:to-emerald-400"
       >
-        {isLeader && pendingMembers.length > 0 && (
-          <TabPane 
-            tab={
-              <Badge count={pendingMembers.length} size="small">
-                <span>Duyệt thành viên</span>
-              </Badge>
-            } 
-            key="approval"
-          >
-            <Card className="backdrop-blur-xl bg-white/5 border-white/10">
-              <h3 className="text-xl text-white mb-4">
-                Thành viên chờ duyệt ({pendingMembers.length})
-              </h3>
-              <div className="space-y-4">
-                {pendingMembers.map((member) => (
-                  <Card
-                    key={member.id || member.userId}
-                    className="bg-white/5 border-white/10 hover:bg-white/10 transition-all"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-4 flex-1">
-                        <Avatar
-                          size={48}
-                          className="bg-gradient-to-r from-green-400 to-emerald-400 text-white"
-                        >
-                          {member.avatar || member.name?.substring(0, 2).toUpperCase()}
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <h4 className="text-white font-medium">{member.name}</h4>
-                            <Badge status="warning" text="Chờ duyệt" />
-                          </div>
-                          <p className="text-sm text-gray-400 mb-2">{member.email}</p>
-                          {member.role && (
-                            <p className="text-sm text-gray-400 mb-2">{member.role}</p>
-                          )}
-                          {member.message && (
-                            <p className="text-sm text-gray-300 italic">&quot;{member.message}&quot;</p>
-                          )}
-                          {member.skills && member.skills.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {member.skills.slice(0, 4).map((skill, idx) => (
-                                <Tag key={idx} className="text-xs bg-white/5 border-white/10 text-gray-300">
-                                  {skill}
-                                </Tag>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          type="primary"
-                          icon={<CheckCircle className="w-4 h-4" />}
-                          onClick={() => handleApproveMember(member.id || member.userId)}
-                          loading={approveMemberMutation.isPending}
-                          className="bg-green-500 hover:bg-green-600 border-0"
-                        >
-                          Chấp nhận
-                        </Button>
-                        <Button
-                          danger
-                          icon={<X className="w-4 h-4" />}
-                          onClick={() => handleRejectMember(member.id || member.userId)}
-                          loading={rejectMemberMutation.isPending}
-                        >
-                          Từ chối
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </Card>
-          </TabPane>
-        )}
         <TabPane tab="Thành viên" key="members">
           <Card className="backdrop-blur-xl bg-white/5 border-white/10">
             <div className="flex items-center justify-between mb-6">
@@ -701,102 +532,140 @@ const MyTeamPage = () => {
           </Card>
         </TabPane>
 
-        <TabPane tab="Penalty đội" key="penalties">
+        <TabPane tab="Group Chat" key="chat">
           <Card className="backdrop-blur-xl bg-white/5 border-white/10">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl text-white">
-                Penalty của đội ({displayPenalties.length})
+                Group Chat ({chatGroups.length})
               </h3>
             </div>
-            {penaltiesLoading ? (
+            {chatGroupsLoading ? (
               <div className="text-center py-8">
-                <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2 animate-spin" />
-                <p className="text-gray-400">Đang tải...</p>
+                <Spin size="large" />
               </div>
-            ) : displayPenalties.length > 0 ? (
-              <div className="space-y-4">
-                {displayPenalties.map((penalty) => (
-                  <Card
-                    key={penalty.id}
-                    className="bg-white/5 border-white/10 hover:bg-white/10 transition-all"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <AlertTriangle className="w-5 h-5 text-red-400" />
-                          <h4 className="text-white font-medium">
-                            {penalty.type === 'late_submission' && 'Nộp bài muộn'}
-                            {penalty.type === 'rule_violation' && 'Vi phạm quy tắc'}
-                            {penalty.type === 'abandonment' && 'Bỏ thi giữa chừng'}
+            ) : chatGroups.length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Chat Groups List */}
+                <div className="lg:col-span-1 space-y-2">
+                  {chatGroups.map((group) => (
+                    <Card
+                      key={group.chatGroupId}
+                      className={`cursor-pointer transition-all ${
+                        selectedChatGroup?.chatGroupId === group.chatGroupId
+                          ? 'bg-green-500/10 border-green-500/50'
+                          : 'bg-white/5 border-white/10 hover:bg-white/10'
+                      }`}
+                      onClick={() => setSelectedChatGroup(group)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center">
+                          <MessageOutlined className="text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-white font-medium truncate">
+                            {group.groupName || group.teamName || 'Group Chat'}
                           </h4>
-                          <Tag color="red">-{Math.abs(penalty.points)} điểm</Tag>
-                          {penalty.status === 'appealed' && (
-                            <Tag color="orange">
-                              {penalty.appealStatus === 'pending' && 'Đang phúc khảo'}
-                              {penalty.appealStatus === 'approved' && 'Phúc khảo thành công'}
-                              {penalty.appealStatus === 'rejected' && 'Phúc khảo bị từ chối'}
-                            </Tag>
+                          {group.mentorName && (
+                            <p className="text-sm text-gray-400 truncate">
+                              Mentor: {group.mentorName}
+                            </p>
                           )}
                         </div>
-                        <p className="text-gray-300 mb-2">{penalty.reason}</p>
-                        <div className="flex items-center space-x-4 text-sm text-gray-400">
-                          <span>Giai đoạn: {penalty.hackathonPhase}</span>
-                          <span>•</span>
-                          <span>
-                            {new Date(penalty.date).toLocaleDateString('vi-VN')}
-                          </span>
-                        </div>
                       </div>
-                      {penalty.canAppeal && (
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Chat Messages */}
+                <div className="lg:col-span-2">
+                  {selectedChatGroup ? (
+                    <Card className="bg-white/5 border-white/10 h-[600px] flex flex-col">
+                      {/* Chat Header */}
+                      <div className="border-b border-white/10 pb-4 mb-4">
+                        <h4 className="text-white font-medium">
+                          {selectedChatGroup.groupName || selectedChatGroup.teamName || 'Group Chat'}
+                        </h4>
+                        {selectedChatGroup.mentorName && (
+                          <p className="text-sm text-gray-400">
+                            Mentor: {selectedChatGroup.mentorName}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Messages Area */}
+                      <div className="flex-1 overflow-y-auto mb-4 space-y-3">
+                        {messagesLoading ? (
+                          <div className="text-center py-8">
+                            <Spin size="large" />
+                          </div>
+                        ) : messages.length > 0 ? (
+                          messages.map((msg) => (
+                            <div
+                              key={msg.messageId || msg.id}
+                              className={`flex ${msg.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
+                            >
+                              <div
+                                className={`max-w-[70%] rounded-lg p-3 ${
+                                  msg.senderId === currentUserId
+                                    ? 'bg-green-500/20 border border-green-500/30'
+                                    : 'bg-white/5 border border-white/10'
+                                }`}
+                              >
+                                <div className="text-xs text-gray-400 mb-1">
+                                  {msg.senderName || 'Unknown'}
+                                </div>
+                                <div className="text-white">{msg.content}</div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {msg.createdAt
+                                    ? dayjs(msg.createdAt).format('HH:mm DD/MM')
+                                    : ''}
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-12 text-gray-400">
+                            <MessageOutlined className="text-4xl mb-2 opacity-50" />
+                            <p>Chưa có tin nhắn nào</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Message Input */}
+                      <div className="flex gap-2">
+                        <AntInput
+                          placeholder="Nhập tin nhắn..."
+                          value={messageContent}
+                          onChange={(e) => setMessageContent(e.target.value)}
+                          onPressEnter={handleSendMessage}
+                          className="bg-white/5 border-white/10 text-white"
+                        />
                         <Button
                           type="primary"
-                          icon={<FileText className="w-4 h-4" />}
-                          onClick={() => {
-                            setSelectedPenalty(penalty);
-                            setAppealModalVisible(true);
-                          }}
-                          className="bg-orange-500 hover:bg-orange-600 border-0"
+                          icon={<SendOutlined />}
+                          onClick={handleSendMessage}
+                          loading={sendMessageMutation.isPending}
+                          disabled={!messageContent.trim()}
+                          className="bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 border-0"
                         >
-                          Phúc khảo
+                          Gửi
                         </Button>
-                      )}
-                    </div>
-                  </Card>
-                ))}
+                      </div>
+                    </Card>
+                  ) : (
+                    <Card className="bg-white/5 border-white/10 h-[600px] flex items-center justify-center">
+                      <div className="text-center text-gray-400">
+                        <MessageOutlined className="text-4xl mb-2 opacity-50" />
+                        <p>Chọn một group chat để xem tin nhắn</p>
+                      </div>
+                    </Card>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="text-center py-12">
-                <Award className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">Đội không có penalty nào</p>
-              </div>
-            )}
-          </Card>
-        </TabPane>
-
-        <TabPane tab="Nộp bài" key="submissions">
-          <Card className="backdrop-blur-xl bg-white/5 border-white/10">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl text-white">
-                Bài nộp của đội ({submissionsData.length})
-              </h3>
-            </div>
-            {submissionsLoading ? (
-              <div className="text-center py-8">
-                <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2 animate-spin" />
-                <p className="text-gray-400">Đang tải...</p>
-              </div>
-            ) : submissionsData.length > 0 ? (
-              <Table
-                columns={submissionColumns}
-                dataSource={submissionsData}
-                rowKey="submissionId"
-                pagination={false}
-                className="[&_.ant-table]:bg-transparent [&_th]:!bg-white/5 [&_th]:!text-white [&_td]:!text-gray-300 [&_td]:border-white/10 [&_th]:border-white/10 [&_tr:hover_td]:!bg-white/10"
-              />
-            ) : (
-              <div className="text-center py-12">
-                <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">Chưa có bài nộp nào</p>
+                <MessageOutlined className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400">Chưa có group chat nào</p>
               </div>
             )}
           </Card>
@@ -855,154 +724,6 @@ const MyTeamPage = () => {
         </Form>
       </Modal>
 
-      {/* Appeal Penalty Modal */}
-      <Modal
-        title="Phúc khảo Penalty"
-        open={appealModalVisible}
-        onCancel={() => {
-          setAppealModalVisible(false);
-          appealForm.resetFields();
-          setSelectedPenalty(null);
-        }}
-        footer={null}
-        className="[&_.ant-modal-content]:bg-gray-900/95 [&_.ant-modal-content]:backdrop-blur-xl [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white [&_.ant-modal-mask]:bg-black/50"
-      >
-        {selectedPenalty && (
-          <div className="mb-4">
-            <Alert
-              message={
-                <div>
-                  <p className="text-white font-medium mb-1">
-                    {selectedPenalty.type === 'late_submission' && 'Nộp bài muộn'}
-                    {selectedPenalty.type === 'rule_violation' && 'Vi phạm quy tắc'}
-                    {selectedPenalty.type === 'abandonment' && 'Bỏ thi giữa chừng'}
-                  </p>
-                  <p className="text-gray-300 text-sm">{selectedPenalty.reason}</p>
-                  <p className="text-red-400 text-sm mt-1">
-                    Trừ {Math.abs(selectedPenalty.points)} điểm
-                  </p>
-                </div>
-              }
-              type="error"
-              showIcon
-              className="mb-4"
-            />
-          </div>
-        )}
-        <Form form={appealForm} onFinish={handleAppealPenalty} layout="vertical">
-          <Form.Item
-            label={<span className="text-white">Lý do phúc khảo</span>}
-            name="message"
-            rules={[
-              { required: true, message: 'Vui lòng nhập lý do phúc khảo!' },
-              { min: 10, message: 'Lý do phúc khảo phải có ít nhất 10 ký tự!' },
-            ]}
-          >
-            <Input.TextArea
-              rows={4}
-              placeholder="Giải thích lý do bạn muốn phúc khảo penalty này..."
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <div className="flex justify-end gap-2">
-              <Button
-                onClick={() => {
-                  setAppealModalVisible(false);
-                  appealForm.resetFields();
-                  setSelectedPenalty(null);
-                }}
-              >
-                Hủy
-              </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={appealPenaltyMutation.isPending}
-                className="bg-orange-500 hover:bg-orange-600 border-0"
-              >
-                {appealPenaltyMutation.isPending ? 'Đang gửi...' : 'Gửi phúc khảo'}
-              </Button>
-            </div>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Submission Details Modal */}
-      <Modal
-        title={
-          selectedSubmission && (
-            <span className="text-xl font-semibold text-white">
-              Chi tiết bài nộp: {selectedSubmission.title || 'Chưa có tiêu đề'}
-            </span>
-          )
-        }
-        open={!!selectedSubmission}
-        onCancel={() => setSelectedSubmission(null)}
-        footer={null}
-        width={800}
-        className="[&_.ant-modal-content]:bg-gray-900/95 [&_.ant-modal-content]:backdrop-blur-xl [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white [&_.ant-modal-mask]:bg-black/50"
-      >
-        {selectedSubmission && (
-          <div className="space-y-6">
-            {/* Project Info */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-gray-400 mb-1">Phase</label>
-                <p className="text-white">{selectedSubmission.phaseName || 'N/A'}</p>
-              </div>
-              <div>
-                <label className="block text-gray-400 mb-1">Track</label>
-                <p className="text-white">{selectedSubmission.trackName || 'N/A'}</p>
-              </div>
-              <div>
-                <label className="block text-gray-400 mb-1">Đội</label>
-                <p className="text-white">{selectedSubmission.teamName || 'N/A'}</p>
-              </div>
-              <div>
-                <label className="block text-gray-400 mb-1">Trạng thái</label>
-                <Tag color={getSubmissionStatusColor(selectedSubmission.isFinal)}>
-                  {getSubmissionStatusText(selectedSubmission.isFinal)}
-                </Tag>
-              </div>
-              <div>
-                <label className="block text-gray-400 mb-1">Đã nộp</label>
-                <p className="text-white">
-                  {selectedSubmission.submittedAt 
-                    ? dayjs(selectedSubmission.submittedAt).format('DD/MM/YYYY HH:mm')
-                    : 'Chưa nộp'}
-                </p>
-              </div>
-            </div>
-
-            {/* File */}
-            {selectedSubmission.filePath && (
-              <div>
-                <label className="block text-gray-400 mb-2">File đã nộp</label>
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
-                  <div className="flex items-center gap-3">
-                    <FileTextOutlined className="text-green-400 text-lg" />
-                    <div>
-                      <p className="text-white m-0">
-                        {selectedSubmission.filePath.split('/').pop() || 'File'}
-                      </p>
-                      <p className="text-gray-400 text-sm m-0">
-                        {selectedSubmission.filePath}
-                      </p>
-                    </div>
-                  </div>
-                  <AntButton
-                    type="text"
-                    className="text-white hover:text-green-400"
-                    icon={<DownloadOutlined />}
-                    onClick={() => handleDownloadFile(selectedSubmission.filePath)}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
     </div>
   );
 };
