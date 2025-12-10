@@ -65,7 +65,8 @@ const ChapterTeamHackathonApproval = () => {
   const handleApprove = async (approval) => {
     try {
       await approveMutation.mutateAsync({
-        approvalId: approval.registrationId,
+        teamId: approval.teamId,
+        teamid: approval.teamid,
       });
     } catch (error) {
       console.error('Error approving:', error);
@@ -80,8 +81,9 @@ const ChapterTeamHackathonApproval = () => {
 
     rejectMutation.mutate(
       {
-        approvalId: selectedApproval.registrationId,
-        reason: rejectReason,
+        teamId: selectedApproval.teamId,
+        teamid: selectedApproval.teamid,
+        cancelReason: rejectReason,
       },
       {
         onSuccess: () => {

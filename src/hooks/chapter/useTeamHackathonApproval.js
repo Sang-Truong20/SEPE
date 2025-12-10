@@ -27,8 +27,15 @@ export const useApproveTeamHackathon = (hackathonId) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ approvalId }) => {
-      const response = await axiosClient.put(`/HackathonRegistration/${approvalId}/approve`);
+    mutationFn: async ({ teamId, teamid }) => {
+      const payloadTeamId = teamId ?? teamid;
+      if (!hackathonId || !payloadTeamId) {
+        throw new Error('hackathonId and teamId are required');
+      }
+      const response = await axiosClient.post('/HackathonRegistration/approve', {
+        hackathonId,
+        teamId: payloadTeamId,
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -47,8 +54,19 @@ export const useRejectTeamHackathon = (hackathonId) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ approvalId, reason }) => {
-      const response = await axiosClient.put(`/HackathonRegistration/${approvalId}/reject`, { reason });
+    mutationFn: async ({ teamId, teamid, cancelReason }) => {
+      const payloadTeamId = teamId ?? teamid;
+      if (!hackathonId || !payloadTeamId) {
+        throw new Error('hackathonId and teamId are required');
+      }
+      if (!cancelReason) {
+        throw new Error('cancelReason is required');
+      }
+      const response = await axiosClient.post('/HackathonRegistration/reject', {
+        hackathonId,
+        teamId: payloadTeamId,
+        cancelReason,
+      });
       return response.data;
     },
     onSuccess: () => {
