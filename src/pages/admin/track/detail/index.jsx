@@ -46,7 +46,6 @@ const TrackDetail = () => {
 
   const judgeUsers = allUsers.filter(user => user.roleName === 'Judge' && !trackAssignments.some(assignment => String(assignment.judgeId) === String(user.userId)));
 
-
   // Lấy tiêu chí chỉ của phase này → sau đó filter theo trackId ở client
   const { fetchCriteria, deleteCriterion } = useCriteria();
   const { data: phaseCriteria = [], isLoading: criteriaLoading } =
@@ -60,9 +59,9 @@ const TrackDetail = () => {
   );
 
   const model = {
-    modelName: 'Tracks',
+    modelName: 'Hạng mục',
     fields: [
-      { key: 'Tên Track', type: 'input', name: 'name' },
+      { key: 'Tên hạng mục', type: 'input', name: 'name' },
       { key: 'Mô tả', type: 'textarea', name: 'description' },
       {
         key: 'Thử thách',
@@ -253,12 +252,12 @@ const TrackDetail = () => {
     setConfirmModal({ open: false, type: '', record: null });
   };
 
-  if (trackError)
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-500">
-        Lỗi tải track
-      </div>
-    );
+    if (trackError)
+      return (
+        <div className="min-h-screen flex items-center justify-center text-red-500">
+          Lỗi tải hạng mục
+        </div>
+      );
   if (trackLoading || criteriaLoading || usersLoading || assignmentsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -281,7 +280,7 @@ const TrackDetail = () => {
       }}
     >
       <EntityDetail
-        entityName="Track"
+        entityName="Hạng mục"
         model={model}
         data={track || {}}
         onBack={() =>
@@ -302,7 +301,7 @@ const TrackDetail = () => {
             model={judgeAssignmentTableModel}
             data={trackAssignments}
             loading={assignmentsLoading}
-            emptyText="Chưa có giám khảo nào được phép chấm cho track này"
+            emptyText="Chưa có giám khảo nào được phép chấm cho hạng mục này"
           />
         </Card>
 
@@ -314,7 +313,7 @@ const TrackDetail = () => {
               data={trackCriteria}
               loading={criteriaLoading}
               handlers={criteriaHandlers}
-              emptyText="Chưa có tiêu chí chấm điểm nào cho track này"
+              emptyText="Chưa có tiêu chí chấm điểm nào cho hạng mục này"
             />
           </Card>
         )}
@@ -322,7 +321,7 @@ const TrackDetail = () => {
 
       {/* Assign Judge Modal */}
       <Modal
-        title="giám khảo"
+        title="Chọn giám khảo"
         open={isAssignModalOpen}
         onCancel={() => {
           setIsAssignModalOpen(false);
@@ -330,6 +329,8 @@ const TrackDetail = () => {
         }}
         onOk={() => assignForm.submit()}
         confirmLoading={createJudgeAssignment.isPending}
+        width={600}
+        centered
       >
         <Form
           form={assignForm}
@@ -339,19 +340,31 @@ const TrackDetail = () => {
           <Form.Item
             label="Chọn giám khảo"
             name="judgeId"
-            rules={[{ required: true, message: 'Hãy chọn giám khảo....' }]}
+            rules={[{ required: true, message: 'Vui lòng chọn giám khảo' }]}
           >
             <Select
-              placeholder="Hãy chọn giám khảo...."
+              placeholder="Tìm kiếm theo tên hoặc email..."
               showSearch
-              filterOption={(input, option) =>
-                option.children.toLowerCase().includes(input.toLowerCase())
-              }
               loading={usersLoading}
+              optionFilterProp="label" // Quan trọng: Antd sẽ dùng "label" để filter
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              style={{ width: '100%' }}
+              virtual={true} // Bật virtual scroll khi danh sách dài
+              listHeight={200} // Chiều cao dropdown
             >
               {judgeUsers.map(judge => (
-                <Select.Option key={judge.userId} value={judge.userId}>
-                  {judge.fullName}  ({judge.email})
+                <Select.Option
+                  key={judge.userId}
+                  value={judge.userId}
+                  label={`${judge.fullName} ${judge.email}`} // Dùng để search chính xác
+                >
+                  <div>
+                    <strong>{judge.fullName}</strong>
+                    <br />
+                    <small style={{ color: '#888' }}>{judge.email}</small>
+                  </div>
                 </Select.Option>
               ))}
             </Select>

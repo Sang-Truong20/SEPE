@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
+import useMessage from "../../util/getError";
 
 // -------------------------------------------------------------------
 // Query Keys cho Score
@@ -18,6 +19,7 @@ export const scoreQueryKeys = {
 // -------------------------------------------------------------------
 export const useScores = () => {
   const queryClient = useQueryClient();
+  const { getMessage } = useMessage();
 
   // 1. Lấy team scores theo groupId
   /**
@@ -85,11 +87,11 @@ export const useScores = () => {
       // Invalidate lists liên quan đến submission hoặc phase/group (giả sử dựa trên submissionId)
       // Có thể cần thêm logic lấy phaseId/groupId từ context nếu biết
       queryClient.invalidateQueries({ queryKey: scoreQueryKeys.all });
-      message.success("Score created successfully!");
+      message.success("Tạo điểm thành công!");
     },
     onError: (error) => {
       console.error("Error creating score:", error);
-      message.error("Failed to create score. Please try again.");
+      message.error(getMessage(error));
     },
   });
 
@@ -106,11 +108,11 @@ export const useScores = () => {
     mutationFn: (payload) => axiosClient.put("/Score/score", payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: scoreQueryKeys.all });
-      message.success("Score updated successfully!");
+      message.success("Cập nhật điểm thành công!");
     },
     onError: (error) => {
       console.error("Error updating score:", error);
-      message.error("Failed to update score. Please try again.");
+      message.error(getMessage(error));
     },
   });
 

@@ -21,6 +21,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useMemo, useCallback } from 'react';
+import { getStatusDisplay } from '../../configs/statusConfig';
 
 const SUPPORTED_TYPES = [
   'input',
@@ -114,17 +115,17 @@ const EntityDetail = ({
               : field.tagColor || 'default';
           return <Tag color={tagColor}>{tagText}</Tag>;
 
-        case 'status':
-          const statusMap = field.statusMap || {
-            Complete: { text: 'Hoàn thành', color: 'success' },
-            Pending: { text: 'Chờ xử lý', color: 'warning' },
-            Failed: { text: 'Thất bại', color: 'error' },
-          };
-          const status = statusMap[raw] || {
-            text: raw || 'N/A',
-            color: 'default',
+        case 'status': {
+          const statusMap = field.statusMap || {};
+          const statusType = field.statusType || 'default';
+          const matched = raw ? statusMap[raw] : null;
+          const fallback = getStatusDisplay(raw, statusType);
+          const status = matched || {
+            text: fallback.text || raw || 'N/A',
+            color: fallback.color || 'default',
           };
           return <Badge status={status.color} text={status.text} />;
+        }
 
         case 'boolean':
           return (

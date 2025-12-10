@@ -28,7 +28,7 @@ const HackathonDetail = () => {
           ]
         ]
       },
-      { key: 'Status', type: 'dropdown', name: 'status' }
+      { key: 'Trạng thái', type: 'dropdown', name: 'status' }
     ]
   };
 
@@ -38,6 +38,7 @@ const HackathonDetail = () => {
       if (!value) return <span className="text-gray-300">--</span>;
       const map = {
         Pending: { color: 'gold', text: 'Đang chờ' },
+        Unactive: { color: 'gold', text: 'Chưa bắt đầu' },
         Active: { color: 'green', text: 'Đang diễn ra' },
         Ended: { color: 'red', text: 'Đã kết thúc' }
       };

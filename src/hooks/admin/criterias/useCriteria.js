@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import axiosClient from '../../../configs/axiosClient';
+import useMessage from '../../util/getError';
 
 /**
  * API: GET /api/Criterion
@@ -36,6 +37,7 @@ export const criterionQueryKeys = {
 // -------------------------------------------------------------------
 export const useCriteria = () => {
   const queryClient = useQueryClient();
+  const { getMessage } = useMessage();
 
   // 1. Lấy danh sách criteria theo phaseId
   /**
@@ -133,11 +135,11 @@ export const useCriteria = () => {
       queryClient.invalidateQueries({
         queryKey: criterionQueryKeys.list(variables.phaseId),
       });
-      message.success('Criterion created successfully!');
+      message.success('Tạo tiêu chí thành công!');
     },
     onError: (error) => {
       console.error('Error creating criterion:', error);
-      message.error('Failed to create criterion. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -167,11 +169,11 @@ export const useCriteria = () => {
       });
       // Invalidate list nếu biết phaseId, nhưng giả sử invalidate all lists
       queryClient.invalidateQueries({ queryKey: criterionQueryKeys.lists() });
-      message.success('Criterion updated successfully!');
+      message.success('Cập nhật tiêu chí thành công!');
     },
     onError: (error) => {
       console.error('Error updating criterion:', error);
-      message.error('Failed to update criterion. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -189,11 +191,11 @@ export const useCriteria = () => {
     mutationFn: (id) => axiosClient.delete(`/Criterion/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: criterionQueryKeys.lists() });
-      message.success('Criterion deleted successfully!');
+      message.success('Xóa tiêu chí thành công!');
     },
     onError: (error) => {
       console.error('Error deleting criterion:', error);
-      message.error('Failed to delete criterion. Please try again.');
+      message.error(getMessage(error));
     },
   });
 

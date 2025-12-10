@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { callRefreshToken } from '../services/auth';
-import { useLogout } from '../hooks/useLogout';
+import { performLogout } from '../hooks/useLogout';
 
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL,
@@ -11,23 +11,20 @@ const axiosClient = axios.create({
 });
 
 axiosClient.interceptors.request.use(
-  async (config) => {
-    const accessToken = Cookies.get('accessToken');
+  (config) => {
+    const accessToken = Cookies.get("accessToken");
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
-  (err) => {
-    return Promise.reject(err);
-  },
+  (err) => Promise.reject(err)
 );
 
 axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    const logout = useLogout();
 
     if (error?.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -37,30 +34,29 @@ axiosClient.interceptors.response.use(
       if (refreshToken) {
         try {
           const res = await callRefreshToken(refreshToken);
+          if (res?.status === 200) {
+            const { accessToken: newAccessToken, refreshToken: newRefreshToken } = res.data;
 
-          if (res && res.status === 200) {
-            const newAccessToken = res.data.accessToken;
-            const newRefreshToken = res.data.refreshToken;
+            Cookies.set("accessToken", newAccessToken);
+            if (newRefreshToken) Cookies.set("refreshToken", newRefreshToken);
 
-            Cookies.set('accessToken', newAccessToken);
-            Cookies.set('refreshToken', newRefreshToken);
-
-            originalRequest.headers['Authorization'] =
-              `Bearer ${newAccessToken}`;
-            axiosClient.defaults.headers.common['Authorization'] =
-              `Bearer ${newAccessToken}`;
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            axiosClient.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
 
             return axiosClient(originalRequest);
           }
-        } catch (error) {
-          console.error('err', error);
-          logout();
+        } catch (refreshError) {
+          console.error("Refresh token failed", refreshError);
+          performLogout(); // ← Gọi hàm thuần, không dùng hook
+          return Promise.reject(refreshError);
         }
+      } else {
+        performLogout();
       }
     }
 
     return Promise.reject(error);
-  },
+  }
 );
 
 export default axiosClient;

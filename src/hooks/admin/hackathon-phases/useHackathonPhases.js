@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
+import useMessage from "../../util/getError";
 
 /**
  * API endpoints for HackathonPhase
@@ -25,6 +26,7 @@ export const hackathonPhaseQueryKeys = {
 
 export const useHackathonPhases = () => {
     const queryClient = useQueryClient();
+    const { getMessage } = useMessage();
 
     // Fetch phases by hackathon ID
     /**
@@ -80,11 +82,11 @@ export const useHackathonPhases = () => {
             queryClient.invalidateQueries({
                 queryKey: hackathonPhaseQueryKeys.list(variables.hackathonId)
             });
-            message.success('Hackathon phase created successfully!');
+            message.success('Tạo giai đoạn hackathon thành công!');
         },
         onError: (error) => {
             console.error('Error creating hackathon phase:', error);
-            message.error('Failed to create hackathon phase. Please try again.');
+            message.error(getMessage(error));
         },
     });
 
@@ -103,11 +105,11 @@ export const useHackathonPhases = () => {
         mutationFn: ({ id, payload }) => axiosClient.put(`/HackathonPhase/${id}`, payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: hackathonPhaseQueryKeys.all });
-            message.success('Hackathon phase updated successfully!');
+            message.success('Cập nhật giai đoạn hackathon thành công!');
         },
         onError: (error) => {
             console.error('Error updating hackathon phase:', error);
-            message.error('Failed to update hackathon phase. Please try again.');
+            message.error(getMessage(error));
         },
     });
 
@@ -123,11 +125,11 @@ export const useHackathonPhases = () => {
         mutationFn: (id) => axiosClient.delete(`/HackathonPhase/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: hackathonPhaseQueryKeys.all });
-            message.success('Hackathon phase deleted successfully!');
+            message.success('Xóa giai đoạn hackathon thành công!');
         },
         onError: (error) => {
             console.error('Error deleting hackathon phase:', error);
-            message.error('Failed to delete hackathon phase. Please try again.');
+            message.error(getMessage(error));
         },
     });
 

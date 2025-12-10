@@ -34,7 +34,7 @@ const Prizes = () => {
         entityName: 'Giải thưởng',
         rowKey: 'prizeId',
         createButton: hackathonId ? {
-            label: 'Tạo mới Prize',
+            label: 'Tạo mới giải thưởng',
             action: () => navigate(`/admin/hackathons/prizes/create?hackathonId=${hackathonId}`),
             icon: true
         } : null,
@@ -141,7 +141,7 @@ const Prizes = () => {
                             Chọn Hackathon
                         </label>
                         <Select
-                            placeholder="Chọn hackathon để xem prizes"
+                            placeholder="Chọn hackathon để xem giải thưởng"
                             value={hackathonId}
                             onChange={handleHackathonChange}
                             loading={hackathonsLoading}
@@ -150,7 +150,7 @@ const Prizes = () => {
                         >
                             {hackathons.map(hackathon => (
                                 <Select.Option key={hackathon.hackathonId} value={hackathon.hackathonId.toString()}>
-                                    {hackathon.name} ({hackathon.season})
+                                    {hackathon.name} ({hackathon.seasonName})
                                 </Select.Option>
                             ))}
                         </Select>

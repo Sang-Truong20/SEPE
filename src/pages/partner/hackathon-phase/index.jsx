@@ -130,7 +130,7 @@ const HackathonPhases = () => {
                   key={hackathon.hackathonId}
                   value={hackathon.hackathonId.toString()}
                 >
-                  {hackathon.name} ({hackathon.season})
+                  {hackathon.name} ({hackathon.seasonName})
                 </Select.Option>
               ))}
             </Select>

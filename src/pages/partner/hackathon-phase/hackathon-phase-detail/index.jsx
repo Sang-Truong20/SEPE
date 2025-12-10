@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Spin,
   ConfigProvider,
@@ -24,7 +24,7 @@ const HackathonPhaseDetail = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const hackathonId = searchParams.get('hackathonId');
-  const isLastPhase = searchParams.get('isLastPhase').includes('true');
+  const isLastPhase = searchParams.get('isLastPhase')?.includes('true');
 
   const { fetchHackathonPhase } = useHackathonPhases();
   const { fetchFinalQualified, selectTopTeams } = useQualifications();
@@ -34,11 +34,12 @@ const HackathonPhaseDetail = () => {
     isLoading: phaseLoading,
     error: phaseError,
   } = fetchHackathonPhase(id);
-  const { data: qualifiedTeams = [], isLoading: qualifiedLoading } = fetchFinalQualified(id);
+  const { data: qualifiedTeams = [], isLoading: qualifiedLoading , refetch: fetch} = fetchFinalQualified(id);
 
-
-
-  const [showQualifiedTable, setShowQualifiedTable] = useState(false);
+  // const [showQualifiedTable, setShowQualifiedTable] = useState(false);
+  useEffect(() => {
+    fetch()
+  },[])
 
   const model = {
     modelName: 'HackathonPhases',
@@ -111,17 +112,14 @@ const HackathonPhaseDetail = () => {
     }
   }), []);
 
-  const handleGetQualifiedTeams = () => {
-    selectTopTeams.mutate(id, {
-      onSuccess: () => {
-        setShowQualifiedTable(true);
-        message.success('Đã lấy danh sách đội đủ điều kiện!');
-      },
-      onError: () => {
-        message.error('Không thể lấy danh sách đội!');
-      }
-    });
-  };
+  // const handleGetQualifiedTeams = () => {
+  //   selectTopTeams.mutate(id, {
+  //     onSuccess: () => {
+  //       setShowQualifiedTable(true);
+  //     },
+  //     onError: () => {},
+  //   });
+  // };
 
   if (phaseError) {
     return (
@@ -167,24 +165,24 @@ const HackathonPhaseDetail = () => {
         {/* Qualification Section - Chỉ hiển thị nếu là phase cuối */}
         {isLastPhase && (
           <>
-            { !showQualifiedTable &&
-             ( <div className="mx-6 mb-6">
-                <Button
-                  type="dashed"
-                  icon={<PlusOutlined />}
-                  onClick={handleGetQualifiedTeams}
-                  loading={selectTopTeams.isPending}
-                  disabled={selectTopTeams.isPending}
-                  className="w-full h-12 !text-primary !border-primary/50 hover:!border-primary hover:!bg-primary/5"
-                >
-                  {selectTopTeams.isPending
-                    ? 'Đang xử lý...'
-                    : 'Lấy danh sách đội'}
-                </Button>
-              </div>)
-            }
+            {/*{ !showQualifiedTable &&*/}
+            {/* ( <div className="mx-6 mb-6">*/}
+            {/*    <Button*/}
+            {/*      type="dashed"*/}
+            {/*      icon={<PlusOutlined />}*/}
+            {/*      onClick={handleGetQualifiedTeams}*/}
+            {/*      loading={selectTopTeams.isPending}*/}
+            {/*      disabled={selectTopTeams.isPending}*/}
+            {/*      className="w-full h-12 !text-primary !border-primary/50 hover:!border-primary hover:!bg-primary/5"*/}
+            {/*    >*/}
+            {/*      {selectTopTeams.isPending*/}
+            {/*        ? 'Đang xử lý...'*/}
+            {/*        : 'Lấy danh sách đội'}*/}
+            {/*    </Button>*/}
+            {/*  </div>)*/}
+            {/*}*/}
 
-            {showQualifiedTable && (
+            {true && (
               <Card className="mt-6 border border-white/10 bg-white/5 rounded-xl">
                 <EntityTable
                   model={qualificationTableModel}

@@ -34,7 +34,7 @@ const ChallengeDetail = () => {
 
       // File với preview iframe
       {
-        key: 'File đính kèm',
+        key: 'Tệp đính kèm',
         type: 'custom',
         render: (record) => {
           const filePath = record.filePath;

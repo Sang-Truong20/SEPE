@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
+import useMessage from "../../util/getError";
 
 /**
  * API: GET /api/Appeal
@@ -27,6 +28,7 @@ export const appealQueryKeys = {
 
 export const useAppeal = () => {
   const queryClient = useQueryClient();
+  const { getMessage } = useMessage();
 
   // Fetch all appeals
   const fetchAppeals = useQuery({
@@ -93,11 +95,11 @@ export const useAppeal = () => {
     mutationFn: (payload) => axiosClient.post('/Appeal', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: appealQueryKeys.lists() });
-      message.success('Appeal created successfully!');
+      message.success('Tạo khiếu nại thành công!');
     },
     onError: (error) => {
       console.error('Error creating appeal:', error);
-      message.error('Failed to create appeal. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -116,11 +118,11 @@ export const useAppeal = () => {
       axiosClient.put(`/Appeal/${id}/review`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: appealQueryKeys.all });
-      message.success('Appeal updated successfully!');
+      message.success('Cập nhật khiếu nại thành công!');
     },
     onError: (error) => {
       console.error('Error updating appeal:', error);
-      message.error('Failed to update appeal. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -136,11 +138,11 @@ export const useAppeal = () => {
     mutationFn: (id) => axiosClient.delete(`/Appeal/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: appealQueryKeys.lists() });
-      message.success('Appeal deleted successfully!');
+      message.success('Xóa khiếu nại thành công!');
     },
     onError: (error) => {
       console.error('Error deleting appeal:', error);
-      message.error('Failed to delete appeal. Please try again.');
+      message.error(getMessage(error));
     },
   });
 

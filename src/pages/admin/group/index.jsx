@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import { ConfigProvider, theme, Modal, Button, InputNumber, Select, Card, Tag } from 'antd';
 import { ExclamationCircleOutlined, PlusOutlined, CalendarOutlined } from '@ant-design/icons';
@@ -8,6 +8,7 @@ import EntityTable from '../../../components/ui/EntityTable.jsx';
 import { useHackathons } from '../../../hooks/admin/hackathons/useHackathons.js';
 
 const Groups = (tracks) => {
+    const { id: phaseId } = useParams();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const hackathonId = searchParams.get('hackathonId');
@@ -80,7 +81,7 @@ const Groups = (tracks) => {
     const handleConfirmOk = () => {
         autoCreateGroups.mutate({
             teamsPerGroup: confirmModal.teamsPerGroup,
-            phaseId: tracks.tracks[0]?.phaseId || null,
+            phaseId: phaseId || null,
         }, {
             onSuccess: () => {
                 setConfirmModal({ open: false, teamsPerGroup: 1 });

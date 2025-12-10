@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import axiosClient from '../../../configs/axiosClient';
+import useMessage from '../../util/getError';
 
 /**
  * API: Qualification endpoints
@@ -26,6 +27,7 @@ export const qualificationQueryKeys = {
 // -------------------------------------------------------------------
 export const useQualifications = () => {
   const queryClient = useQueryClient();
+  const { getMessage } = useMessage();
 
   /**
    * API: GET /{phaseId}/final-qualified
@@ -75,11 +77,11 @@ export const useQualifications = () => {
       queryClient.invalidateQueries({
         queryKey: qualificationQueryKeys.list(phaseId),
       });
-      message.success('Top teams selected successfully!');
+      message.success('Lấy danh sách đội đủ điều kiện thành công!');
     },
     onError: (error) => {
       console.error('Error selecting top teams:', error);
-      message.error('Failed to select top teams. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
