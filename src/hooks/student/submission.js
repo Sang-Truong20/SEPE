@@ -20,11 +20,9 @@ export const useCreateDraftSubmission = () => {
         mutationFn: async (submissionData) => {
             const response = await axiosClient.post('/Submission/create-draft', {
                 teamId: submissionData.teamId,
-                challengeId: submissionData.challengeId,
+                phaseId: submissionData.phaseId,
                 title: submissionData.title,
-                githubLink: submissionData.githubLink,
-                demoLink: submissionData.demoLink,
-                reportLink: submissionData.reportLink,
+                filePath: submissionData.filePath,
             });
 
             return response.data;

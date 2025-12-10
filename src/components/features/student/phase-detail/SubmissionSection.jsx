@@ -9,78 +9,71 @@ import {
 } from '@ant-design/icons';
 import { Button, Card, Form, Input, Modal, Space, Spin, Table, Tag, Tooltip, message } from 'antd';
 import dayjs from 'dayjs';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   useCreateDraftSubmission,
-  useGetSubmissions,
+  useGetSubmissionsByTeam,
   useSetFinalSubmission,
 } from '../../../../hooks/student/submission';
-import { useGetChallengesByTrack } from '../../../../hooks/student/challenge';
 
 const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo }) => {
   const [form] = Form.useForm();
   const [submissionModalVisible, setSubmissionModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
-  const [selectedChallengeId, setSelectedChallengeId] = useState(null);
 
-  const trackId = selectedTrack?.trackId || selectedTrack?.id;
-
-  // Get challenges for the selected track
+  // Get submissions for this team - API: /api/Submission/team/{teamId}
+  // Currently hardcoded to teamId = 8 for testing
   const {
-    data: challengesData = [],
-    isLoading: challengesLoading,
-  } = useGetChallengesByTrack(trackId, { enabled: !!trackId });
-
-  const challenges = Array.isArray(challengesData)
-    ? challengesData
-    : challengesData?.data
-      ? challengesData.data
-      : challengesData?.challenges
-        ? challengesData.challenges
-        : [];
-
-  // Get challengeId - use first challenge if available, or from selectedTrack
-  const challengeId = selectedChallengeId || selectedTrack?.challengeId || (challenges.length > 0 ? challenges[0].challengeId : null);
-
-  // Get submissions for this team and phase/challenge
-  const {
-    data: submissionsData = [],
+    data: submissionsData,
     isLoading: submissionsLoading,
+    isError: submissionsError,
     refetch: refetchSubmissions,
-  } = useGetSubmissions(teamId, challengeId, {
-    enabled: !!teamId && !!challengeId,
+  } = useGetSubmissionsByTeam(teamId, {
+    enabled: !!teamId && typeof teamId === 'number',
   });
 
-  const submissions = Array.isArray(submissionsData)
-    ? submissionsData
-    : submissionsData?.data
-      ? submissionsData.data
-      : [];
+  // Filter submissions by phaseId or phaseName
+  const submissions = React.useMemo(() => {
+    if (!submissionsData) return [];
+    
+    // Handle different response formats
+    const allSubmissions = Array.isArray(submissionsData)
+      ? submissionsData
+      : Array.isArray(submissionsData?.data)
+        ? submissionsData.data
+        : Array.isArray(submissionsData?.submissions)
+          ? submissionsData.submissions
+          : [];
+    
+    if (!phaseId) return allSubmissions;
+    
+    // Filter by phaseId or phaseChallengeId if available
+    // If phaseId doesn't match, return all submissions (API already filters by team)
+    return allSubmissions.filter(sub => {
+      if (sub.phaseId === parseInt(phaseId) || sub.phaseChallengeId === parseInt(phaseId)) {
+        return true;
+      }
+      // If no phaseId match, show all submissions for this team
+      return true;
+    });
+  }, [submissionsData, phaseId]);
 
   const createDraftMutation = useCreateDraftSubmission();
   const setFinalMutation = useSetFinalSubmission();
 
-  useEffect(() => {
-    if (challenges.length > 0 && !selectedChallengeId) {
-      setSelectedChallengeId(challenges[0].challengeId);
-    }
-  }, [challenges, selectedChallengeId]);
-
   const handleCreateDraft = async (values) => {
-    if (!challengeId) {
-      message.error('Vui lòng chọn challenge');
+    if (!teamId || !phaseId) {
+      message.error('Thiếu thông tin team hoặc phase');
       return;
     }
 
     try {
       await createDraftMutation.mutateAsync({
-        teamId,
-        challengeId,
+        teamId: parseInt(teamId),
+        phaseId: parseInt(phaseId),
         title: values.title,
-        githubLink: values.githubLink,
-        demoLink: values.demoLink,
-        reportLink: values.reportLink,
+        filePath: values.filePath || '',
       });
       form.resetFields();
       setSubmissionModalVisible(false);
@@ -148,6 +141,22 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo 
       ),
     },
     {
+      title: 'Phase',
+      dataIndex: 'phaseName',
+      key: 'phaseName',
+      render: (text) => (
+        <span className="text-gray-300">{text || 'N/A'}</span>
+      ),
+    },
+    {
+      title: 'Track',
+      dataIndex: 'trackName',
+      key: 'trackName',
+      render: (text) => (
+        <span className="text-gray-300">{text || 'N/A'}</span>
+      ),
+    },
+    {
       title: 'Trạng thái',
       dataIndex: 'isFinal',
       key: 'isFinal',
@@ -161,9 +170,9 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo 
       ),
     },
     {
-      title: 'Ngày tạo',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
+      title: 'Ngày nộp',
+      dataIndex: 'submittedAt',
+      key: 'submittedAt',
       render: (date) => (
         <span className="text-gray-400">
           {date ? dayjs(date).format('DD/MM/YYYY HH:mm') : 'N/A'}
@@ -198,15 +207,16 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo 
     },
   ];
 
-  if (!selectedTrack) {
-    return (
-      <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Vui lòng chọn track trước khi nộp bài</p>
-        </div>
-      </Card>
-    );
-  }
+  // Tạm thời disable để test UI
+  // if (!selectedTrack) {
+  //   return (
+  //     <Card className="bg-card-background border border-card-border backdrop-blur-xl">
+  //       <div className="text-center py-8">
+  //         <p className="text-muted-foreground">Vui lòng chọn track trước khi nộp bài</p>
+  //       </div>
+  //     </Card>
+  //   );
+  // }
 
   return (
     <>
@@ -226,28 +236,6 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo 
           </Button>
         </div>
 
-        {challenges.length > 1 && (
-          <div className="mb-4">
-            <p className="text-sm text-muted-foreground mb-2">Chọn challenge:</p>
-            <Space wrap>
-              {challenges.map((challenge) => (
-                <Button
-                  key={challenge.challengeId}
-                  type={selectedChallengeId === challenge.challengeId ? 'primary' : 'default'}
-                  onClick={() => setSelectedChallengeId(challenge.challengeId)}
-                  className={
-                    selectedChallengeId === challenge.challengeId
-                      ? 'bg-green-500 border-green-500'
-                      : ''
-                  }
-                >
-                  {challenge.title || challenge.challengeName}
-                </Button>
-              ))}
-            </Space>
-          </div>
-        )}
-
         <div className="mb-4">
           <p className="text-sm text-muted-foreground">
             {isLeader
@@ -256,16 +244,25 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo 
           </p>
         </div>
 
-        <Table
-          columns={columns}
-          dataSource={submissions}
-          loading={submissionsLoading || challengesLoading}
-          rowKey={(record) => record.submissionId || record.id}
-          pagination={false}
-          locale={{
-            emptyText: 'Chưa có bài nộp nào',
-          }}
-        />
+        {submissionsError ? (
+          <div className="text-center py-8">
+            <p className="text-red-400">Có lỗi xảy ra khi tải danh sách bài nộp</p>
+            <Button onClick={() => refetchSubmissions()} className="mt-4">
+              Thử lại
+            </Button>
+          </div>
+        ) : (
+          <Table
+            columns={columns}
+            dataSource={submissions}
+            loading={submissionsLoading}
+            rowKey={(record) => record.submissionId || record.id || `submission-${record.title}`}
+            pagination={false}
+            locale={{
+              emptyText: 'Chưa có bài nộp nào',
+            }}
+          />
+        )}
       </Card>
 
       {/* Create Draft Modal */}
@@ -295,33 +292,13 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo 
           </Form.Item>
 
           <Form.Item
-            label={<span className="text-white">GitHub Link</span>}
-            name="githubLink"
+            label={<span className="text-white">Đường dẫn file</span>}
+            name="filePath"
             rules={[
-              { type: 'url', message: 'Vui lòng nhập URL hợp lệ' },
+              { required: true, message: 'Vui lòng nhập đường dẫn file' },
             ]}
           >
-            <Input placeholder="https://github.com/..." className="bg-gray-800 border-gray-700 text-white" />
-          </Form.Item>
-
-          <Form.Item
-            label={<span className="text-white">Demo Link</span>}
-            name="demoLink"
-            rules={[
-              { type: 'url', message: 'Vui lòng nhập URL hợp lệ' },
-            ]}
-          >
-            <Input placeholder="https://..." className="bg-gray-800 border-gray-700 text-white" />
-          </Form.Item>
-
-          <Form.Item
-            label={<span className="text-white">Report Link</span>}
-            name="reportLink"
-            rules={[
-              { type: 'url', message: 'Vui lòng nhập URL hợp lệ' },
-            ]}
-          >
-            <Input placeholder="https://..." className="bg-gray-800 border-gray-700 text-white" />
+            <Input placeholder="Nhập đường dẫn file (ví dụ: /files/submission.pdf)" className="bg-gray-800 border-gray-700 text-white" />
           </Form.Item>
 
           <Form.Item className="mb-0">
@@ -380,6 +357,27 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo 
               <p className="text-white font-medium">{selectedSubmission.title || 'Chưa có tiêu đề'}</p>
             </div>
 
+            {selectedSubmission.teamName && (
+              <div>
+                <p className="text-sm text-muted-foreground">Team</p>
+                <p className="text-white">{selectedSubmission.teamName}</p>
+              </div>
+            )}
+
+            {selectedSubmission.phaseName && (
+              <div>
+                <p className="text-sm text-muted-foreground">Phase</p>
+                <p className="text-white">{selectedSubmission.phaseName}</p>
+              </div>
+            )}
+
+            {selectedSubmission.trackName && (
+              <div>
+                <p className="text-sm text-muted-foreground">Track</p>
+                <p className="text-white">{selectedSubmission.trackName}</p>
+              </div>
+            )}
+
             <div>
               <p className="text-sm text-muted-foreground">Trạng thái</p>
               <Tag
@@ -390,54 +388,17 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo 
               </Tag>
             </div>
 
-            {selectedSubmission.githubLink && (
+            {selectedSubmission.filePath && (
               <div>
-                <p className="text-sm text-muted-foreground">GitHub Link</p>
+                <p className="text-sm text-muted-foreground">Đường dẫn file</p>
                 <a
-                  href={selectedSubmission.githubLink}
+                  href={selectedSubmission.filePath}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-green-400 hover:text-green-300"
+                  className="text-green-400 hover:text-green-300 break-all"
                 >
-                  {selectedSubmission.githubLink}
+                  {selectedSubmission.filePath}
                 </a>
-              </div>
-            )}
-
-            {selectedSubmission.demoLink && (
-              <div>
-                <p className="text-sm text-muted-foreground">Demo Link</p>
-                <a
-                  href={selectedSubmission.demoLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-green-400 hover:text-green-300"
-                >
-                  {selectedSubmission.demoLink}
-                </a>
-              </div>
-            )}
-
-            {selectedSubmission.reportLink && (
-              <div>
-                <p className="text-sm text-muted-foreground">Report Link</p>
-                <a
-                  href={selectedSubmission.reportLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-green-400 hover:text-green-300"
-                >
-                  {selectedSubmission.reportLink}
-                </a>
-              </div>
-            )}
-
-            {selectedSubmission.createdAt && (
-              <div>
-                <p className="text-sm text-muted-foreground">Ngày tạo</p>
-                <p className="text-white">
-                  {dayjs(selectedSubmission.createdAt).format('DD/MM/YYYY HH:mm')}
-                </p>
               </div>
             )}
 
@@ -447,6 +408,13 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader, userInfo 
                 <p className="text-white">
                   {dayjs(selectedSubmission.submittedAt).format('DD/MM/YYYY HH:mm')}
                 </p>
+              </div>
+            )}
+
+            {selectedSubmission.submittedBy && (
+              <div>
+                <p className="text-sm text-muted-foreground">Người nộp (ID)</p>
+                <p className="text-white">{selectedSubmission.submittedBy}</p>
               </div>
             )}
           </div>

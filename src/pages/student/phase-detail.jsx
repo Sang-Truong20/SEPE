@@ -11,7 +11,7 @@ import {
 } from '../../components/features/student/phase-detail';
 import { useGetHackathon } from '../../hooks/student/hackathon';
 import { useGetHackathonPhases } from '../../hooks/student/hackathon-phase';
-import { useGetTeamHackathonRegistration } from '../../hooks/student/hackathon-registration';
+import { useGetTeamHackathonRegistration, useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
 import { useGetTeams } from '../../hooks/student/team';
 import { useGetTeamMembers } from '../../hooks/student/team-member';
 import { useSelectTeamTrack } from '../../hooks/student/team-track';
@@ -28,11 +28,34 @@ const StudentPhaseDetail = () => {
   const { data: phases = [] } = useGetHackathonPhases(hackathonId);
   const phase = phases.find(p => p.phaseId === parseInt(phaseId));
   
-  // Get user's team
+  // Get my hackathon registrations to find teamId
+  const { data: myRegistrations } = useGetMyHackathonRegistrations();
+  
+  // Find registration for current hackathon
+  const myRegistration = React.useMemo(() => {
+    if (!myRegistrations || !Array.isArray(myRegistrations)) return null;
+    return myRegistrations.find(reg => reg.hackathonId === parseInt(hackathonId)) || null;
+  }, [myRegistrations, hackathonId]);
+  
+  // Get teamId from registration
+  const teamId = React.useMemo(() => {
+    // Try to get teamId from myRegistration first
+    if (myRegistration?.teamId) return myRegistration.teamId;
+    if (myRegistration?.team?.teamId) return myRegistration.team.teamId;
+    if (myRegistration?.team?.id) return myRegistration.team.id;
+    
+    // Fallback: try to find from teamsData
+    const userTeam = teamsData && Array.isArray(teamsData) 
+      ? teamsData.find(t => t.leaderId === (userInfo?.id || userInfo?.userId))
+      : null;
+    
+    return userTeam?.teamId || userTeam?.id || null;
+  }, [myRegistration, teamsData, userInfo]);
+  
+  // Get user's team for leader check
   const userTeam = teamsData && Array.isArray(teamsData) 
-    ? teamsData.find(t => t.leaderId === (userInfo?.id || userInfo?.userId))
+    ? teamsData.find(t => t.teamId === teamId || t.id === teamId)
     : null;
-  const teamId = userTeam?.id || userTeam?.teamId || null;
 
   // Get team members to check if user is leader
   const { data: teamMembersResponse } = useGetTeamMembers(teamId, {
@@ -169,15 +192,13 @@ const StudentPhaseDetail = () => {
             phaseId={phaseId}
           />
 
-          {teamId && (
-            <SubmissionSection
-              teamId={teamId}
-              phaseId={phaseId}
-              selectedTrack={selectedTrack}
-              isLeader={isLeader}
-              userInfo={userInfo}
-            />
-          )}
+          <SubmissionSection
+            teamId={teamId}
+            phaseId={phaseId}
+            selectedTrack={selectedTrack}
+            isLeader={isLeader}
+            userInfo={userInfo}
+          />
         </div>
 
         {/* Sidebar */}
