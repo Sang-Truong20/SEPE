@@ -1,0 +1,485 @@
+import {
+  BarChart3,
+  Bell,
+  ChevronDown,
+  Home,
+  LogOut,
+  Settings,
+  Trophy,
+  User,
+  Users,
+} from 'lucide-react';
+import React, { useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { PATH_NAME } from '../../constants';
+import { useGetNotifications, useGetUnreadCount, useMarkAsRead } from '../../hooks/student/notification';
+import { useUserData } from '../../hooks/useUserData';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
+
+const StudentLayout = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const { data: notificationsData, isLoading: notificationsLoading } = useGetNotifications();
+  
+  const notifications = Array.isArray(notificationsData)
+    ? notificationsData
+    : notificationsData?.data
+      ? notificationsData.data
+      : notificationsData?.notifications
+        ? notificationsData.notifications
+        : [];
+  
+  const { data: unreadCountData } = useGetUnreadCount();
+  const unreadCount = unreadCountData?.count ?? 0;
+  const markAsRead = useMarkAsRead();
+  const { userInfo: authUser } = useUserData();
+
+  const recentNotifications = Array.isArray(notifications) ? notifications.slice(0, 5) : [];
+
+  const userData = {
+    name: authUser?.fullName || authUser?.name || '',
+    email: authUser?.email || '',
+    avatar: authUser?.avatarUrl || authUser?.avatar || null,
+    role: authUser?.roleName || authUser?.role || '',
+    isVerified: authUser?.isVerified,
+  };
+
+  const navItems = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: Home,
+      path: PATH_NAME.STUDENT_DASHBOARD,
+    },
+    {
+      id: 'hackathons',
+      label: 'Hackathons',
+      icon: Trophy,
+      path: PATH_NAME.STUDENT_HACKATHONS,
+    },
+    { id: 'teams', label: 'Teams', icon: Users, path: PATH_NAME.STUDENT_TEAMS },
+    {
+      id: 'leaderboard',
+      label: 'Leaderboard',
+      icon: BarChart3,
+      path: PATH_NAME.STUDENT_LEADERBOARD,
+    },
+  ];
+
+  const handleNavigate = (path) => {
+    navigate(path);
+  };
+
+  const isActivePage = (path) => {
+    return location.pathname === path;
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-darkv2-primary via-darkv2-secondary to-darkv2-primary text-gray-100">
+      {/* Navigation - Top bar similar to Hackathon Management Web App UI */}
+      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-darkv2-secondary/80 border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <div className="flex items-center gap-3 lg:gap-4 shrink-0">
+              <div className="h-7 lg:h-8 w-7 lg:w-8 bg-gradient-to-r from-green-400 to-emerald-400 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">S</span>
+              </div>
+              <div className="h-6 lg:h-8 w-px bg-white/20 shrink-0"></div>
+              <span className="text-base lg:text-xl whitespace-nowrap bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                SEPE Student Portal
+              </span>
+            </div>
+
+            {/* Navigation Items - Desktop */}
+            <div className="hidden lg:flex items-center space-x-1 xl:space-x-2">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavigate(item.path)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-all ${
+                    isActivePage(item.path)
+                      ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 border border-green-500/30'
+                      : 'text-muted-foreground hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* User Menu */}
+            <div className="flex items-center space-x-2 lg:space-x-4">
+              {/* Notification Bell */}
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    setIsNotificationOpen(!isNotificationOpen);
+                    setIsDropdownOpen(false);
+                  }}
+                  className="relative p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400/20"
+                >
+                  <Bell className="w-5 h-5 text-white" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notification Dropdown */}
+                {isNotificationOpen && (
+                  <>
+                    {/* Overlay */}
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsNotificationOpen(false)}
+                    />
+
+                    {/* Dropdown Content */}
+                    <div className="absolute right-0 top-full mt-2 w-96 bg-darkv2-secondary/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 max-h-[600px] flex flex-col">
+                      {/* Header */}
+                      <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                        <h3 className="text-white font-semibold text-lg">Thông báo</h3>
+                        
+                      </div>
+
+                      {/* Notifications List */}
+                      <div className="overflow-y-auto flex-1">
+                        {notificationsLoading ? (
+                          <div className="p-8 text-center">
+                            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                          </div>
+                        ) : recentNotifications.length > 0 ? (
+                          <div className="divide-y divide-white/10">
+                            {recentNotifications.map((notification) => {
+                              const isUnread = !notification.isRead;
+                              const isTeamInvite =
+                                notification.type === 'TEAM_INVITE' ||
+                                notification.type === 'team_invite' ||
+                                notification.type?.toLowerCase().includes('team');
+
+                              return (
+                                <div
+                                  key={notification.notificationId || notification.id}
+                                  className={`p-4 hover:bg-white/5 transition-colors cursor-pointer ${
+                                    isUnread ? 'bg-blue-500/5' : ''
+                                  }`}
+                                  onClick={() => {
+                                    if (isUnread) {
+                                      const notificationId = notification.notificationId || notification.id;
+                                      if (notificationId) {
+                                        markAsRead.mutate(notificationId);
+                                      }
+                                    }
+                                    if (isTeamInvite && notification.teamId) {
+                                      navigate(`${PATH_NAME.STUDENT_TEAMS}/${notification.teamId}`);
+                                    } else {
+                                      navigate(PATH_NAME.STUDENT_NOTIFICATIONS);
+                                    }
+                                    setIsNotificationOpen(false);
+                                  }}
+                                >
+                                  <div className="flex items-start space-x-3">
+                                    {isUnread && (
+                                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p
+                                        className={`text-sm font-medium truncate ${
+                                          isUnread ? 'text-white' : 'text-muted-foreground'
+                                        }`}
+                                      >
+                                        {notification.title || notification.message}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                        {notification.message || notification.content}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground mt-2">
+                                        {dayjs(
+                                          notification.createdAt ||
+                                            notification.createdDate ||
+                                            notification.timestamp,
+                                        ).fromNow()}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="p-8 text-center text-muted-foreground">
+                            <Bell className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                            <p>Không có thông báo nào</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Footer */}
+                      {recentNotifications.length > 0 && (
+                        <div className="p-3 border-t border-white/10">
+                          <button
+                            onClick={() => {
+                              navigate(PATH_NAME.STUDENT_NOTIFICATIONS);
+                              setIsNotificationOpen(false);
+                            }}
+                            className="w-full text-center text-sm text-green-400 hover:text-green-300 transition-colors"
+                          >
+                            Xem tất cả thông báo
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Dropdown Avatar */}
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    setIsDropdownOpen(!isDropdownOpen);
+                    setIsNotificationOpen(false);
+                  }}
+                  className="flex items-center space-x-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400/20"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-white" />
+                  </div>
+
+                  <ChevronDown
+                    className={`w-4 h-4 text-white transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {/* Dropdown Menu */}
+                {isDropdownOpen && (
+                  <>
+                    {/* Overlay */}
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsDropdownOpen(false)}
+                    />
+
+                    {/* Dropdown Content */}
+                    <div className="absolute right-0 top-full mt-2 w-72 bg-darkv2-secondary/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50">
+                      {/* User Info Header */}
+                      <div className="p-4 border-b border-white/10">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center">
+                            <User className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white font-medium truncate">
+                              {userData.name}
+                            </p>
+                            <p className="text-muted-foreground text-sm truncate">
+                              {userData.email}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-green-400 text-xs font-medium">
+                                {userData.role || '—'}
+                              </span>
+                              {userData.isVerified !== undefined && (
+                                <span
+                                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                    userData.isVerified
+                                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                                      : 'bg-red-500/20 text-red-300 border border-red-400/30'
+                                  }`}
+                                >
+                                  {userData.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Menu Items */}
+                      <div className="py-2">
+                        <button
+                          onClick={() => {
+                            handleNavigate(PATH_NAME.STUDENT_PROFILE);
+                            setIsDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
+                        >
+                          <User className="w-5 h-5 text-muted-foreground" />
+                          <span className="text-white">Hồ sơ cá nhân</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setIsDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
+                        >
+                          <Settings className="w-5 h-5 text-muted-foreground" />
+                          <span className="text-white">Cài đặt</span>
+                        </button>
+
+                        <div className="border-t border-white/10 my-2"></div>
+
+                        <button
+                          onClick={() => {
+                            console.log('Logout clicked');
+                            setIsDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-500/10 transition-colors"
+                        >
+                          <LogOut className="w-5 h-5 text-red-400" />
+                          <span className="text-red-400">Đăng xuất</span>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Navigation */}
+          <div className="lg:hidden border-t border-white/10 py-2">
+            <div className="flex items-center space-x-1 overflow-x-auto">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavigate(item.path)}
+                  className={`flex-shrink-0 flex items-center space-x-1 px-3 py-2 rounded-lg text-xs transition-all ${
+                    isActivePage(item.path)
+                      ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 border border-green-500/30'
+                      : 'text-muted-foreground hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="pt-6">
+        <Outlet />
+      </main>
+
+      {/* Footer */}
+      <footer className="mt-16 border-t border-white/5 bg-darkv2-secondary/60 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="h-6 w-6 bg-gradient-to-r from-green-400 to-emerald-400 rounded flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">S</span>
+                </div>
+                <div className="h-6 w-px bg-white/20"></div>
+                <span className="text-base bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent whitespace-nowrap">
+                  SEPE Student Portal
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Nền tảng học tập và thi đấu cho sinh viên công nghệ thông tin.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="text-white mb-4">Học tập</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Hackathons
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Đội thi
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Bài nộp
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Bảng xếp hạng
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-white mb-4">Tài nguyên</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Tài liệu
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Hướng dẫn
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Cộng đồng
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Hỗ trợ
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-white mb-4">Liên hệ</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Về chúng tôi
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Liên hệ
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Chính sách
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Điều khoản
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 mt-8 pt-8 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              © 2024 SEPE Student Portal. Tất cả quyền được bảo lưu.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default StudentLayout;
