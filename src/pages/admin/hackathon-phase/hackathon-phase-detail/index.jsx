@@ -1,5 +1,5 @@
 // components/admin/hackathon-phases/HackathonPhaseDetail.jsx
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Spin,
   ConfigProvider,
@@ -36,10 +36,10 @@ const HackathonPhaseDetail = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const hackathonId = searchParams.get('hackathonId');
-  const isLastPhase = searchParams.get('isLastPhase')?.includes('true');
+  const isLastPhaseParam = searchParams.get('isLastPhase')?.includes('true');
   const queryClient = useQueryClient();
 
-  const { fetchHackathonPhase } = useHackathonPhases();
+  const { fetchHackathonPhases, fetchHackathonPhase } = useHackathonPhases();
   const { deleteTrack, fetchTracks, assignRandomChallenge } = useTracks();
   const { fetchCompleteChallenge } = useChallenges();
   const { fetchGroupsByHackathon, autoCreateGroups } = useGroups();
@@ -50,6 +50,7 @@ const HackathonPhaseDetail = () => {
     isLoading: phaseLoading,
     error: phaseError,
   } = fetchHackathonPhase(id);
+  const { data: phases = [], isLoading: phasesLoading } = fetchHackathonPhases(hackathonId);
   const { data: allTracks, isLoading: tracksLoading } = fetchTracks;
   const { data: completesChallenges = [], isLoading: cChallengesLoading } = fetchCompleteChallenge(hackathonId);
   const { data: groupsData = [], isLoading: groupsLoading } = fetchGroupsByHackathon(hackathonId);
@@ -67,6 +68,40 @@ const HackathonPhaseDetail = () => {
   const [createGroupModal, setCreateGroupModal] = useState(false);
   const [confirmModal, setConfirmModal] = useState({ open: false, trackId: null });
   const [showQualifiedTable, setShowQualifiedTable] = useState(false);
+
+  const computedIsLastPhase = useMemo(() => {
+    if (!phases?.length || !phase?.endDate) return null;
+    const sortedByEnd = [...phases].sort(
+      (a, b) => dayjs(b.endDate).valueOf() - dayjs(a.endDate).valueOf(),
+    );
+    const lastPhase = sortedByEnd[0];
+    return lastPhase?.phaseId === phase?.phaseId;
+  }, [phases, phase]);
+
+  const isLastPhase = computedIsLastPhase ?? isLastPhaseParam;
+
+  useEffect(() => {
+    qualifiedRefetch();
+  }, []);
+  useEffect(() => {
+    // Auto show table when qualified teams already exist
+    console.log(qualifiedTeams);
+    
+    if (qualifiedTeams && qualifiedTeams.length > 0) {
+      setShowQualifiedTable(true);
+    }
+  }, [qualifiedTeams]);
+
+  useEffect(() => {
+    if (!phase?.startDate || !hackathonId) return;
+    if (dayjs().isBefore(dayjs(phase.startDate))) {
+      message.warning('Giai đoạn chưa bắt đầu');
+      navigate(
+        `${PATH_NAME.ADMIN_HACKATHON_PHASES}?hackathonId=${hackathonId}`,
+        { replace: true },
+      );
+    }
+  }, [phase, hackathonId, navigate]);
   const [assignForm] = Form.useForm();
   const [createGroupForm] = Form.useForm();
 
@@ -264,24 +299,21 @@ const HackathonPhaseDetail = () => {
 
   const handleAssignSubmit = () => {
     assignForm.validateFields().then((values) => {
-      assignRandomChallenge.mutate(
-        {
-          trackId: assignModal.track.trackId,
-          quantity: values.quantity,
-          challengeIds:
-            values.challengeIds.length > 0 ? values.challengeIds : null,
+    assignRandomChallenge.mutate(
+      {
+        trackId: assignModal.track?.trackId,
+        quantity: values.quantity,
+        challengeIds:
+          values.challengeIds.length > 0 ? values.challengeIds : null,
+      },
+      {
+        onSuccess: () => {
+          setAssignModal({ open: false, track: null });
+          assignForm.resetFields();
         },
-        {
-          onSuccess: () => {
-            message.success('Gán thử thách thành công!');
-            setAssignModal({ open: false, track: null });
-            assignForm.resetFields();
-          },
-          onError: () => {
-            message.error('Gán thử thách thất bại!');
-          },
-        },
-      );
+        onError: () => {},
+      },
+    );
     });
   };
 
@@ -289,16 +321,13 @@ const HackathonPhaseDetail = () => {
     createGroupForm.validateFields().then((values) => {
       autoCreateGroups.mutate({
         teamsPerGroup: values.teamsPerGroup,
-        phaseId: phaseTracks[0]?.phaseId || null,
+        phaseId: parseInt(id) || null,
       }, {
         onSuccess: () => {
-          message.success('Tạo bảng đấu thành công!');
           setCreateGroupModal(false);
           createGroupForm.resetFields();
         },
-        onError: () => {
-          message.error('Tạo bảng đấu thất bại!');
-        }
+        onError: () => {},
       });
     });
   };
@@ -331,11 +360,8 @@ const HackathonPhaseDetail = () => {
     selectTopTeams.mutate(id, {
       onSuccess: () => {
         setShowQualifiedTable(true);
-        message.success('Đã lấy danh sách đội đủ điều kiện!');
       },
-      onError: () => {
-        message.error('Không thể lấy danh sách đội!');
-      }
+      onError: () => {},
     });
   };
 
@@ -383,7 +409,7 @@ const HackathonPhaseDetail = () => {
     );
   }
 
-  if (phaseLoading || tracksLoading || cChallengesLoading) {
+  if (phaseLoading || phasesLoading || tracksLoading || cChallengesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spin size="large" />
@@ -457,7 +483,7 @@ const HackathonPhaseDetail = () => {
         {/* Qualification Section - Chỉ hiển thị nếu là phase cuối */}
         {isLastPhase && (
           <>
-            { !showQualifiedTable &&
+            {qualifiedTeams?.length === 0 && !showQualifiedTable &&
               ( <div className="mx-6 mb-6">
                 <Button
                   type="dashed"

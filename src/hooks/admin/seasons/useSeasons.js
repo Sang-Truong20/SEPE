@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
+import useMessage from "../../util/getError";
 
 /**
  * API: GET /api/Season
@@ -25,6 +26,7 @@ export const seasonQueryKeys = {
 
 export const useSeasons = () => {
     const queryClient = useQueryClient();
+    const { getMessage } = useMessage();
 
     // Fetch all seasons
     const fetchSeasons = useQuery({
@@ -68,11 +70,11 @@ export const useSeasons = () => {
         mutationFn: (payload) => axiosClient.post('/Season', payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: seasonQueryKeys.lists() });
-            message.success('Season created successfully!');
+            message.success('Tạo mùa giải thành công!');
         },
         onError: (error) => {
             console.error('Error creating season:', error);
-            message.error('Failed to create season. Please try again.');
+            message.error(getMessage(error));
         },
     });
 
@@ -92,11 +94,11 @@ export const useSeasons = () => {
         mutationFn: ({ id, payload }) => axiosClient.put(`/Season/${id}`, payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: seasonQueryKeys.all });
-            message.success('Season updated successfully!');
+            message.success('Cập nhật mùa giải thành công!');
         },
         onError: (error) => {
             console.error('Error updating season:', error);
-            message.error('Failed to update season. Please try again.');
+            message.error(getMessage(error));
         },
     });
 
@@ -112,11 +114,11 @@ export const useSeasons = () => {
         mutationFn: (id) => axiosClient.delete(`/Season/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: seasonQueryKeys.lists() });
-            message.success('Season deleted successfully!');
+            message.success('Xóa mùa giải thành công!');
         },
         onError: (error) => {
             console.error('Error deleting season:', error);
-            message.error('Failed to delete season. Please try again.');
+            message.error(getMessage(error));
         },
     });
 

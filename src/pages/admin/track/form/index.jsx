@@ -21,20 +21,20 @@ const TrackForm = ({ mode = 'create' }) => {
   // Định nghĩa model
   const model = useMemo(
     () => ({
-      modelName: 'Tracks',
+      modelName: 'Hạng mục',
       fields: [
         {
-          key: 'Tên Track *',
+          key: 'Tên hạng mục *',
           type: 'input',
-          placeholder: 'VD: AI Track, Web3 Track...',
+          placeholder: 'Ví dụ: AI, Web3, IoT...',
           name: 'name',
           required: true,
-          message: 'Vui lòng nhập tên track',
+          message: 'Vui lòng nhập tên hạng mục',
         },
         {
           key: 'Mô tả',
           type: 'textarea',
-          placeholder: 'Mô tả chi tiết về track...',
+          placeholder: 'Mô tả chi tiết về hạng mục...',
           name: 'description',
           rows: 4,
         },
@@ -99,7 +99,7 @@ const TrackForm = ({ mode = 'create' }) => {
     >
       <CreateEditForm
         mode={mode}
-        entityName="Track"
+        entityName="Hạng mục"
         model={model}
         initialValues={initialValues}
         onSubmit={handleSubmit}

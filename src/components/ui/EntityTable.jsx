@@ -1,5 +1,5 @@
 // components/ui/EntityTable.jsx
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Table, Button, Space, Tag, Tooltip } from 'antd';
 import {
   PlusOutlined,
@@ -8,6 +8,7 @@ import {
   DeleteOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { getStatusDisplay } from '../../configs/statusConfig';
 
 const defaultDateFormatter = (val, fmt) =>
   val ? dayjs(val).format(fmt || 'DD/MM/YYYY') : '--';
@@ -21,6 +22,7 @@ const buildRender = (col, dateFormatter) => {
     transform,
     render,
     statusMap,
+    statusType = 'default',
   } = col;
 
   if (render && typeof render === 'function') {
@@ -54,18 +56,19 @@ const buildRender = (col, dateFormatter) => {
     case 'status':
       return (value) => {
         const raw = transform ? transform(value) : value;
-        const key = value?.toString().toLowerCase();
+        const key = raw?.toString().toLowerCase();
         const matched = Object.keys(statusMap || {}).find(
           (k) => k.toLowerCase() === key,
         );
         const config = matched ? statusMap[matched] : null;
+        const fallback = getStatusDisplay(raw, statusType);
 
         return (
           <Tag
-            color={config?.color || 'default'}
+            color={config?.color || fallback.color || 'default'}
             className="m-0 px-2 py-1 text-sm"
           >
-            {config?.text || raw || '--'}
+            {config?.text || fallback.text || raw || '--'}
           </Tag>
         );
       };
@@ -106,12 +109,42 @@ const EntityTable = ({
     rowKey = 'id',
     createButton,
     entityName,
+    pageSize: defaultPageSize = 10,
   } = model || {};
 
-  const columnsWithAutoScroll = columns.map(col => {
-    if (col.dataIndex && data.length > 0) {
-      const sampleValues = data.slice(0, 10).map(row => String(row[col.dataIndex] || ''));
-      const avgLength = sampleValues.reduce((sum, v) => sum + v.length, 0) / sampleValues.length;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
+
+  // Reset về trang 1 nếu trang hiện tại vượt quá số trang có thể
+  useEffect(() => {
+    const totalPages = Math.ceil((data?.length || 0) / pageSize);
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [data, pageSize, currentPage]);
+
+  // Tính toán dữ liệu phân trang
+  const paginatedData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    return data.slice(start, end);
+  }, [data, currentPage, pageSize]);
+
+  const columnsWithAutoScroll = (columns || []).map((col) => {
+    if (col?.dataIndex && (paginatedData?.length || 0) > 0) {
+      const sampleValues = (paginatedData || [])
+        .slice(0, 10)
+        .map((row) => {
+          const val =
+            typeof col.dataIndex === 'string'
+              ? row?.[col.dataIndex]
+              : col.dataIndex?.reduce?.((acc, key) => acc?.[key], row);
+          return String(val ?? '');
+        });
+      const avgLength =
+        sampleValues.reduce((sum, v) => sum + v.length, 0) /
+        (sampleValues.length || 1);
 
       if (avgLength > 50 && !col.width) {
         return { ...col, scrollable: true, width: 250 };
@@ -147,6 +180,7 @@ const EntityTable = ({
               <Button
                 type="text"
                 size="small"
+                disabled={record.disableView || false}
                 className={cfg.className || 'text-white hover:text-primary'}
                 icon={cfg.icon || <EyeOutlined />}
                 onClick={() => handlers.onView?.(record)}
@@ -162,6 +196,7 @@ const EntityTable = ({
               <Button
                 type="text"
                 size="small"
+                disabled={record.disableEdit || false}
                 className={cfg.className || 'text-white hover:text-primary'}
                 icon={cfg.icon || <EditOutlined />}
                 onClick={() => handlers.onEdit?.(record)}
@@ -269,11 +304,28 @@ const EntityTable = ({
 
       <Table
         columns={builtColumns}
-        dataSource={data}
+        dataSource={paginatedData}
         loading={loading}
         locale={{ emptyText: loading ? ' ' : emptyText }}
         rowKey={rowKey}
-        pagination={false}
+        pagination={{
+          current: currentPage,
+          pageSize: pageSize,
+          total: data.length,
+          showSizeChanger: true,
+          showTotal: (total, range) =>
+            `${range[0]}-${range[1]} của ${total} mục`,
+          pageSizeOptions: ['10', '20', '50', '100'],
+          onChange: (page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          },
+          onShowSizeChange: (current, size) => {
+            setCurrentPage(1);
+            setPageSize(size);
+          },
+          // className: '[&_.ant-pagination-item]:bg-white/5 [&_.ant-pagination-item]:border-white/10 [&_.ant-pagination-item]:text-white [&_.ant-pagination-item-active]:!bg-primary [&_.ant-pagination-item-active]:!text-black [&_.ant-pagination-item-active]:!border-primary [&_.ant-pagination-prev]:text-white [&_.ant-pagination-next]:text-white [&_.ant-pagination-options]:text-white [&_.ant-select-selector]:bg-white/5 [&_.ant-select-selector]:border-white/10 [&_.ant-select-selector]:text-white',
+        }}
         scroll={{ x: 'max-content' }}
         className="[&_.ant-table]:bg-transparent [&_th]:!bg-white/5 [&_th]:!text-white [&_td]:!text-gray-300 [&_td]:border-white/10 [&_th]:border-white/10 [&_tr:hover_td]:!bg-white/[0.03] [&_.ant-table-tbody_tr]:transition-colors"
       />

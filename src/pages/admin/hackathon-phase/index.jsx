@@ -30,9 +30,21 @@ const HackathonPhases = () => {
     error,
   } = fetchHackathonPhases(hackathonId);
 
-  const phasesData = phasesDataRaw.sort(
-    (a, b) => new Date(a.endDate) - new Date(b.endDate)
-  );
+  const phasesData = phasesDataRaw
+    .sort((a, b) => new Date(a.endDate) - new Date(b.endDate))
+    .map((p, index, arr) => {
+      if (arr.length > 1 && index === arr.length - 1) {
+        // phase cuối cùng
+        const now = new Date();
+        const startDate = new Date(p.startDate);
+
+        return {
+          ...p,
+          // disableView: now < startDate,
+        };
+      }
+      return p;
+    });
 
   const selectedHackathon = hackathons.find(
     (h) => h.hackathonId === parseInt(hackathonId),
@@ -172,7 +184,7 @@ const HackathonPhases = () => {
                   key={hackathon.hackathonId}
                   value={hackathon.hackathonId.toString()}
                 >
-                  {hackathon.name} ({hackathon.season})
+                  {hackathon.name} ({hackathon.seasonName})
                 </Select.Option>
               ))}
             </Select>

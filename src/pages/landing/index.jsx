@@ -56,8 +56,15 @@ const SEALLandingPage = () => {
         console.log(role);
 
         if (role === 'Admin') {
-          window.location.href = PATH_NAME.ADMIN_DASHBOARD;
-        } else {
+          window.location.href = PATH_NAME.ADMIN;
+        }
+        if (role === 'Partner') {
+          window.location.href = PATH_NAME.PARTNER;
+        }
+        if (role === 'Judge') {
+          window.location.href = PATH_NAME.JUDGE;
+        }
+        else {
           window.location.href = PATH_NAME.HOME;
         }
       }

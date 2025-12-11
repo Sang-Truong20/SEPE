@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import axiosClient from '../../../configs/axiosClient';
+import useMessage from '../../util/getError';
 
 /**
  * API: Track endpoints
@@ -25,6 +26,7 @@ export const trackQueryKeys = {
 // -------------------------------------------------------------------
 export const useTracks = () => {
   const queryClient = useQueryClient();
+  const { getMessage } = useMessage();
 
   // 1. Lấy danh sách tất cả tracks
   /**
@@ -75,11 +77,11 @@ export const useTracks = () => {
     mutationFn: (payload) => axiosClient.post('/Track', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: trackQueryKeys.lists() });
-      message.success('Track created successfully!');
+      message.success('Tạo phần thi thành công!');
     },
     onError: (error) => {
       console.error('Error creating track:', error);
-      message.error('Failed to create track. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -101,11 +103,11 @@ export const useTracks = () => {
         queryKey: trackQueryKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: trackQueryKeys.lists() });
-      message.success('Track updated successfully!');
+      message.success('Cập nhật phần thi thành công!');
     },
     onError: (error) => {
       console.error('Error updating track:', error);
-      message.error('Failed to update track. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -121,11 +123,11 @@ export const useTracks = () => {
     mutationFn: (id) => axiosClient.delete(`/Track/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: trackQueryKeys.lists() });
-      message.success('Track deleted successfully!');
+      message.success('Xóa phần thi thành công!');
     },
     onError: (error) => {
       console.error('Error deleting track:', error);
-      message.error('Failed to delete track. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -145,9 +147,11 @@ export const useTracks = () => {
       axiosClient.post('/Track/assign-random-challenge', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: trackQueryKeys.lists() });
+      message.success('Gán thử thách ngẫu nhiên thành công!');
     },
     onError: (error) => {
       console.error('Error assigning random challenges:', error);
+      message.error(getMessage(error));
     },
   });
 
@@ -165,11 +169,11 @@ export const useTracks = () => {
     mutationFn: (payload) => axiosClient.post('/TeamTrack/select', payload),
     onSuccess: () => {
       // Có thể cần invalidate thêm key của team hoặc challenge nếu có
-      message.success('Team has selected the track successfully!');
+      message.success('Đội đã chọn phần thi thành công!');
     },
     onError: (error) => {
       console.error('Error selecting track for team:', error);
-      message.error('Failed to select track. Please try again.');
+      message.error(getMessage(error));
     },
   });
 

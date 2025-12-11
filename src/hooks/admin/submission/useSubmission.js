@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
+import useMessage from "../../util/getError";
 
 /**
  * Submission API (documented from OpenAPI):
@@ -122,6 +123,7 @@ export const submissionQueryKeys = {
  */
 export const useSubmission = () => {
     const queryClient = useQueryClient();
+    const { getMessage } = useMessage();
 
     /**
      * Fetch all submissions.
@@ -197,11 +199,11 @@ export const useSubmission = () => {
             queryClient.invalidateQueries({ queryKey: submissionQueryKeys.lists() });
             if (teamId) queryClient.invalidateQueries({ queryKey: submissionQueryKeys.byTeam(teamId) });
             if (phaseId) queryClient.invalidateQueries({ queryKey: submissionQueryKeys.byPhase(phaseId) });
-            message.success('Draft submission created successfully!');
+            message.success('Tạo bản nháp bài nộp thành công!');
         },
         onError: (error) => {
             console.error('Error creating draft submission:', error);
-            message.error('Failed to create draft submission. Please try again.');
+            message.error(getMessage(error));
         },
     });
 
@@ -226,11 +228,11 @@ export const useSubmission = () => {
             const phaseId = variables?.payload?.phaseId || variables?.payload?.phase?.id;
             if (teamId) queryClient.invalidateQueries({ queryKey: submissionQueryKeys.byTeam(teamId) });
             if (phaseId) queryClient.invalidateQueries({ queryKey: submissionQueryKeys.byPhase(phaseId) });
-            message.success('Draft submission updated successfully!');
+            message.success('Cập nhật bản nháp bài nộp thành công!');
         },
         onError: (error) => {
             console.error('Error updating draft submission:', error);
-            message.error('Failed to update draft submission. Please try again.');
+            message.error(getMessage(error));
         },
     });
 
@@ -250,11 +252,11 @@ export const useSubmission = () => {
             if (submissionId) queryClient.invalidateQueries({ queryKey: submissionQueryKeys.detail(submissionId) });
             queryClient.invalidateQueries({ queryKey: submissionQueryKeys.lists() });
             if (teamId) queryClient.invalidateQueries({ queryKey: submissionQueryKeys.byTeam(teamId) });
-            message.success('Submission marked as final successfully!');
+            message.success('Đánh dấu bài nộp cuối cùng thành công!');
         },
         onError: (error) => {
             console.error('Error setting submission final:', error);
-            message.error('Failed to set submission as final. Please try again.');
+            message.error(getMessage(error));
         },
     });
 

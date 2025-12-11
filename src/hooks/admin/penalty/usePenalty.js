@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
+import useMessage from "../../util/getError";
 
 /**
  * API Group: Penalty (Penalties & Bonuses)
@@ -24,6 +25,7 @@ export const penaltyQueryKeys = {
 
 export const usePenalty = () => {
   const queryClient = useQueryClient();
+  const { getMessage } = useMessage();
 
   /**
    * API: GET /api/Penalty
@@ -128,11 +130,11 @@ export const usePenalty = () => {
     mutationFn: (payload) => axiosClient.post('/Penalty', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: penaltyQueryKeys.all });
-      message.success('Penalty/Bonus created successfully!');
+      message.success('Tạo điểm thưởng/phạt thành công!');
     },
     onError: (error) => {
       console.error('Error creating penalty/bonus:', error);
-      message.error('Failed to create penalty/bonus. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -147,11 +149,11 @@ export const usePenalty = () => {
     mutationFn: ({ id, payload }) => axiosClient.put(`/Penalty/${id}`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: penaltyQueryKeys.all });
-      message.success('Penalty/Bonus updated successfully!');
+      message.success('Cập nhật điểm thưởng/phạt thành công!');
     },
     onError: (error) => {
       console.error('Error updating penalty/bonus:', error);
-      message.error('Failed to update penalty/bonus. Please try again.');
+      message.error(getMessage(error));
     },
   });
 
@@ -166,11 +168,11 @@ export const usePenalty = () => {
     mutationFn: (id) => axiosClient.delete(`/Penalty/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: penaltyQueryKeys.all });
-      message.success('Penalty/Bonus deleted successfully!');
+      message.success('Xóa điểm thưởng/phạt thành công!');
     },
     onError: (error) => {
       console.error('Error deleting penalty/bonus:', error);
-      message.error('Failed to delete penalty/bonus. Please try again.');
+      message.error(getMessage(error));
     },
   });
 

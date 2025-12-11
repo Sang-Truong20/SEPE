@@ -40,7 +40,7 @@ const HackathonForm = ({ mode = 'create' }) => {
 
   // Định nghĩa model - phụ thuộc vào selectSessions
   const model = useMemo(() => ({
-    modelName: 'Hackathons',
+    modelName: 'Cuộc thi',
     fields: [
       {
         key: 'Tên Hackathon *',
@@ -74,7 +74,7 @@ const HackathonForm = ({ mode = 'create' }) => {
             {
               key: 'Ngày bắt đầu *',
               type: 'datetime',
-              placeholder: 'mm/dd/yyyy',
+              placeholder: 'dd/mm/yyyy',
               name: 'startDate',
               required: true,
               message: 'Vui lòng chọn ngày bắt đầu'
@@ -84,7 +84,7 @@ const HackathonForm = ({ mode = 'create' }) => {
             {
               key: 'Ngày kết thúc *',
               type: 'datetime',
-              placeholder: 'mm/dd/yyyy',
+              placeholder: 'dd/mm/yyyy',
               name: 'endDate',
               required: true,
               message: 'Vui lòng chọn ngày kết thúc'
@@ -93,7 +93,7 @@ const HackathonForm = ({ mode = 'create' }) => {
         ]
       },
       {
-        key: 'Status *',
+        key: 'Trạng thái *',
         type: 'dropdown',
         placeholder: 'Chọn trạng thái',
         name: 'status',

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
+import useMessage from "../../util/getError";
 
 /**
  * API: GET /api/Prize/hackathon/{hackathonId}
@@ -28,6 +29,7 @@ export const prizeQueryKeys = {
 
 export const usePrizes = () => {
     const queryClient = useQueryClient();
+    const { getMessage } = useMessage();
 
     // Fetch prizes by hackathon ID
     const fetchPrizes = (hackathonId) => useQuery({
@@ -66,11 +68,11 @@ export const usePrizes = () => {
             queryClient.invalidateQueries({
                 queryKey: prizeQueryKeys.list(variables.hackathonId)
             });
-            message.success('Prize created successfully!');
+            message.success('Tạo giải thưởng thành công!');
         },
         onError: (error) => {
             console.error('Error creating prize:', error);
-            message.error('Failed to create prize. Please try again.');
+            message.error(getMessage(error));
         },
     });
 
@@ -91,11 +93,11 @@ export const usePrizes = () => {
         mutationFn: (payload) => axiosClient.put('/Prize', payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: prizeQueryKeys.all });
-            message.success('Prize updated successfully!');
+            message.success('Cập nhật giải thưởng thành công!');
         },
         onError: (error) => {
             console.error('Error updating prize:', error);
-            message.error('Failed to update prize. Please try again.');
+            message.error(getMessage(error));
         },
     });
 
@@ -112,11 +114,11 @@ export const usePrizes = () => {
         mutationFn: (id) => axiosClient.delete(`/Prize/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: prizeQueryKeys.all });
-            message.success('Prize deleted successfully!');
+            message.success('Xóa giải thưởng thành công!');
         },
         onError: (error) => {
             console.error('Error deleting prize:', error);
-            message.error('Failed to delete prize. Please try again.');
+            message.error(getMessage(error));
         },
     });
 
