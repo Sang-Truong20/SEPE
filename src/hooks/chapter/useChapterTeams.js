@@ -1,0 +1,327 @@
+import { useQuery } from '@tanstack/react-query';
+import axiosClient from '../../configs/axiosClient';
+
+export const chapterTeamsQueryKeys = {
+  origin: ['chapter', 'teams'],
+  teams: () => [...chapterTeamsQueryKeys.origin, 'list'],
+  team: (id) => [...chapterTeamsQueryKeys.origin, 'detail', id],
+};
+
+// Get all teams from chapter's university
+export const useGetChapterTeams = (options = {}) => {
+  return useQuery({
+    queryKey: chapterTeamsQueryKeys.teams(),
+    queryFn: async () => {
+      // Mock data - In real app, this would be: axiosClient.get('/Chapter/teams')
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      // Mock teams data
+      return [
+        {
+          id: '1',
+          name: 'Tech Innovators FPT',
+          teamName: 'Tech Innovators FPT',
+          hackathon: 'SEAL Hackathon 2024 - Ho Chi Minh',
+          hackathonId: '1',
+          hackathonStatus: 'ongoing',
+          leader: {
+            id: '1',
+            name: 'Nguyễn Văn An',
+            fullName: 'Nguyễn Văn An',
+            email: 'annv@fpt.edu.vn',
+            role: 'leader',
+            studentId: 'SE123456',
+            verified: true,
+          },
+          members: [
+            {
+              id: '1',
+              name: 'Nguyễn Văn An',
+              fullName: 'Nguyễn Văn An',
+              email: 'annv@fpt.edu.vn',
+              role: 'leader',
+              studentId: 'SE123456',
+              verified: true,
+            },
+            {
+              id: '2',
+              name: 'Trần Thị Bình',
+              fullName: 'Trần Thị Bình',
+              email: 'binhtt@fpt.edu.vn',
+              role: 'member',
+              studentId: 'SE123457',
+              verified: true,
+            },
+            {
+              id: '3',
+              name: 'Lê Văn Cường',
+              fullName: 'Lê Văn Cường',
+              email: 'cuonglv@fpt.edu.vn',
+              role: 'member',
+              studentId: 'SE123458',
+              verified: true,
+            },
+            {
+              id: '4',
+              name: 'Phạm Thị Dung',
+              fullName: 'Phạm Thị Dung',
+              email: 'dungpt@fpt.edu.vn',
+              role: 'member',
+              studentId: 'SE123459',
+              verified: true,
+            },
+            {
+              id: '5',
+              name: 'Hoàng Văn Em',
+              fullName: 'Hoàng Văn Em',
+              email: 'emhv@fpt.edu.vn',
+              role: 'member',
+              studentId: 'SE123460',
+              verified: true,
+            },
+          ],
+          createdAt: '2024-01-15',
+          status: 'active',
+          university: 'FPT University - Ho Chi Minh',
+          score: 8.5,
+          rank: 3,
+          description: 'AI-powered healthcare platform để cải thiện chẩn đoán bệnh',
+        },
+        {
+          id: '2',
+          name: 'Code Masters',
+          teamName: 'Code Masters',
+          hackathon: 'SEAL Hackathon 2024 - Ho Chi Minh',
+          hackathonId: '1',
+          hackathonStatus: 'ongoing',
+          leader: {
+            id: '5',
+            name: 'Hoàng Văn Em',
+            fullName: 'Hoàng Văn Em',
+            email: 'emhv@fpt.edu.vn',
+            role: 'leader',
+            studentId: 'SE123460',
+            verified: true,
+          },
+          members: [
+            {
+              id: '5',
+              name: 'Hoàng Văn Em',
+              fullName: 'Hoàng Văn Em',
+              email: 'emhv@fpt.edu.vn',
+              role: 'leader',
+              studentId: 'SE123460',
+              verified: true,
+            },
+            {
+              id: '6',
+              name: 'Đỗ Thị Phương',
+              fullName: 'Đỗ Thị Phương',
+              email: 'phuongdt@fpt.edu.vn',
+              role: 'member',
+              studentId: 'SE123461',
+              verified: false,
+            },
+            {
+              id: '7',
+              name: 'Vũ Văn Giang',
+              fullName: 'Vũ Văn Giang',
+              email: 'giangvv@fpt.edu.vn',
+              role: 'member',
+              studentId: 'SE123462',
+              verified: true,
+            },
+          ],
+          createdAt: '2024-01-18',
+          status: 'active',
+          university: 'FPT University - Ho Chi Minh',
+          score: 7.8,
+          rank: 7,
+          description: 'Full-stack web application với modern tech stack',
+        },
+        {
+          id: '3',
+          name: 'AI Warriors',
+          teamName: 'AI Warriors',
+          hackathon: 'Tech Challenge 2024',
+          hackathonId: '2',
+          hackathonStatus: 'completed',
+          leader: {
+            id: '8',
+            name: 'Bùi Văn Hải',
+            fullName: 'Bùi Văn Hải',
+            email: 'haibv@fpt.edu.vn',
+            role: 'leader',
+            studentId: 'SE123463',
+            verified: true,
+          },
+          members: [
+            {
+              id: '8',
+              name: 'Bùi Văn Hải',
+              fullName: 'Bùi Văn Hải',
+              email: 'haibv@fpt.edu.vn',
+              role: 'leader',
+              studentId: 'SE123463',
+              verified: true,
+            },
+            {
+              id: '9',
+              name: 'Ngô Thị Lan',
+              fullName: 'Ngô Thị Lan',
+              email: 'lannt@fpt.edu.vn',
+              role: 'member',
+              studentId: 'SE123464',
+              verified: true,
+            },
+            {
+              id: '10',
+              name: 'Trịnh Văn Minh',
+              fullName: 'Trịnh Văn Minh',
+              email: 'minhtv@fpt.edu.vn',
+              role: 'member',
+              studentId: 'SE123465',
+              verified: true,
+            },
+            {
+              id: '11',
+              name: 'Lý Thị Ngọc',
+              fullName: 'Lý Thị Ngọc',
+              email: 'ngoclt@fpt.edu.vn',
+              role: 'member',
+              studentId: 'SE123466',
+              verified: true,
+            },
+            {
+              id: '12',
+              name: 'Phan Văn Oanh',
+              fullName: 'Phan Văn Oanh',
+              email: 'oanhpv@fpt.edu.vn',
+              role: 'member',
+              studentId: 'SE123467',
+              verified: true,
+            },
+          ],
+          createdAt: '2023-11-20',
+          status: 'active',
+          university: 'FPT University - Ho Chi Minh',
+          score: 9.2,
+          rank: 1,
+          description: 'Machine learning platform cho recommendation system',
+        },
+        {
+          id: '4',
+          name: 'Blockchain Pioneers',
+          teamName: 'Blockchain Pioneers',
+          hackathon: 'Fintech Innovation 2024',
+          hackathonId: '3',
+          hackathonStatus: 'upcoming',
+          leader: {
+            id: '13',
+            name: 'Đinh Văn Phúc',
+            fullName: 'Đinh Văn Phúc',
+            email: 'phucdv@fpt.edu.vn',
+            role: 'leader',
+            studentId: 'SE123468',
+            verified: true,
+          },
+          members: [
+            {
+              id: '13',
+              name: 'Đinh Văn Phúc',
+              fullName: 'Đinh Văn Phúc',
+              email: 'phucdv@fpt.edu.vn',
+              role: 'leader',
+              studentId: 'SE123468',
+              verified: true,
+            },
+            {
+              id: '14',
+              name: 'Mai Thị Quỳnh',
+              fullName: 'Mai Thị Quỳnh',
+              email: 'quynhmt@fpt.edu.vn',
+              role: 'member',
+              studentId: 'SE123469',
+              verified: true,
+            },
+          ],
+          createdAt: '2024-02-01',
+          status: 'pending',
+          university: 'FPT University - Ho Chi Minh',
+          description: 'DeFi platform cho microfinance',
+        },
+        {
+          id: '5',
+          name: 'Cloud Masters',
+          teamName: 'Cloud Masters',
+          hackathon: 'SEAL Hackathon 2024 - Ho Chi Minh',
+          hackathonId: '1',
+          hackathonStatus: 'ongoing',
+          leader: {
+            id: '15',
+            name: 'Lê Thị Uyên',
+            fullName: 'Lê Thị Uyên',
+            email: 'uyenlt@fpt.edu.vn',
+            role: 'leader',
+            studentId: 'SE123470',
+            verified: true,
+          },
+          members: [
+            {
+              id: '15',
+              name: 'Lê Thị Uyên',
+              fullName: 'Lê Thị Uyên',
+              email: 'uyenlt@fpt.edu.vn',
+              role: 'leader',
+              studentId: 'SE123470',
+              verified: true,
+            },
+            {
+              id: '16',
+              name: 'Vũ Văn Vinh',
+              fullName: 'Vũ Văn Vinh',
+              email: 'vinhvv@fpt.edu.vn',
+              role: 'member',
+              studentId: 'SE123471',
+              verified: true,
+            },
+            {
+              id: '17',
+              name: 'Trần Thị Xuân',
+              fullName: 'Trần Thị Xuân',
+              email: 'xuantt@fpt.edu.vn',
+              role: 'member',
+              studentId: 'SE123472',
+              verified: true,
+            },
+          ],
+          createdAt: '2024-01-20',
+          status: 'active',
+          university: 'FPT University - Ho Chi Minh',
+          score: 8.1,
+          rank: 5,
+          description: 'Cloud infrastructure automation platform',
+        },
+      ];
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    ...options,
+  });
+};
+
+// Get team by ID
+export const useGetChapterTeam = (teamId, options = {}) => {
+  return useQuery({
+    queryKey: chapterTeamsQueryKeys.team(teamId),
+    queryFn: async () => {
+      // Mock - In real app: axiosClient.get(`/Chapter/teams/${teamId}`)
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Return mock team data
+      return null;
+    },
+    enabled: !!teamId && (options.enabled !== false),
+    staleTime: 2 * 60 * 1000,
+    ...options,
+  });
+};
+

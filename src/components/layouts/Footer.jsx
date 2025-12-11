@@ -3,7 +3,7 @@ import fptLogo from '../../assets/images/logo/fpt-logo.webp';
 
 const Footer = () => {
   return (
-    <footer className="relative mt-20 bg-gradient-to-b from-zinc-900 via-black to-black border-t border-white/10 text-gray-300">
+    <footer className="relative mt-20 bg-dark-secondary/80 border-t border-white/5 text-gray-300">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div>

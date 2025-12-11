@@ -13,6 +13,12 @@ module.exports = {
           tertiary: '#203937',
           accent: '#2A4A47',
         },
+        darkv2: {
+          primary: '#0a0f1a',
+          secondary: '#111827',
+          tertiary: '#1a2332',
+          accent: '#1e293b',
+        },
         light: {
           primary: '#E7FAE8',
           secondary: '#C5E6C6',

@@ -2,17 +2,119 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --darkv2-primary: #0a0f1a;
+  --darkv2-secondary: #111827;
+  --darkv2-tertiary: #1a2332;
+  --darkv2-accent: #1e293b;
+}
+
+@layer base {
+  body {
+    background-color: var(--darkv2-primary);
+    color: #f8fafc;
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+}
+
+@layer components {
+  .bg-card-background {
+    background-color: var(--darkv2-tertiary);
+  }
+
+  .bg-card-background\/50 {
+    background-color: rgba(26, 35, 50, 0.5);
+  }
+
+  .border-card-border {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .border-card-border\/50 {
+    border-color: rgba(255, 255, 255, 0.04);
+  }
+}
+
+/* Ant Design Dark Theme Base Styles */
+.ant-card {
+  background: rgba(17, 24, 39, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.ant-card:hover {
+  border-color: rgba(34, 197, 94, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.ant-btn {
+  background: rgba(17, 24, 39, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.ant-btn:hover {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
+  color: #4ade80 !important;
+}
+
+.ant-table {
+  background: transparent !important;
+}
+
+.ant-table-tbody > tr {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: rgba(34, 197, 94, 0.05) !important;
+}
+
+.ant-progress-bg {
+  background: linear-gradient(135deg, #22c55e 0%, #3b82f6 100%) !important;
+}
+
+.ant-badge-count {
+  background: rgba(17, 24, 39, 0.8) !important;
+  color: #ffffff !important;
+}
+
+/* Normalize Ant Design overlay opacity for dropdowns/modals/popups */
+:where(.ant-dropdown),
+:where(.ant-select-dropdown),
+:where(.ant-modal),
+:where(.ant-popover),
+:where(.ant-picker-dropdown) {
+  opacity: 1 !important;
+}
+
+:where(.ant-dropdown .ant-dropdown-menu),
+:where(.ant-select-dropdown),
+:where(.ant-modal-content),
+:where(.ant-popover-inner),
+:where(.ant-picker-dropdown .ant-picker-panel-container),
+:where(.ant-picker-panel-container .ant-picker-panel) {
+  background: rgba(15, 23, 42, 0.98) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(12px);
+}
+
+:where(.ant-modal-mask),
+:where(.ant-drawer-mask) {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+
 @layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #01bd30 0%, #66cc99 100%);
+    background-image: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   }
 
   .card-gradient {
     background-image: linear-gradient(
       135deg,
-      rgba(1, 189, 48, 0.1) 0%,
-      rgba(102, 204, 153, 0.1) 100%
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.02) 100%
     );
   }
 
@@ -36,8 +138,10 @@
 
   .grid-pattern {
     background-image:
-      linear-gradient(rgba(1, 189, 48, 0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(1, 189, 48, 0.1) 1px, transparent 1px);
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
     background-size: 50px 50px;
   }
 }
+
+/* stylelint-enable */
