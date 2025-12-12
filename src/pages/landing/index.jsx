@@ -57,14 +57,17 @@ const SEALLandingPage = () => {
 
         if (role === 'Admin') {
           window.location.href = PATH_NAME.ADMIN;
-        }
-        if (role === 'Partner') {
+        } else if (role === 'Partner') {
           window.location.href = PATH_NAME.PARTNER;
-        }
-        if (role === 'Judge') {
+        } else if (role === 'Judge') {
           window.location.href = PATH_NAME.JUDGE;
-        }
-        else {
+        } else if (role === 'Student') {
+          window.location.href = PATH_NAME.STUDENT;
+        } else if (role === 'Mentor') {
+          window.location.href = PATH_NAME.MENTOR;
+        } else if (role === 'Chapter') {
+          window.location.href = PATH_NAME.CHAPTER;
+        } else {
           window.location.href = PATH_NAME.HOME;
         }
       }
