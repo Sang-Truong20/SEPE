@@ -41,7 +41,7 @@ const HackathonPhases = () => {
       rowKey: 'phaseId',
       columns: [
         {
-          title: 'Tên Phase',
+          title: 'Tên giai đoạn',
           dataIndex: 'phaseName',
           key: 'phaseName',
           type: 'text',

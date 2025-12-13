@@ -33,6 +33,7 @@ import { useCriteria } from '../../../../hooks/admin/criterias/useCriteria.js';
 import { useUsers } from '../../../../hooks/admin/users/useUsers';
 import { useJudgeAssignment } from '../../../../hooks/admin/assignments/useJudgeAssignments.js';
 import { UserAddOutlined } from '@ant-design/icons';
+import { useUserData } from '../../../../hooks/useUserData.js';
 
 const HackathonPhaseDetail = () => {
   const { id } = useParams();
@@ -41,6 +42,9 @@ const HackathonPhaseDetail = () => {
   const hackathonId = searchParams.get('hackathonId');
   const isLastPhaseParam = searchParams.get('isLastPhase')?.includes('true');
   const queryClient = useQueryClient();
+
+  const { userInfo } = useUserData();
+  const isAdmin = userInfo?.roleName?.toLowerCase() === 'admin';
 
   const { fetchHackathonPhases, fetchHackathonPhase } = useHackathonPhases();
   const { deleteTrack, fetchTracks, assignRandomChallenge } = useTracks();
@@ -165,17 +169,17 @@ const HackathonPhaseDetail = () => {
     ],
   };
 
-  const trackTableModel = {
+  const trackTableModel = useMemo(() => ({
     entityName: 'phần thi',
     rowKey: 'trackId',
-    createButton: {
+    createButton: isAdmin && isFirstPhase ? {
       label: 'Tạo mới phần thi',
       action: () =>
         navigate(
           `${PATH_NAME.ADMIN_TRACKS}/create?phaseId=${id}&hackathonId=${hackathonId}`,
         ),
       icon: true,
-    },
+    } : null,
     columns: [
       {
         title: 'Tên',
@@ -225,30 +229,30 @@ const HackathonPhaseDetail = () => {
     ],
     actions: {
       view: true,
-      edit: true,
-      delete: true,
-      extra: [
+      edit: isAdmin && isFirstPhase,
+      delete: isAdmin && isFirstPhase,
+      extra: isAdmin && isFirstPhase ? [
         {
           key: 'assign-random-challenge',
           icon: <SyncOutlined />,
           tooltip: 'Gán thử thách ngẫu nhiên',
           className: 'text-yellow-500 hover:text-yellow-400',
         },
-      ],
+      ] : [],
     },
-  };
+  }), [isAdmin, isFirstPhase, id, hackathonId, navigate]);
 
   const groupTableModel = useMemo(() => ({
     entityName: 'bảng đấu',
     rowKey: 'groupId',
-    createButton: {
+    createButton: isAdmin && isFirstPhase ? {
       label: 'Tạo bảng đấu Tự Động',
       action: () => {
         setCreateGroupModal(true);
         createGroupForm.setFieldsValue({ teamsPerGroup: 1 });
       },
       icon: true,
-    },
+    } : null,
     columns: [
       {
         title: 'Tên bảng đấu',
@@ -277,7 +281,7 @@ const HackathonPhaseDetail = () => {
       edit: false,
       delete: false,
     }
-  }), []);
+  }), [isAdmin, isFirstPhase]);
 
   // Model cho bảng Qualification
   const qualificationTableModel = useMemo(() => ({
@@ -300,18 +304,11 @@ const HackathonPhaseDetail = () => {
         transform: (val) => val || 'N/A'
       },
       {
-        title: 'Track',
+        title: 'Hạng mục',
         dataIndex: 'trackName',
         key: 'trackName',
         type: 'text',
         className: 'text-gray-300'
-      },
-      {
-        title: 'Group ID',
-        dataIndex: 'groupId',
-        key: 'groupId',
-        type: 'tag',
-        tagColor: 'blue'
       }
     ],
     actions: {
@@ -321,14 +318,14 @@ const HackathonPhaseDetail = () => {
     }
   }), []);
 
-  const judgeAssignmentTableModel = {
+  const judgeAssignmentTableModel = useMemo(() => ({
     entityName: 'giám khảo được phân công',
     rowKey: 'assignmentId',
-    createButton: {
+    createButton: isAdmin && isFirstPhase ? {
       label: 'Thêm giám khảo',
       icon: <UserAddOutlined />,
       action: () => setIsAssignJudgeModalOpen(true),
-    },
+    } : null,
     columns: [
       {
         title: 'Tên giám khảo',
@@ -362,7 +359,7 @@ const HackathonPhaseDetail = () => {
           </Tag>
         ),
       },
-      {
+      ...(isAdmin && isFirstPhase ? [{
         title: 'Thao tác',
         key: 'action',
         render: (record) => (
@@ -386,21 +383,21 @@ const HackathonPhaseDetail = () => {
             )}
           </Space>
         ),
-      },
+      }] : []),
     ],
     actions: {},
-  };
+  }), [isAdmin, isFirstPhase, navigate, handleBlockJudgeAssignment, handleReactivateJudgeAssignment]);
 
-  const criteriaTableModel = {
+  const criteriaTableModel = useMemo(() => ({
     entityName: 'Tiêu chí chấm điểm',
     rowKey: 'criteriaId',
-    createButton: {
+    createButton: isAdmin && isFirstPhase ? {
       label: 'Thêm tiêu chí',
       action: () =>
         navigate(
           `${PATH_NAME.ADMIN_CRITERIAS}/create?phaseId=${id}&hackathonId=${hackathonId}`,
         ),
-    },
+    } : null,
     columns: [
       {
         title: 'Tên tiêu chí',
@@ -426,8 +423,12 @@ const HackathonPhaseDetail = () => {
         className: 'text-gray-400',
       },
     ],
-    actions: { view: true, edit: true, delete: true },
-  };
+    actions: {
+      view: true,
+      edit: isAdmin && isFirstPhase,
+      delete: isAdmin && isFirstPhase,
+    },
+  }), [isAdmin, isFirstPhase, id, hackathonId, navigate, phaseTracks]);
 
   const handleAssignRandomClick = (record) => {
     setAssignModal({ open: true, track: record });
@@ -546,13 +547,13 @@ const HackathonPhaseDetail = () => {
       navigate(
         `${PATH_NAME.ADMIN_CRITERIAS}/${record.criteriaId}?phaseId=${id}&trackId=${record.trackId || ''}&hackathonId=${hackathonId}`,
       ),
-    onEdit: (record) =>
+    onEdit: isAdmin && isFirstPhase ? (record) =>
       navigate(
         `${PATH_NAME.ADMIN_CRITERIAS}/edit/${record.criteriaId}?phaseId=${id}&trackId=${record.trackId || ''}&hackathonId=${hackathonId}`,
-      ),
-    onDelete: (record) => {
+      ) : undefined,
+    onDelete: isAdmin && isFirstPhase ? (record) => {
       setConfirmJudgeModal({ open: true, type: 'deleteCriteria', record });
-    },
+    } : undefined,
     isDeleting: (record) =>
       deleteCriterion.isPending &&
       deleteCriterion.variables === record.criteriaId,
@@ -569,11 +570,11 @@ const HackathonPhaseDetail = () => {
       navigate(
         `${PATH_NAME.ADMIN_TRACKS}/${record.trackId}?phaseId=${id}&hackathonId=${hackathonId}`,
       ),
-    onEdit: (record) =>
+    onEdit: isAdmin && isFirstPhase ? (record) =>
       navigate(
         `${PATH_NAME.ADMIN_TRACKS}/edit/${record.trackId}?phaseId=${id}&hackathonId=${hackathonId}`,
-      ),
-    onDelete: (record) => handleDeleteConfirm(record.trackId),
+      ) : undefined,
+    onDelete: isAdmin && isFirstPhase ? (record) => handleDeleteConfirm(record.trackId) : undefined,
     isDeleting: (record) =>
       deleteTrack.isPending && deleteTrack.variables === record.trackId,
     onExtraAction: (key, record) => {
@@ -645,7 +646,7 @@ const HackathonPhaseDetail = () => {
             `${PATH_NAME.ADMIN_HACKATHON_PHASES}/edit/${rec.phaseId}?hackathonId=${hackathonId}`,
           )
         }
-        showEdit
+        showEdit={isAdmin && isFirstPhase}
       >
         {/* Track Section - Không hiển thị nếu là phase cuối (trừ khi chỉ có 1 phase) */}
         {(!isLastPhase || isSinglePhase) && (
@@ -707,7 +708,7 @@ const HackathonPhaseDetail = () => {
         {/* Qualification Section - Chỉ hiển thị nếu là phase cuối và không phải single phase */}
         {isLastPhase && !isSinglePhase && (
           <>
-            {qualifiedTeams?.length === 0 && !showQualifiedTable &&
+            {isAdmin && qualifiedTeams?.length === 0 && !showQualifiedTable &&
               ( <div className="mx-6 mb-6">
                 <Button
                   type="dashed"

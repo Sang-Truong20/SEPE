@@ -1,10 +1,26 @@
-import { Spin, ConfigProvider, theme, Form, Input, InputNumber, Button, Space, Card } from 'antd';
+import {
+  Spin,
+  ConfigProvider,
+  theme,
+  Form,
+  Input,
+  InputNumber,
+  Button,
+  Space,
+  Card,
+} from 'antd';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import CreateEditForm from '../../../../components/ui/CreateEditForm.jsx';
 import { useCriteria } from '../../../../hooks/admin/criterias/useCriteria.js';
 import { PATH_NAME } from '../../../../constants';
-import { PlusOutlined, DeleteOutlined, ArrowLeftOutlined, FileTextOutlined, SaveOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  ArrowLeftOutlined,
+  FileTextOutlined,
+  SaveOutlined,
+} from '@ant-design/icons';
 
 const CriterionForm = ({ mode = 'create' }) => {
   const { id: criterionId } = useParams(); // for edit
@@ -59,7 +75,12 @@ const CriterionForm = ({ mode = 'create' }) => {
             step: 1,
             rules: [
               { required: true, message: 'Vui lòng nhập trọng số' },
-              { type: 'number', min: 1, max: 5, message: 'Trọng số phải từ 1 đến 5' },
+              {
+                type: 'number',
+                min: 1,
+                max: 5,
+                message: 'Trọng số phải từ 1 đến 5',
+              },
             ],
           },
         ],
@@ -99,7 +120,7 @@ const CriterionForm = ({ mode = 'create' }) => {
           c.name.trim() !== '' &&
           c.weight != null &&
           c.weight >= 1 &&
-          c.weight <= 5
+          c.weight <= 5,
       );
 
       if (validCriteria.length === 0) {
@@ -206,7 +227,11 @@ const CriterionForm = ({ mode = 'create' }) => {
                     key={index}
                     className="mb-4 p-4 border border-white/10 rounded-lg bg-white/5"
                   >
-                    <Space direction="vertical" className="w-full" size="middle">
+                    <Space
+                      direction="vertical"
+                      className="w-full"
+                      size="middle"
+                    >
                       <Form.Item
                         label="Tên tiêu chí *"
                         required
@@ -234,7 +259,9 @@ const CriterionForm = ({ mode = 'create' }) => {
                         required
                         className="mb-0"
                         validateStatus={
-                          item.weight != null && item.weight >= 1 && item.weight <= 5
+                          item.weight != null &&
+                          item.weight >= 1 &&
+                          item.weight <= 5
                             ? ''
                             : 'error'
                         }
@@ -242,8 +269,8 @@ const CriterionForm = ({ mode = 'create' }) => {
                           item.weight == null
                             ? 'Vui lòng nhập trọng số'
                             : item.weight < 1 || item.weight > 5
-                            ? 'Trọng số phải từ 1 đến 5'
-                            : ''
+                              ? 'Trọng số phải từ 1 đến 5'
+                              : ''
                         }
                       >
                         <InputNumber
