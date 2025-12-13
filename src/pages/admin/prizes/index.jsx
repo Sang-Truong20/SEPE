@@ -133,7 +133,7 @@ const Prizes = () => {
                         icon={<ArrowLeftOutlined />}
                         className="mb-4 !text-light-primary hover:!text-primary"
                     >
-                        Quay lại danh sách Hackathons
+                        Quay lại
                     </Button>
 
                     <div className="mb-4">
@@ -168,7 +168,7 @@ const Prizes = () => {
                         >
                             <div className="space-y-2">
                             <p className="text-gray-200 text-base font-medium">
-                                {selectedHackathon.name} - {selectedHackathon.season}
+                                {selectedHackathon.name} - {selectedHackathon.seasonName}
                             </p>
                             <p className="text-gray-400 text-sm italic">
                                 {selectedHackathon.theme}

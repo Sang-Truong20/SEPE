@@ -34,6 +34,10 @@ const items = [
       <Link to={PATH_NAME.ADMIN_PRIZES}>Giải thưởng</Link>,
       PATH_NAME.ADMIN_PRIZES,
     ),
+    getItem(
+      <Link to={PATH_NAME.ADMIN_RANKINGS}>Xếp hạng</Link>,
+      PATH_NAME.ADMIN_RANKINGS,
+    ),
   ]),
   getItem(
     <Link to={PATH_NAME.ADMIN_CHALLENGES}>Thử thách</Link>,

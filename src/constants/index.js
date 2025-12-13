@@ -13,6 +13,7 @@ const PATH_NAME = {
   ADMIN_HACKATHONS: '/admin/hackathons',
   ADMIN_HACKATHON_PHASES: '/admin/hackathons/hackathon-phases',
   ADMIN_PRIZES: '/admin/hackathons/prizes',
+  ADMIN_RANKINGS: '/admin/hackathons/rankings',
   ADMIN_CHALLENGES: '/admin/challenges',
   ADMIN_TRACKS: '/admin/tracks',
   ADMIN_CRITERIAS: '/admin/criterias',

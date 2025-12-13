@@ -32,6 +32,7 @@ const Hackathons = lazy(() => import('../pages/admin/hackathon'));
 const HackathonPhases = lazy(() => import('../pages/admin/hackathon-phase'));
 const Challenges = lazy(() => import('../pages/admin/challenge/index.jsx'));
 const Prizes = lazy(() => import('../pages/admin/prizes'));
+const Rankings = lazy(() => import('../pages/admin/ranking'));
 const Seasons = lazy(() => import('../pages/admin/season'));
 const Appeals = lazy(() => import('../pages/admin/appeal'));
 const Groups = lazy(() => import('../pages/admin/group'));
@@ -161,6 +162,12 @@ const router = createBrowserRouter([
                     path: 'edit/:id',
                     element: withSuspense(() => <PrizeForm mode="edit" />),
                   },
+                ],
+              },
+              {
+                path: 'rankings',
+                children: [
+                  { index: true, element: withSuspense(Rankings) },
                 ],
               },
             ],

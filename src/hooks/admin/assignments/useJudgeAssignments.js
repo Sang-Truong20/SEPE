@@ -70,8 +70,11 @@ export const useJudgeAssignment = () => {
   const createJudgeAssignment = useMutation({
     mutationFn: (payload) =>
       axiosClient.post('/JudgeAssignment/Adminassignjugde', payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: judgeAssignmentQueryKeys.all });
+    onSuccess: (_, variables) => {
+      // Invalidate và refetch danh sách theo hackathonId
+      queryClient.invalidateQueries({
+        queryKey: judgeAssignmentQueryKeys.byHackathon(variables.hackathonId)
+      });
       message.success('Phân công giám khảo thành công!');
     },
     onError: (error) => {
@@ -91,6 +94,7 @@ export const useJudgeAssignment = () => {
     mutationFn: (assignmentId) =>
       axiosClient.put(`/JudgeAssignment/block/${assignmentId}`),
     onSuccess: () => {
+      // Invalidate tất cả queries để refetch
       queryClient.invalidateQueries({ queryKey: judgeAssignmentQueryKeys.all });
       message.success('Đã khóa phân công giám khảo!');
     },
@@ -111,6 +115,7 @@ export const useJudgeAssignment = () => {
     mutationFn: (assignmentId) =>
       axiosClient.put(`/JudgeAssignment/reactivate/${assignmentId}`),
     onSuccess: () => {
+      // Invalidate tất cả queries để refetch
       queryClient.invalidateQueries({ queryKey: judgeAssignmentQueryKeys.all });
       message.success('Khôi phục phân công giám khảo thành công!');
     },
