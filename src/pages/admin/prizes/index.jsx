@@ -23,9 +23,9 @@ const Prizes = () => {
     const selectedHackathon = hackathons.find(h => h.hackathonId === parseInt(hackathonId));
     const  prizeTypes =  [
       { value: 'Cash', text: 'Tiền mặt' },
-      { value: 'Certificate', text: 'Chứng nhận' },
-      { value: 'Medal', text: 'Huy chuong' },
+      { value: 'Medal', text: 'Huy chương' },
       { value: 'Gift', text: 'Quà tặng' },
+      { value: 'Certificate', text: 'Chứng nhận' },
     ]
 
 

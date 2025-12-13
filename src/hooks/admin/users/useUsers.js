@@ -94,9 +94,55 @@ export const useUsers = () => {
     },
   });
 
+  /**
+   * API: GET /api/Roles
+   * method: GET
+   * path: /api/Roles
+   * request: none
+   * response: 200 OK -> array of role objects
+   * [
+   *   {
+   *     "roleId": 1,
+   *     "roleName": "Member",
+   *     "users": []
+   *   },
+   *   ...
+   * ]
+   */
+  const fetchRoles = useQuery({
+    queryKey: ['Roles'],
+    queryFn: async () => {
+      const response = await axiosClient.get('/Roles');
+      return response.data;
+    },
+  });
+
+  /**
+   * API: PUT /api/Auth/admin/change-role/{id}
+   * method: PUT
+   * path: /api/Auth/admin/change-role/{id}
+   * request body: { roleId: integer }
+   * response: 200 OK
+   * describe: Change user role
+   */
+  const changeUserRole = useMutation({
+    mutationFn: ({ id, roleId }) =>
+      axiosClient.put(`/Auth/admin/change-role/${id}`, { roleId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userQueryKeys.all });
+      message.success('Cập nhật vai trò thành công!');
+    },
+    onError: (error) => {
+      console.error('Error changing user role:', error);
+      message.error(getMessage(error));
+    },
+  });
+
   return {
     fetchUsers,
     updateUser,
     toggleBlockUser,
+    fetchRoles,
+    changeUserRole,
   };
 };

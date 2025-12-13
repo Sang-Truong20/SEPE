@@ -1,17 +1,20 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ConfigProvider, theme, Modal, Tag, Switch } from 'antd';
-import { ExclamationCircleOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { ConfigProvider, theme, Modal, Tag, Switch, Select, Form, Button, Space } from 'antd';
+import { ExclamationCircleOutlined, CheckCircleOutlined, CloseCircleOutlined, UserOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useUsers } from '../../../hooks/admin/users/useUsers';
 import EntityTable from '../../../components/ui/EntityTable.jsx';
 
 const Users = () => {
     const navigate = useNavigate();
-    const { fetchUsers, toggleBlockUser } = useUsers();
+    const { fetchUsers, toggleBlockUser, fetchRoles, changeUserRole } = useUsers();
     const { data: usersData = [], isLoading, error } = fetchUsers;
+    const { data: rolesData = [], isLoading: rolesLoading } = fetchRoles;
     const [blockingId, setBlockingId] = useState(null);
     const [confirmModal, setConfirmModal] = useState({ open: false, userId: null, isBlocked: false });
+    const [roleModal, setRoleModal] = useState({ open: false, userId: null, userName: '', currentRole: null });
+    const [roleForm] = Form.useForm();
 
     // Model cho bảng users
     const tableModel = useMemo(() => ({
@@ -84,6 +87,22 @@ const Users = () => {
         ],
         actions: {
             edit: true,
+            extra: [
+                {
+                    key: 'editRole',
+                    icon: <UserOutlined />,
+                    tooltip: 'Chỉnh sửa vai trò',
+                    render: (record) => (
+                        <Button
+                            type="text"
+                            size="small"
+                            className="text-white hover:text-primary"
+                            icon={<UserOutlined />}
+                            onClick={() => handleEditRole(record)}
+                        />
+                    ),
+                },
+            ],
         }
     }), [blockingId]);
 
@@ -104,6 +123,36 @@ const Users = () => {
 
     const handleConfirmCancel = () => {
         setConfirmModal({ open: false, userId: null, isBlocked: false });
+    };
+
+    const handleEditRole = (record) => {
+        const currentRole = rolesData.find(r => r.roleName === record.roleName);
+        setRoleModal({
+            open: true,
+            userId: record.userId,
+            userName: record.fullName,
+            currentRole: currentRole?.roleId || null,
+        });
+        roleForm.setFieldsValue({ roleId: currentRole?.roleId || null });
+    };
+
+    const handleRoleModalOk = async () => {
+        try {
+            const values = await roleForm.validateFields();
+            await changeUserRole.mutateAsync({
+                id: roleModal.userId,
+                roleId: values.roleId,
+            });
+            setRoleModal({ open: false, userId: null, userName: '', currentRole: null });
+            roleForm.resetFields();
+        } catch (error) {
+            console.error('Error updating role:', error);
+        }
+    };
+
+    const handleRoleModalCancel = () => {
+        setRoleModal({ open: false, userId: null, userName: '', currentRole: null });
+        roleForm.resetFields();
     };
 
     const handlers = {
@@ -153,6 +202,43 @@ const Users = () => {
                             : 'Bạn có chắc chắn muốn mở khóa tài khoản người dùng này không?'}
                     </span>
                 </div>
+            </Modal>
+
+            <Modal
+                title="Chỉnh sửa vai trò"
+                open={roleModal.open}
+                onOk={handleRoleModalOk}
+                onCancel={handleRoleModalCancel}
+                okText="Cập nhật"
+                cancelText="Hủy"
+                confirmLoading={changeUserRole.isPending}
+                centered
+            >
+                <Form form={roleForm} layout="vertical">
+                    <div className="mb-4">
+                        <p className="text-gray-300 text-sm mb-2">
+                            Người dùng: <span className="font-semibold text-white">{roleModal.userName}</span>
+                        </p>
+                    </div>
+                    <Form.Item
+                        name="roleId"
+                        label="Vai trò"
+                        rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}
+                    >
+                        <Select
+                            placeholder="Chọn vai trò"
+                            loading={rolesLoading}
+                            className="w-full"
+                            style={{ backgroundColor: '#1f1f1f' }}
+                        >
+                            {rolesData.map((role) => (
+                                <Select.Option key={role.roleId} value={role.roleId}>
+                                    {role.roleName}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+                </Form>
             </Modal>
         </ConfigProvider>
     );
