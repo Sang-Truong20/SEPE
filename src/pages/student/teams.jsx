@@ -1,41 +1,46 @@
 import {
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CloseCircleOutlined,
   LoadingOutlined,
   PlusOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
 } from '@ant-design/icons';
-import { Alert, Button, Spin, message, Tabs, Card, Tag, Space, Empty } from 'antd';
+import { Alert, Button, Card, Empty, message, Space, Spin, Tabs, Tag } from 'antd';
+import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CreateTeamModal,
   TeamList,
+  JoinTeamModal,
+  SearchTeamsTab,
 } from '../../components/features/student/team';
 import {
   useCreateTeam,
   useGetMyTeams,
+  useGetTeams,
 } from '../../hooks/student/team';
+import {
+  useAcceptTeamInvitation,
+  useRejectTeamInvitation,
+  useTeamInvitationStatus
+} from '../../hooks/student/team-invitation';
+import {
+  useGetMyTeamJoinRequests,
+  useCreateTeamJoinRequest,
+} from '../../hooks/student/team-join-request';
 import {
   useGetTeamMembers,
   useLeaveTeam,
 } from '../../hooks/student/team-member';
-import {
-  useGetMyTeamJoinRequests,
-} from '../../hooks/student/team-join-request';
-import {
-  useTeamInvitationStatus,
-  useAcceptTeamInvitation,
-  useRejectTeamInvitation,
-  useGetTeamInvitationsByTeam,
-} from '../../hooks/student/team-invitation';
-import dayjs from 'dayjs';
 
 const StudentTeams = () => {
   const navigate = useNavigate();
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [activeTab, setActiveTab] = useState('teams');
+  const [isJoinModalVisible, setIsJoinModalVisible] = useState(false);
+  const [selectedTeamForJoin, setSelectedTeamForJoin] = useState(null);
 
   // Hooks for team operations
   const createTeamMutation = useCreateTeam();
@@ -44,18 +49,21 @@ const StudentTeams = () => {
     isLoading: myTeamsLoading,
     error: myTeamsError,
   } = useGetMyTeams();
+  const {
+    data: allTeamsData,
+    isLoading: allTeamsLoading,
+    error: allTeamsError,
+  } = useGetTeams();
   const { data: teamMembersData, isLoading: membersLoading } =
     useGetTeamMembers(selectedTeam);
 
   const leaveTeamMutation = useLeaveTeam();
+  const createJoinRequestMutation = useCreateTeamJoinRequest();
 
   // Invitations and join requests hooks
   const { data: joinRequests = [], isLoading: joinRequestsLoading } = useGetMyTeamJoinRequests();
   const { data: invitations = [], isLoading: invitationsLoading } = useTeamInvitationStatus();
-  const {
-    data: teamInvitationsByTeam = [],
-    isLoading: teamInvitationsByTeamLoading,
-  } = useGetTeamInvitationsByTeam(selectedTeam, { enabled: !!selectedTeam });
+
   const acceptInvitationMutation = useAcceptTeamInvitation();
   const rejectInvitationMutation = useRejectTeamInvitation();
 
@@ -70,7 +78,6 @@ const StudentTeams = () => {
         : [];
 
   const myTeams = myTeamsArray || [];
-  const availableTeams = [];
 
   const handleCreateTeam = async (values) => {
     try {
@@ -99,16 +106,45 @@ const StudentTeams = () => {
     }
   };
 
-  const handleJoinTeam = async (teamId) => {
-    try {
-      // For joining a team, we need to send a request to join
-      // This might require a separate hook or API endpoint
-      console.log('Joining team:', teamId);
-      message.info('Chức năng gia nhập đội đang được phát triển');
-    } catch (error) {
-      message.error('Có lỗi xảy ra khi gia nhập đội. Vui lòng thử lại.');
-      console.error('Join team error:', error);
+  const handleJoinTeam = (teamId) => {
+    setSelectedTeamForJoin(teamId);
+    setIsJoinModalVisible(true);
+  };
+
+  const handleSubmitJoinRequest = async (joinMessage) => {
+    if (!selectedTeamForJoin) {
+      message.error('Không xác định được đội. Vui lòng thử lại.');
+      return;
     }
+
+    try {
+      await createJoinRequestMutation.mutateAsync({
+        teamId: selectedTeamForJoin,
+        message: joinMessage || 'Tôi muốn tham gia đội của bạn',
+      });
+      message.success('Đã gửi yêu cầu tham gia đội thành công!');
+      setIsJoinModalVisible(false);
+      setSelectedTeamForJoin(null);
+    } catch (error) {
+      console.error('Join team error:', error);
+      if (
+        error?.message?.includes('Network Error') ||
+        error?.code === 'NETWORK_ERROR'
+      ) {
+        message.error('Không thể kết nối đến máy chủ. Vui lòng thử lại.');
+      } else if (error?.response?.status === 401) {
+        message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      } else if (error?.response?.status === 400) {
+        message.error(error?.response?.data?.message || 'Không thể gửi yêu cầu. Có thể bạn đã gửi yêu cầu trước đó.');
+      } else {
+        message.error('Có lỗi xảy ra khi gửi yêu cầu tham gia đội. Vui lòng thử lại.');
+      }
+    }
+  };
+
+  const handleCancelJoinModal = () => {
+    setIsJoinModalVisible(false);
+    setSelectedTeamForJoin(null);
   };
 
   const handleViewTeam = (teamId) => {
@@ -230,66 +266,24 @@ const StudentTeams = () => {
         />
       </section>
 
-      <section className="space-y-4 border-t border-white/5 pt-8">
-        <TeamList
-          teams={availableTeams}
-          title="Đội đang tìm thành viên"
-          emptyMessage="Không có đội nào đang tìm thành viên"
-          onViewTeam={handleViewTeam}
-          onLeaveTeam={handleLeaveTeam}
-          onJoinTeam={handleJoinTeam}
-          selectedTeam={selectedTeam}
-          teamLoading={false}
-          membersLoading={membersLoading}
-          teamMembersData={teamMembersData}
-          isAvailableTeam={true}
-          leaveTeamMutation={leaveTeamMutation}
-        />
-      </section>
+      
 
-      <section className="space-y-4 border-t border-white/5 pt-8">
-        <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-          <h3 className="text-lg font-semibold text-text-primary mb-4">
-            Lời mời đã gửi của đội đang chọn
-          </h3>
-          {!selectedTeam ? (
-            <Empty description="Chọn một đội để xem lời mời" />
-          ) : teamInvitationsByTeamLoading ? (
-            <div className="flex justify-center py-8">
-              <Spin />
-            </div>
-          ) : teamInvitationsByTeam && teamInvitationsByTeam.length > 0 ? (
-            <div className="space-y-3">
-              {teamInvitationsByTeam.map((invitation) => (
-                <Card
-                  key={invitation.invitationId || invitation.id || invitation.email}
-                  className="bg-card-background/50 border border-card-border"
-                  size="small"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="text-text-primary font-medium mb-1">
-                        {invitation.email || invitation.invitedUserEmail || 'Email không xác định'}
-                      </div>
-                      {invitation.createdAt && (
-                        <p className="text-muted-foreground text-xs">
-                          Gửi lúc: {dayjs(invitation.createdAt).format('DD/MM/YYYY HH:mm')}
-                        </p>
-                      )}
-                    </div>
-                    <Tag color="blue">
-                      {invitation.status || 'Pending'}
-                    </Tag>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Empty description="Đội chưa gửi lời mời nào" />
-          )}
-        </Card>
-      </section>
+      
     </div>
+  );
+
+  const renderSearchTeamsTab = () => (
+    <SearchTeamsTab
+      allTeamsData={allTeamsData}
+      allTeamsLoading={allTeamsLoading}
+      allTeamsError={allTeamsError}
+      myTeams={myTeams}
+      onViewTeam={handleViewTeam}
+      onJoinTeam={handleJoinTeam}
+      selectedTeam={selectedTeam}
+      membersLoading={membersLoading}
+      teamMembersData={teamMembersData}
+    />
   );
 
   const renderInvitationsTab = () => (
@@ -453,6 +447,11 @@ const StudentTeams = () => {
             children: renderTeamsTab(),
           },
           {
+            key: 'search',
+            label: 'Tìm team',
+            children: renderSearchTeamsTab(),
+          },
+          {
             key: 'invitations',
             label: 'Lời mời',
             children: renderInvitationsTab(),
@@ -467,6 +466,14 @@ const StudentTeams = () => {
         onCancel={() => setIsCreateModalVisible(false)}
         onSubmit={handleCreateTeam}
         loading={createTeamMutation.isPending}
+      />
+
+      {/* Join Team Modal */}
+      <JoinTeamModal
+        visible={isJoinModalVisible}
+        onCancel={handleCancelJoinModal}
+        onSubmit={handleSubmitJoinRequest}
+        loading={createJoinRequestMutation.isPending}
       />
 
     </div>
