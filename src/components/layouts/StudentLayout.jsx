@@ -14,6 +14,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 import { useGetNotifications, useGetUnreadCount, useMarkAsRead } from '../../hooks/student/notification';
 import { useUserData } from '../../hooks/useUserData';
+import { useLogout } from '../../hooks/useLogout';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -38,6 +39,7 @@ const StudentLayout = () => {
   const unreadCount = unreadCountData?.count ?? 0;
   const markAsRead = useMarkAsRead();
   const { userInfo: authUser } = useUserData();
+  const mutationLogout = useLogout();
 
   const recentNotifications = Array.isArray(notifications) ? notifications.slice(0, 5) : [];
 
@@ -330,8 +332,8 @@ const StudentLayout = () => {
 
                         <button
                           onClick={() => {
-                            console.log('Logout clicked');
                             setIsDropdownOpen(false);
+                            mutationLogout();
                           }}
                           className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-500/10 transition-colors"
                         >
