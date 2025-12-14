@@ -173,13 +173,16 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader: propIsLea
   };
 
   const handleConfirmFinalSubmission = async () => {
-    if (!pendingSubmissionId) {
+    if (!pendingSubmissionId || !teamId) {
       message.warning('Vui lòng chọn bài nộp để nộp final');
       return;
     }
 
     try {
-      await setFinalMutation.mutateAsync(pendingSubmissionId);
+      await setFinalMutation.mutateAsync({
+        submissionId: pendingSubmissionId,
+        teamId: parseInt(teamId),
+      });
       message.success('Nộp bài final thành công!');
       setFinalSubmissionModalVisible(false);
       setPendingSubmissionId(null);
