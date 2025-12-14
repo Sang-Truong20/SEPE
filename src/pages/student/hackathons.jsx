@@ -1,14 +1,12 @@
 import {
-  PlusOutlined,
   SearchOutlined,
   TrophyOutlined
 } from '@ant-design/icons';
-import { Alert, Button, Input, Select, Spin } from 'antd';
+import { Alert, Input, Select, Spin } from 'antd';
 import dayjs from 'dayjs';
 import { Archive, ArrowRight, CheckCircle, Hourglass, Layers, Terminal, Zap } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PATH_NAME } from '../../constants';
 import { useGetHackathons } from '../../hooks/student/hackathon';
 import { useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
 
@@ -55,22 +53,39 @@ const HackathonCard = ({ item, registration, onViewDetails }) => {
     if (!registration) return null;
     
     const status = registration.status?.toLowerCase();
-    if (status === 'approved') {
-      return (
-        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-green-500/10 text-green-400 border-green-500/20">
-          <CheckCircle size={12} className="mr-1.5" />
-          Đã đăng ký
-        </span>
-      );
-    } else if (status === 'pending') {
-      return (
-        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">
-          <Hourglass size={12} className="mr-1.5" />
-          Chờ duyệt
-        </span>
-      );
+    
+    switch (status) {
+      case 'approved':
+        return (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-green-500/10 text-green-400 border-green-500/20">
+            <CheckCircle size={12} className="mr-1.5" />
+            Đã đăng ký
+          </span>
+        );
+      case 'pending':
+        return (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">
+            <Hourglass size={12} className="mr-1.5" />
+            Chờ duyệt
+          </span>
+        );
+      case 'waitingmentor':
+        return (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-blue-500/10 text-blue-400 border-blue-500/20">
+            <Hourglass size={12} className="mr-1.5" />
+            Chờ mentor
+          </span>
+        );
+      case 'rejected':
+        return (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-red-500/10 text-red-400 border-red-500/20">
+            <Archive size={12} className="mr-1.5" />
+            Bị từ chối
+          </span>
+        );
+      default:
+        return null;
     }
-    return null;
   };
 
   return (
@@ -168,14 +183,24 @@ const StudentHackathons = () => {
     navigate(`/student/hackathons/${hackathonId}`);
   };
 
+  // Normalize registrations data to always be an array
+  const registrationsArray = useMemo(() => {
+    if (!myRegistrations) return [];
+    if (Array.isArray(myRegistrations)) return myRegistrations;
+    if (Array.isArray(myRegistrations.data)) return myRegistrations.data;
+    return [];
+  }, [myRegistrations]);
+
   // Create a map of registrations by hackathonId for quick lookup
   const registrationsMap = useMemo(() => {
-    if (!myRegistrations || !Array.isArray(myRegistrations)) return {};
-    return myRegistrations.reduce((acc, reg) => {
-      acc[reg.hackathonId] = reg;
+    if (!registrationsArray || registrationsArray.length === 0) return {};
+    return registrationsArray.reduce((acc, reg) => {
+      if (reg.hackathonId) {
+        acc[reg.hackathonId] = reg;
+      }
       return acc;
     }, {});
-  }, [myRegistrations]);
+  }, [registrationsArray]);
 
   // Get unique seasons from hackathons
   const uniqueSeasons = useMemo(() => {
@@ -259,15 +284,7 @@ const StudentHackathons = () => {
           </p>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <Button
-            icon={<PlusOutlined />}
-            className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 transition-all"
-            onClick={() => navigate(PATH_NAME.STUDENT_TEAMS)}
-          >
-            Tạo đội mới
-          </Button>
-        </div>
+        
       </div>
 
       {/* Search and Filter */}

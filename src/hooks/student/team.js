@@ -51,7 +51,8 @@ export const useGetMyTeams = (options = {}) => {
         queryKey: teamQueryKeys.myTeams(),
         queryFn: async () => {
             const response = await axiosClient.get('/Team/my-teams');
-            return response.data;
+            // Handle response structure: { success, message, data: [...] }
+            return response.data?.data || response.data || [];
         },
         staleTime: 5 * 60 * 1000,
         ...options,

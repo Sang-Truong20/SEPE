@@ -14,7 +14,8 @@ export const useGetMyHackathonRegistrations = (options = {}) => {
         queryKey: hackathonRegistrationQueryKeys.myRegistrations(),
         queryFn: async () => {
             const response = await axiosClient.get('/HackathonRegistration/my-registrations');
-            return response.data;
+            // Handle response structure: { success, message, data: [...] }
+            return response.data?.data || response.data || [];
         },
         staleTime: 2 * 60 * 1000,
         ...options,
@@ -27,10 +28,11 @@ export const useRegisterHackathon = () => {
 
     return useMutation({
         mutationKey: hackathonRegistrationQueryKeys.register(),
-        mutationFn: async ({ hackathonId, link }) => {
+        mutationFn: async ({ hackathonId, link, teamId }) => {
             const response = await axiosClient.post('/HackathonRegistration/register', {
                 hackathonId,
                 link,
+                teamId,
             });
             return response.data;
         },

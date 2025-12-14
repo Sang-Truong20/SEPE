@@ -12,7 +12,7 @@ import {
   TrophyOutlined,
   UserOutlined
 } from '@ant-design/icons';
-import { Alert, Avatar, Button, Card, Divider, Form, Input, Modal, Space, Spin, Table, Tag } from 'antd';
+import { Alert, Avatar, Button, Card, Divider, Form, Input, Modal, Select, Space, Spin, Table, Tag } from 'antd';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import HackathonPhases from '../../components/features/student/HackathonPhases';
@@ -21,7 +21,7 @@ import { PATH_NAME } from '../../constants';
 import { useGetHackathon } from '../../hooks/student/hackathon';
 import { useGetMyHackathonRegistrations, useRegisterHackathon } from '../../hooks/student/hackathon-registration';
 import { useAssignMentor } from '../../hooks/student/mentor-assignment';
-import { useGetTeams } from '../../hooks/student/team';
+import { useGetMyTeams } from '../../hooks/student/team';
 import { useGetTrackRanking } from '../../hooks/student/team-ranking';
 import { useUserData } from '../../hooks/useUserData';
 import { useGroups } from '../../hooks/admin/groups/useGroups';
@@ -32,21 +32,47 @@ const StudentHackathonDetail = () => {
   const { id } = useParams();
   const { data: hackathon, isLoading, error } = useGetHackathon(id);
   const { userInfo } = useUserData();
-  const { data: teamsData } = useGetTeams();
+  const { data: myTeamsData } = useGetMyTeams();
   const { data: phases = [] } = useGetHackathonPhases(id);
   const phase1 = phases.find(p => p.phaseNumber === 1 || p.phaseId === phases[0]?.phaseId);
   const { fetchGroupsByHackathon } = useGroups();
   const { data: groupsData = [], isLoading: groupsLoading } = fetchGroupsByHackathon(id);
   
-  const userTeam = teamsData && Array.isArray(teamsData) 
-    ? teamsData.find(t => {
-        const teamLeaderName = t.teamLeaderName || t.leaderName || t.leader?.name;
-        const userName = userInfo?.name || userInfo?.fullName || userInfo?.userName;
-        return teamLeaderName && userName && teamLeaderName === userName;
-      })
-    : null;
-  
   const { data: myRegistrations } = useGetMyHackathonRegistrations();
+  
+  // Normalize myTeamsData to always be an array
+  const teamsArray = useMemo(() => {
+    if (!myTeamsData) return [];
+    if (Array.isArray(myTeamsData)) return myTeamsData;
+    if (Array.isArray(myTeamsData.data)) return myTeamsData.data;
+    return [];
+  }, [myTeamsData]);
+  
+  // Check if user has any teams
+  const hasTeams = teamsArray.length > 0;
+  
+  // Filter teams where user is leader and hasn't joined any hackathon yet
+  const availableTeams = useMemo(() => {
+    if (!hasTeams || !userInfo) return [];
+    
+    const userName = userInfo?.name || userInfo?.fullName || userInfo?.userName;
+    const userId = userInfo?.id || userInfo?.userId;
+    
+    return teamsArray.filter(t => {
+      const teamLeaderName = t.teamLeaderName || t.leaderName || t.leader?.name;
+      const teamLeaderId = t.teamLeaderId || t.leaderId || t.leader?.id || t.leader?.userId;
+      
+      // Check if user is leader
+      const isLeader = (teamLeaderName && userName && teamLeaderName === userName) ||
+                      (teamLeaderId && userId && teamLeaderId === userId);
+      
+      // Check if team hasn't joined any hackathon (hackathonId is null)
+      const hasNotJoined = t.hackathonId === null || t.hackathonId === undefined || 
+                          t.hackathonName === "(No hackathon)" || t.hackathonName === null;
+      
+      return isLeader && hasNotJoined;
+    });
+  }, [teamsArray, userInfo, hasTeams]);
   
   // Tìm registration của user cho hackathon hiện tại
   const myRegistration = useMemo(() => {
@@ -104,10 +130,16 @@ const StudentHackathonDetail = () => {
   };
 
   const handleSubmitRegistration = async (values) => {
+    if (!values.teamId) {
+      console.error('No team selected');
+      return;
+    }
+    
     try {
       await registerMutation.mutateAsync({ 
         hackathonId: parseInt(id), 
-        link: values.link || ''
+        link: values.link || '',
+        teamId: values.teamId
       });
       setRegisterModalVisible(false);
       registerForm.resetFields();
@@ -446,13 +478,11 @@ const StudentHackathonDetail = () => {
                   icon={<TeamOutlined />}
                   onClick={handleRegisterHackathon}
                   className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
-                  disabled={hackathon.status?.toLowerCase() === 'completed' || registerMutation.isPending || !userTeam}
+                  disabled={hackathon.status?.toLowerCase() === 'completed' || registerMutation.isPending || availableTeams.length === 0}
                   loading={registerMutation.isPending}
                 >
                   {hackathon.status?.toLowerCase() === 'completed' 
                     ? 'Đã kết thúc' 
-                    : !userTeam
-                    ? 'Cần tạo đội trước'
                     : 'Đăng ký Hackathon'}
                 </Button>
               )}
@@ -479,18 +509,6 @@ const StudentHackathonDetail = () => {
                     Đăng ký Mentor
                   </Button>
                 </>
-              )}
-
-              {!userTeam && (
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<TeamOutlined />}
-                  onClick={() => navigate(PATH_NAME.STUDENT_TEAMS)}
-                  className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
-                >
-                  Tạo đội trước
-                </Button>
               )}
 
              
@@ -597,8 +615,33 @@ const StudentHackathonDetail = () => {
           form={registerForm}
           layout="vertical"
           onFinish={handleSubmitRegistration}
-          className="[&_.ant-form-item-label>label]:text-white [&_.ant-input]:bg-card-background [&_.ant-input]:border-card-border [&_.ant-input]:text-white [&_.ant-input]:placeholder:text-gray-500"
+          className="[&_.ant-form-item-label>label]:text-white [&_.ant-input]:bg-card-background [&_.ant-input]:border-card-border [&_.ant-input]:text-white [&_.ant-input]:placeholder:text-gray-500 [&_.ant-select-selector]:bg-card-background [&_.ant-select-selector]:border-card-border [&_.ant-select-selection-item]:text-white [&_.ant-select-selection-placeholder]:text-gray-500"
         >
+          <Form.Item
+            label="Chọn đội"
+            name="teamId"
+            rules={[
+              { required: true, message: 'Vui lòng chọn đội!' }
+            ]}
+            help={availableTeams.length === 0 ? 'Bạn chưa có đội nào là đội trưởng và chưa tham gia hackathon. Vui lòng tạo đội trước.' : null}
+          >
+            <Select
+              placeholder={availableTeams.length === 0 ? "Không có đội khả dụng" : "Chọn đội của bạn"}
+              size="large"
+              showSearch
+              disabled={availableTeams.length === 0}
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              options={availableTeams.map(team => ({
+                value: team.teamId || team.id || team.teamID,
+                label: team.teamName || team.name || `Đội ${team.teamId || team.id || team.teamID}`
+              }))}
+              className="[&_.ant-select-selector]:!bg-card-background [&_.ant-select-selector]:!border-card-border [&_.ant-select-selection-item]:!text-white"
+            />
+          </Form.Item>
+
           <Form.Item
             label="Link GitHub Repository"
             name="link"
@@ -635,6 +678,7 @@ const StudentHackathonDetail = () => {
                 type="primary"
                 htmlType="submit"
                 loading={registerMutation.isPending}
+                disabled={availableTeams.length === 0}
                 className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
               >
                 Đăng ký
