@@ -157,9 +157,6 @@ const PhaseScores = () => {
                   type="primary"
                   ghost
                   className="text-xs"
-                  onClick={() =>
-                    navigate(`${PATH_NAME?.JUDGE_CHALLENGES}/${ch?.challengeId}`)
-                  }
                 >
                   {ch?.title}
                 </Button>
@@ -235,13 +232,16 @@ const PhaseScores = () => {
 
   const handleSaveScore = () => {
     form.validateFields().then(values => {
-      const scores = editModal?.criteria?.map(c => ({
-        criteriaId: c?.criteriaId,
-        scoreValue: values[`score_${c?.criteriaId}`] || 0,
+      const criteriaScores = editModal?.criteria?.map(c => ({
+        criterionId: c?.criteriaId,
+        score: values[`score_${c?.criteriaId}`] || 0,
         comment: values[`comment_${c?.criteriaId}`] || null,
       }));
 
-      const payload = { submissionId: editModal?.submission?.submissionId, scores };
+      const payload = {
+        submissionId: editModal?.submission?.submissionId,
+        criteriaScores
+      };
       const mutation = editModal?.existingScores?.length > 0 ? updateScore : createScore;
 
       mutation.mutate(payload, {
@@ -435,7 +435,7 @@ const PhaseScores = () => {
                         </Space>
                       </div>
                     </Col>
-                  
+
                   </Row>
                 </Card>
 

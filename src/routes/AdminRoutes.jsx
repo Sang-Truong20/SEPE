@@ -1,10 +1,12 @@
 import AdminLayout from '../components/layouts/AdminLayout';
 import { Spin } from 'antd';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useUserData } from '../hooks/useUserData';
+import { PATH_NAME } from '../constants';
 
 const AdminRoutes = () => {
   const { isLoading, userInfo } = useUserData();
+  const location = useLocation();
 
   const isAdmin = userInfo && userInfo.roleName?.toLowerCase() === "admin" ;
 
@@ -14,6 +16,11 @@ const AdminRoutes = () => {
         <Spin size="large" />
       </div>
     );
+  }
+
+  // Redirect to dashboard if navigating to /admin directly
+  if (isAdmin && location.pathname === PATH_NAME.ADMIN) {
+    return <Navigate to={`${PATH_NAME.ADMIN}/dashboard`} replace />;
   }
 
   return isAdmin ? (
