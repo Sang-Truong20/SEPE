@@ -99,7 +99,8 @@ const MentorAssignments = () => {
       title: 'Thao tác',
       key: 'actions',
       render: (_, record) => {
-        const isPending = (record.status || '').toLowerCase() === 'pending';
+        const status = String(record.status || '').toLowerCase().trim();
+        const isPending = status === 'pending';
         return (
           <Space>
             <Button
@@ -116,6 +117,7 @@ const MentorAssignments = () => {
               <>
                 <Button
                   size="small"
+                  type="primary"
                   icon={<CheckCircleOutlined />}
                   loading={
                     approveMutation.isPending &&
@@ -129,10 +131,13 @@ const MentorAssignments = () => {
                       },
                     });
                   }}
-                  className="bg-emerald-600 text-white border-0"
-                />
+                  className="bg-emerald-600 text-white border-0 hover:bg-emerald-700"
+                >
+                  Duyệt
+                </Button>
                 <Button
                   size="small"
+                  danger
                   icon={<CloseCircleOutlined />}
                   loading={
                     rejectMutation.isPending &&
@@ -146,8 +151,10 @@ const MentorAssignments = () => {
                       },
                     });
                   }}
-                  className="bg-red-600 text-white border-0"
-                />
+                  className="bg-red-600 text-white border-0 hover:bg-red-700"
+                >
+                  Từ chối
+                </Button>
               </>
             )}
           </Space>
@@ -301,7 +308,7 @@ const MentorAssignments = () => {
               </div>
             </div>
 
-            {(selected.status || '').toLowerCase() === 'pending' && (
+            {String(selected.status || '').toLowerCase().trim() === 'pending' && (
               <div className="flex gap-2">
                 <Button
                   type="primary"
