@@ -19,6 +19,7 @@ import { useUserData } from '../../hooks/useUserData';
 
 const statusMap = {
   pending: { color: 'orange', text: 'Chờ xác nhận' },
+  waitingmentor: { color: 'orange', text: 'Chờ mentor xác nhận' },
   accepted: { color: 'green', text: 'Đã nhận' },
   rejected: { color: 'red', text: 'Từ chối' },
   approved: { color: 'green', text: 'Đã duyệt' },
@@ -100,7 +101,7 @@ const MentorAssignments = () => {
       key: 'actions',
       render: (_, record) => {
         const status = String(record.status || '').toLowerCase().trim();
-        const isPending = status === 'pending';
+        const isPending = status === 'pending' || status === 'waitingmentor';
         return (
           <Space>
             <Button
@@ -221,6 +222,9 @@ const MentorAssignments = () => {
                     <Select.Option value="pending">
                       <span className="text-white">Chờ xác nhận</span>
                     </Select.Option>
+                    <Select.Option value="waitingmentor">
+                      <span className="text-white">Chờ mentor xác nhận</span>
+                    </Select.Option>
                     <Select.Option value="approved">
                       <span className="text-white">Đã duyệt</span>
                     </Select.Option>
@@ -308,7 +312,8 @@ const MentorAssignments = () => {
               </div>
             </div>
 
-            {String(selected.status || '').toLowerCase().trim() === 'pending' && (
+            {(String(selected.status || '').toLowerCase().trim() === 'pending' || 
+              String(selected.status || '').toLowerCase().trim() === 'waitingmentor') && (
               <div className="flex gap-2">
                 <Button
                   type="primary"
