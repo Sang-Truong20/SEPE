@@ -3,7 +3,6 @@ import { useMutation } from '@tanstack/react-query';
 import { message, Form, Input, Button, Divider } from 'antd';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
-import { useState } from 'react';
 import { PATH_NAME } from '../../constants';
 import { loginGoogle, login } from '../../services/auth';
 import { notify } from '../../utils/index';
@@ -36,6 +35,12 @@ function Login() {
         window.location.href = PATH_NAME.PARTNER;
       } else if (role === 'Judge') {
         window.location.href = PATH_NAME.JUDGE;
+      } else if (role === 'Student') {
+        window.location.href = PATH_NAME.STUDENT;
+      } else if (role === 'Mentor') {
+        window.location.href = PATH_NAME.MENTOR;
+      } else if (role === 'Chapter') {
+        window.location.href = PATH_NAME.CHAPTER;
       } else {
         window.location.href = PATH_NAME.HOME;
       }
