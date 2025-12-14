@@ -1,46 +1,42 @@
-import { useState, useEffect } from 'react';
+import { MessageOutlined, SendOutlined } from '@ant-design/icons';
 import {
-  Card,
-  Button,
+  Alert,
+  Input as AntInput,
   Avatar,
   Badge,
-  Modal,
+  Button,
+  Card,
   Form,
   Input,
   message,
-  Tabs,
-  Space,
-  Alert,
-  Tag,
+  Modal,
   Spin,
+  Tabs,
+  Tag,
+  Tooltip
 } from 'antd';
+import dayjs from 'dayjs';
 import {
-  UserPlus,
-  Crown,
-  Mail,
-  Github,
-  Linkedin,
-  XCircle,
+  AlertTriangle,
   CheckCircle,
   Clock,
+  Crown,
+  Github,
+  Linkedin,
+  Mail,
+  UserCog,
+  UserPlus,
   Users,
-  AlertTriangle,
-  X,
-  FileText,
-  Award,
+  XCircle
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
+import { useGetChatGroupMessages, useGetTeamChatGroups, useSendChatMessage } from '../../hooks/student/chat';
 import { useGetTeam } from '../../hooks/student/team';
-import { useApproveTeamMember, useRejectTeamMember } from '../../hooks/student/team-member-approval';
-import { useUserData } from '../../hooks/useUserData';
 import { useInviteTeamMember } from '../../hooks/student/team-invitation';
-import { useGetTeamChatGroups, useGetChatGroupMessages, useSendChatMessage } from '../../hooks/student/chat';
-import { useGetTeamMembers } from '../../hooks/student/team-member';
-import { Table, Tooltip, Button as AntButton, Input as AntInput } from 'antd';
-import { EyeOutlined, DownloadOutlined, FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, MessageOutlined, SendOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
-
+import { useGetTeamMembers, useKickTeamMember, useTransferTeamLeader } from '../../hooks/student/team-member';
+import { useUserData } from '../../hooks/useUserData';
 const { TabPane } = Tabs;
 
 const mapApiTeamToView = (apiTeam) => {
@@ -63,6 +59,8 @@ const MyTeamPage = () => {
   const { id } = useParams();
   const [form] = Form.useForm();
   const [inviteModalVisible, setInviteModalVisible] = useState(false);
+  const [transferLeaderModalVisible, setTransferLeaderModalVisible] = useState(false);
+  const [selectedMemberForTransfer, setSelectedMemberForTransfer] = useState(null);
   const [activeTab, setActiveTab] = useState('members');
   const {
     data: apiTeam,
@@ -120,9 +118,9 @@ const MyTeamPage = () => {
   ) || (teamData?.leaderId === currentUserId) || 
   (teamData?.leaderName && currentUserName && teamData.leaderName === currentUserName);
 
-  // Member approval hooks
-  const approveMemberMutation = useApproveTeamMember();
-  const rejectMemberMutation = useRejectTeamMember();
+
+  const kickMemberMutation = useKickTeamMember();
+  const transferLeaderMutation = useTransferTeamLeader();
 
   // Chat hooks
   const { data: chatGroupsData = [], isLoading: chatGroupsLoading } = useGetTeamChatGroups(id);
@@ -182,42 +180,40 @@ const MyTeamPage = () => {
       okText: 'Xác nhận',
       cancelText: 'Hủy',
       okButtonProps: { danger: true },
-      onOk: () => {
-        const currentMembers = teamData.members || [];
-        setTeamData({
-          ...teamData,
-          members: currentMembers.filter(
-            (m) => m.id !== memberId && m.userId !== memberId,
-          ),
-        });
-        message.success('Đã loại thành viên khỏi đội');
-      },
-    });
-  };
-
-  const handleApproveMember = async (memberId) => {
-    try {
-      await approveMemberMutation.mutateAsync({ teamId: id, memberId });
-    } catch (error) {
-      console.error('Approve member error:', error);
-    }
-  };
-
-  const handleRejectMember = async (memberId) => {
-    Modal.confirm({
-      title: 'Từ chối thành viên',
-      content: 'Bạn có chắc chắn muốn từ chối thành viên này?',
-      okText: 'Xác nhận',
-      cancelText: 'Hủy',
-      okButtonProps: { danger: true },
       onOk: async () => {
         try {
-          await rejectMemberMutation.mutateAsync({ teamId: id, memberId, reason: 'Từ chối bởi leader' });
+          await kickMemberMutation.mutateAsync({ teamId: id, memberId });
+          message.success('Đã loại thành viên khỏi đội');
         } catch (error) {
-          console.error('Reject member error:', error);
+          console.error('Kick member error:', error);
+          message.error(error?.response?.data?.message || 'Không thể loại thành viên. Vui lòng thử lại.');
         }
       },
     });
+  };
+
+
+
+  const handleTransferLeader = (memberId) => {
+    setSelectedMemberForTransfer(memberId);
+    setTransferLeaderModalVisible(true);
+  };
+
+  const handleConfirmTransferLeader = async () => {
+    if (!selectedMemberForTransfer) return;
+    
+    try {
+      await transferLeaderMutation.mutateAsync({ 
+        teamId: id, 
+        newLeaderId: selectedMemberForTransfer 
+      });
+      message.success('Đã chuyển quyền trưởng nhóm thành công!');
+      setTransferLeaderModalVisible(false);
+      setSelectedMemberForTransfer(null);
+    } catch (error) {
+      console.error('Transfer leader error:', error);
+      message.error(error?.response?.data?.message || 'Không thể chuyển quyền trưởng nhóm. Vui lòng thử lại.');
+    }
   };
 
 
@@ -471,47 +467,73 @@ const MyTeamPage = () => {
                           </div>
                         )}
 
-                        <div className="flex items-center space-x-2">
-                          {memberEmail && (
-                            <Button
-                              type="text"
-                              size="small"
-                              icon={<Mail className="w-4 h-4" />}
-                              className="text-gray-400 hover:text-white"
-                              href={`mailto:${memberEmail}`}
-                            />
-                          )}
-                          {member.github && (
-                            <Button
-                              type="text"
-                              size="small"
-                              icon={<Github className="w-4 h-4" />}
-                              className="text-gray-400 hover:text-white"
-                              href={member.github}
-                              target="_blank"
-                            />
-                          )}
-                          {member.linkedin && (
-                            <Button
-                              type="text"
-                              size="small"
-                              icon={<Linkedin className="w-4 h-4" />}
-                              className="text-gray-400 hover:text-white"
-                              href={member.linkedin}
-                              target="_blank"
-                            />
-                          )}
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
+                          <div className="flex items-center space-x-2">
+                            {memberEmail && (
+                              <Tooltip title="Gửi email">
+                                <Button
+                                  type="text"
+                                  size="small"
+                                  icon={<Mail className="w-4 h-4" />}
+                                  className="text-gray-400 hover:text-white"
+                                  href={`mailto:${memberEmail}`}
+                                />
+                              </Tooltip>
+                            )}
+                            {member.github && (
+                              <Tooltip title="Xem GitHub">
+                                <Button
+                                  type="text"
+                                  size="small"
+                                  icon={<Github className="w-4 h-4" />}
+                                  className="text-gray-400 hover:text-white"
+                                  href={member.github}
+                                  target="_blank"
+                                />
+                              </Tooltip>
+                            )}
+                            {member.linkedin && (
+                              <Tooltip title="Xem LinkedIn">
+                                <Button
+                                  type="text"
+                                  size="small"
+                                  icon={<Linkedin className="w-4 h-4" />}
+                                  className="text-gray-400 hover:text-white"
+                                  href={member.linkedin}
+                                  target="_blank"
+                                />
+                              </Tooltip>
+                            )}
+                          </div>
                           {isLeader && !isMemberLeader && (
-                            <Button
-                              type="text"
-                              size="small"
-                              danger
-                              icon={<XCircle className="w-4 h-4" />}
-                              onClick={() =>
-                                handleKickMember(member.id || member.userId)
-                              }
-                              className="text-red-400 hover:text-red-300"
-                            />
+                            <div className="flex items-center gap-2">
+                              <Tooltip title="Chuyển quyền trưởng nhóm">
+                                <Button
+                                  size="small"
+                                  icon={<UserCog className="w-4 h-4" />}
+                                  onClick={() =>
+                                    handleTransferLeader(member.id || member.userId)
+                                  }
+                                  className="bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-blue-400 hover:text-blue-300 font-medium"
+                                >
+                                  Chuyển quyền
+                                </Button>
+                              </Tooltip>
+                              <Tooltip title="Loại bỏ thành viên khỏi đội">
+                                <Button
+                                  danger
+                                  size="small"
+                                  icon={<XCircle className="w-4 h-4" />}
+                                  onClick={() =>
+                                    handleKickMember(member.id || member.userId)
+                                  }
+                                  loading={kickMemberMutation.isPending}
+                                  className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 font-medium"
+                                >
+                                  Loại bỏ
+                                </Button>
+                              </Tooltip>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -725,6 +747,43 @@ const MyTeamPage = () => {
             </div>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Transfer Leader Modal */}
+      <Modal
+        title="Chuyển quyền trưởng nhóm"
+        open={transferLeaderModalVisible}
+        onOk={handleConfirmTransferLeader}
+        onCancel={() => {
+          setTransferLeaderModalVisible(false);
+          setSelectedMemberForTransfer(null);
+        }}
+        okText="Xác nhận"
+        cancelText="Hủy"
+        okButtonProps={{
+          danger: true,
+          loading: transferLeaderMutation.isPending,
+          className: 'bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0',
+        }}
+        className="[&_.ant-modal-content]:bg-gray-900/95 [&_.ant-modal-content]:backdrop-blur-xl [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white [&_.ant-modal-mask]:bg-black/50"
+      >
+        <div className="space-y-4">
+          <Alert
+            message="Cảnh báo"
+            description="Bạn có chắc chắn muốn chuyển quyền trưởng nhóm cho thành viên này? Sau khi chuyển, bạn sẽ không còn là trưởng nhóm nữa."
+            type="warning"
+            showIcon
+            className="[&_.ant-alert-message]:text-yellow-400 [&_.ant-alert-description]:text-yellow-300"
+          />
+          {selectedMemberForTransfer && (
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <p className="text-gray-400 mb-2">Thành viên được chọn:</p>
+              <p className="text-white font-medium">
+                {members.find(m => (m.id || m.userId) === selectedMemberForTransfer)?.name || 'N/A'}
+              </p>
+            </div>
+          )}
+        </div>
       </Modal>
 
     </div>

@@ -6,7 +6,7 @@ import { useUserData } from '../hooks/useUserData';
 const ChapterRoutes = () => {
   const { isLoading, userInfo } = useUserData();
 
-  const isChapter = userInfo && userInfo.roleName?.toLowerCase() === "chapter";
+  const isChapter = userInfo && userInfo.roleName?.toLowerCase() === "chapterleader";
 
   if (isLoading) {
     return (
