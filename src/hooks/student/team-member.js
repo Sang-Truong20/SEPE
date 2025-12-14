@@ -9,6 +9,7 @@ export const teamMemberQueryKeys = {
     kick: (teamId, memberId) => [...teamMemberQueryKeys.leader, 'kick', teamId, memberId],
     leave: (teamId) => [...teamMemberQueryKeys.origin, 'leave', teamId],
     invite: (teamId) => [...teamMemberQueryKeys.leader, 'invite', teamId],
+    transferLeader: (teamId, newLeaderId) => [...teamMemberQueryKeys.leader, 'transfer-leader', teamId, newLeaderId],
 };
 
 // Get team members
@@ -46,14 +47,15 @@ export const useKickTeamMember = () => {
     return useMutation({
         mutationKey: teamMemberQueryKeys.kick(),
         mutationFn: async ({ teamId, memberId }) => {
-            const response = await axiosClient.post(`/TeamMember/${teamId}/kick/${memberId}`);
+            const response = await axiosClient.delete(`/TeamMember/${teamId}/kick/${memberId}`);
             return response.data;
         },
         onSuccess: (data, variables) => {
             // Invalidate team members list
             queryClient.invalidateQueries({ queryKey: teamMemberQueryKeys.members(variables.teamId) });
-
-           
+        },
+        onError: (error) => {
+            console.error('Kick team member error:', error);
         },
     });
 };
@@ -76,8 +78,9 @@ export const useLeaveTeam = () => {
             queryClient.invalidateQueries({
                 predicate: (query) => query.queryKey[0] === 'student' && query.queryKey[1] === 'team'
             });
-
-           
+        },
+        onError: (error) => {
+            console.error('Leave team error:', error);
         },
     });
 };
@@ -97,6 +100,31 @@ export const useInviteTeamMember = () => {
         onSuccess: (data, variables) => {
             // Invalidate team members list to show pending invitations
             queryClient.invalidateQueries({ queryKey: teamMemberQueryKeys.members(variables.teamId) });
+        },
+    });
+};
+
+// Transfer team leadership
+export const useTransferTeamLeader = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationKey: teamMemberQueryKeys.transferLeader(),
+        mutationFn: async ({ teamId, newLeaderId }) => {
+            const response = await axiosClient.post(`/TeamMember/${teamId}/transfer-leader/${newLeaderId}`);
+            return response.data;
+        },
+        onSuccess: (data, variables) => {
+            // Invalidate team members list to reflect leadership change
+            queryClient.invalidateQueries({ queryKey: teamMemberQueryKeys.members(variables.teamId) });
+            
+            // Invalidate team data to update leader info
+            queryClient.invalidateQueries({
+                predicate: (query) => query.queryKey[0] === 'student' && query.queryKey[1] === 'team'
+            });
+        },
+        onError: (error) => {
+            console.error('Transfer team leader error:', error);
         },
     });
 };
