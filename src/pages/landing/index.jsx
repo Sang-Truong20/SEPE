@@ -7,12 +7,12 @@ import { jwtDecode } from 'jwt-decode';
 import { useEffect, useState } from 'react';
 import Footer from '../../components/layouts/Footer';
 import UserDropdown from '../../components/layouts/UserDropdown';
+import Login from '../../components/login';
 import { PATH_NAME } from '../../constants';
 import { useLogout } from '../../hooks/useLogout';
 import { useUserData } from '../../hooks/useUserData';
 import { loginGoogle } from '../../services/auth';
 import { notify } from '../../utils/index';
-import Login from '../../components/login';
 
 const SEALLandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -61,11 +61,11 @@ const SEALLandingPage = () => {
           window.location.href = PATH_NAME.PARTNER;
         } else if (role === 'Judge') {
           window.location.href = PATH_NAME.JUDGE;
-        } else if (role === 'Student') {
+        } else if (role === 'Member') {
           window.location.href = PATH_NAME.STUDENT;
         } else if (role === 'Mentor') {
           window.location.href = PATH_NAME.MENTOR;
-        } else if (role === 'Chapter') {
+        } else if (role === 'ChapterLeader') {
           window.location.href = PATH_NAME.CHAPTER;
         } else {
           window.location.href = PATH_NAME.HOME;

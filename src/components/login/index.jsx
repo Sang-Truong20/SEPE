@@ -35,11 +35,11 @@ function Login() {
         window.location.href = PATH_NAME.PARTNER;
       } else if (role === 'Judge') {
         window.location.href = PATH_NAME.JUDGE;
-      } else if (role === 'Student') {
+      } else if (role === 'Member') {
         window.location.href = PATH_NAME.STUDENT;
       } else if (role === 'Mentor') {
         window.location.href = PATH_NAME.MENTOR;
-      } else if (role === 'Chapter') {
+      } else if (role === 'ChapterLeader') {
         window.location.href = PATH_NAME.CHAPTER;
       } else {
         window.location.href = PATH_NAME.HOME;
