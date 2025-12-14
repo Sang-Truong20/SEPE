@@ -202,12 +202,12 @@ const HackathonPhaseDetail = () => {
 
   const trackTableModel = useMemo(
     () => ({
-      entityName: 'phần thi',
+      entityName: 'hạng mục',
       rowKey: 'trackId',
       createButton:
         isAdmin && isFirstPhase
           ? {
-              label: 'Tạo mới phần thi',
+              label: 'Tạo mới hạng mục',
               action: () =>
                 navigate(
                   `${PATH_NAME.ADMIN_TRACKS}/create?phaseId=${id}&hackathonId=${hackathonId}`,
@@ -400,7 +400,7 @@ const HackathonPhaseDetail = () => {
           ),
         },
         {
-          title: 'Gán vào lúc',
+          title: 'Phân công',
           dataIndex: 'assignedAt',
           key: 'assignedAt',
           className: 'text-gray-400',
@@ -755,7 +755,7 @@ const HackathonPhaseDetail = () => {
               data={phaseTracks}
               loading={tracksLoading || cChallengesLoading}
               handlers={trackHandlers}
-              emptyText="Không có track nào cho phase này"
+              emptyText="Không có hạng mục nào cho giai đoạn này"
               dateFormatter={(value, fmt) =>
                 value ? dayjs(value).format(fmt) : '--'
               }
@@ -859,8 +859,7 @@ const HackathonPhaseDetail = () => {
         confirmLoading={assignRandomChallenge.isPending}
       >
         <div className="mb-2 text-sm font-medium">
-          Phần thi:{' '}
-          <span className="text-primary">{assignModal.track?.name}</span>
+          Hang: <span className="text-primary">{assignModal.track?.name}</span>
         </div>
         <Form form={assignForm} layout="vertical">
           <Form.Item

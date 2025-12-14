@@ -17,17 +17,18 @@ const HackathonPhases = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const hackathonId = searchParams.get('hackathonId');
   const [deletingId, setDeletingId] = useState(null);
-  const [confirmModal, setConfirmModal] = useState({ open: false, phaseId: null });
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    phaseId: null,
+  });
 
   const { fetchHackathons } = useHackathons();
   const { data: hackathons = [], isLoading: hackathonsLoading } =
     fetchHackathons;
 
   const { fetchHackathonPhases, deleteHackathonPhase } = useHackathonPhases();
-  const {
-    data: phasesDataRaw = [],
-    isLoading,
-  } = fetchHackathonPhases(hackathonId);
+  const { data: phasesDataRaw = [], isLoading } =
+    fetchHackathonPhases(hackathonId);
 
   const phasesData = phasesDataRaw
     .sort((a, b) => new Date(a.endDate) - new Date(b.endDate))
@@ -45,7 +46,7 @@ const HackathonPhases = () => {
       createButton:
         hackathonId && phasesData.length < 2
           ? {
-              label: 'Tạo mới phần thi',
+              label: 'Tạo mới hạng mục',
               action: () =>
                 navigate(
                   `/admin/hackathons/hackathon-phases/create?hackathonId=${hackathonId}&existingPhaseId=${phasesData[0]?.phaseId}`,
@@ -108,12 +109,12 @@ const HackathonPhases = () => {
 
   const handlers = {
     onView: ({ phaseId }) => {
-      const lastPhaseId = phasesData.at(-1)?.phaseId
-      const isLastPhase = phasesData.length > 1 && phaseId === lastPhaseId
+      const lastPhaseId = phasesData.at(-1)?.phaseId;
+      const isLastPhase = phasesData.length > 1 && phaseId === lastPhaseId;
 
       navigate(
-        `/admin/hackathons/hackathon-phases/${phaseId}?hackathonId=${hackathonId}&isLastPhase=${isLastPhase}`
-      )
+        `/admin/hackathons/hackathon-phases/${phaseId}?hackathonId=${hackathonId}&isLastPhase=${isLastPhase}`,
+      );
     },
     onEdit: (record) =>
       navigate(
@@ -126,8 +127,6 @@ const HackathonPhases = () => {
   const handleHackathonChange = (newHackathonId) => {
     setSearchParams({ hackathonId: newHackathonId });
   };
-
-
 
   return (
     <ConfigProvider
