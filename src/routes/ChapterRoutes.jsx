@@ -4,10 +4,9 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useUserData } from '../hooks/useUserData';
 
 const ChapterRoutes = () => {
-  const { isLoading } = useUserData();
+  const { isLoading, userInfo } = useUserData();
 
-  // Mock: Set to true for chapter role
-  const isChapter = true;
+  const isChapter = userInfo && userInfo.roleName?.toLowerCase() === "chapter";
 
   if (isLoading) {
     return (
@@ -22,7 +21,7 @@ const ChapterRoutes = () => {
       <Outlet />
     </ChapterLayout>
   ) : (
-    <Navigate to="/login" replace />
+    <Navigate to="/" replace />
   );
 };
 

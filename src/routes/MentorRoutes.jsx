@@ -4,9 +4,9 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useUserData } from '../hooks/useUserData';
 
 const MentorRoutes = () => {
-  const { isLoading } = useUserData();
+  const { isLoading, userInfo } = useUserData();
 
-  const isMentor = true; // Mock: set to true for now
+  const isMentor = userInfo && userInfo.roleName?.toLowerCase() === "mentor";
 
   if (isLoading) {
     return (
@@ -21,7 +21,7 @@ const MentorRoutes = () => {
       <Outlet />
     </MentorLayout>
   ) : (
-    <Navigate to="/login" replace />
+    <Navigate to="/" replace />
   );
 };
 
