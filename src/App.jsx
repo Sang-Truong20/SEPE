@@ -5,8 +5,6 @@ import router from './routes';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { LoadingProvider } from './context/LoadingContext.jsx';
 
-const queryClient = new QueryClient();
-
 function App() {
   // if ('serviceWorker' in navigator) {
   //   navigator.serviceWorker
@@ -20,6 +18,18 @@ function App() {
   // }
 
   // useFirebaseMessaging();
+
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        staleTime: 5 * 60 * 1000,
+        gcTime: 30 * 60 * 1000,
+        retry: 0,
+      },
+    },
+  });
 
   return (
     <QueryClientProvider client={queryClient}>

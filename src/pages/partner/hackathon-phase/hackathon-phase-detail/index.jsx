@@ -62,18 +62,20 @@ const HackathonPhaseDetail = () => {
     return firstPhase?.phaseId === phase?.phaseId;
   }, [phases, phase]);
 
+  const isSinglePhase = phases?.length === 1;
+
   const computedIsLastPhase = useMemo(() => {
+    // Nếu chỉ có 1 phase, phase đó là phase 1, không phải last phase
+    if (isSinglePhase) return false;
     if (!phases?.length || !phase?.endDate) return null;
     const sortedByEnd = [...phases].sort(
       (a, b) => dayjs(b.endDate).valueOf() - dayjs(a.endDate).valueOf(),
     );
     const lastPhase = sortedByEnd[0];
     return lastPhase?.phaseId === phase?.phaseId;
-  }, [phases, phase]);
+  }, [phases, phase, isSinglePhase]);
 
   const isLastPhase = computedIsLastPhase ?? isLastPhaseParam;
-
-  const isSinglePhase = phases?.length === 1;
 
   // const [showQualifiedTable, setShowQualifiedTable] = useState(false);
   useEffect(() => {
@@ -131,7 +133,7 @@ const HackathonPhaseDetail = () => {
         },
       ],
       actions: {
-        view: true,
+        view: false,
         edit: false,
         delete: false,
       },
@@ -168,7 +170,7 @@ const HackathonPhaseDetail = () => {
         },
       ],
       actions: {
-        view: true,
+        view: false,
         edit: false,
         delete: false,
       },
@@ -248,7 +250,7 @@ const HackathonPhaseDetail = () => {
         },
       ],
       actions: {
-        view: true,
+        view: false,
         edit: false,
         delete: false,
       },
@@ -343,6 +345,7 @@ const HackathonPhaseDetail = () => {
             `${PATH_NAME.PARTNER_HACKATHON_PHASES}?hackathonId=${hackathonId}`,
           )
         }
+        showEdit={false}
       >
         {/* Track Section - Không hiển thị nếu là phase cuối (trừ khi chỉ có 1 phase) */}
         {(!isLastPhase || isSinglePhase) && (
@@ -409,8 +412,8 @@ const HackathonPhaseDetail = () => {
           </Card>
         )}
 
-        {/* Qualification Section - Chỉ hiển thị nếu là phase cuối */}
-        {isLastPhase && (
+        {/* Qualification Section - Chỉ hiển thị nếu là phase cuối và không phải single phase */}
+        {isLastPhase && !isSinglePhase && (
           <>
             {/*{ !showQualifiedTable &&*/}
             {/* ( <div className="mx-6 mb-6">*/}
