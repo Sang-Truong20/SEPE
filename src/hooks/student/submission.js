@@ -44,9 +44,10 @@ export const useSetFinalSubmission = () => {
 
     return useMutation({
         mutationKey: submissionQueryKeys.setFinal(),
-        mutationFn: async (submissionId) => {
+        mutationFn: async ({ submissionId, teamId }) => {
             const response = await axiosClient.post('/Submission/set-final', {
                 submissionId: submissionId,
+                teamId: teamId,
             });
 
             return response.data;

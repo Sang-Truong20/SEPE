@@ -21,6 +21,7 @@ import { useGetTeamAppeals, useCreateAppeal } from '../../hooks/student/appeal';
 import { useGetTeamMembers } from '../../hooks/student/team-member';
 import { useSelectTeamTrack } from '../../hooks/student/team-track';
 import { useGetTracksByPhase } from '../../hooks/student/track';
+import { useGetGroupTeams } from '../../hooks/student/group';
 import { useUserData } from '../../hooks/useUserData';
 
 const StudentPhaseDetail = () => {
@@ -211,6 +212,8 @@ const StudentPhaseDetail = () => {
   const [appealModalVisible, setAppealModalVisible] = React.useState(false);
   const [selectedPenalty, setSelectedPenalty] = React.useState(null);
   const [appealForm] = Form.useForm();
+  const [groupModalVisible, setGroupModalVisible] = React.useState(false);
+  const [selectedGroupId, setSelectedGroupId] = React.useState(null);
   
   const createAppealMutation = useCreateAppeal();
 
@@ -220,6 +223,18 @@ const StudentPhaseDetail = () => {
   // Get groups for phase 1
   const { fetchGroupsByHackathon } = useGroups();
   const { data: groupsData = [], isLoading: groupsLoading } = fetchGroupsByHackathon(hackathonId);
+
+  // Get teams for selected group
+  const { data: groupTeamsData = [], isLoading: groupTeamsLoading } = useGetGroupTeams(
+    selectedGroupId,
+    { enabled: !!selectedGroupId && groupModalVisible }
+  );
+
+  const groupTeams = Array.isArray(groupTeamsData)
+    ? groupTeamsData
+    : Array.isArray(groupTeamsData?.data)
+      ? groupTeamsData.data
+      : [];
 
   // Get final qualified teams for phase 2
   const { data: qualifiedTeams = [], isLoading: qualifiedLoading } = useGetFinalQualifiedTeams(
@@ -304,6 +319,16 @@ const StudentPhaseDetail = () => {
       console.error('Error creating appeal:', error);
       message.error(error?.response?.data?.message || 'Không thể gửi kháng cáo. Vui lòng thử lại.');
     }
+  };
+
+  const handleGroupClick = (group) => {
+    setSelectedGroupId(group.groupId);
+    setGroupModalVisible(true);
+  };
+
+  const handleCloseGroupModal = () => {
+    setGroupModalVisible(false);
+    setSelectedGroupId(null);
   };
 
   // Check if penalty already has an appeal
@@ -638,7 +663,8 @@ const StudentPhaseDetail = () => {
                   {groupsData.map((group) => (
                     <div
                       key={group.groupId}
-                      className="p-4 bg-card-background/50 rounded-lg border border-card-border/50 hover:border-primary/50 transition-colors"
+                      onClick={() => handleGroupClick(group)}
+                      className="p-4 bg-card-background/50 rounded-lg border border-card-border/50 hover:border-primary/50 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="text-lg font-semibold text-text-primary">
@@ -784,6 +810,84 @@ const StudentPhaseDetail = () => {
           />
         </div>
       </div>
+
+      {/* Group Teams Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <TeamOutlined />
+            <span>Danh sách đội trong bảng</span>
+          </div>
+        }
+        open={groupModalVisible}
+        onCancel={handleCloseGroupModal}
+        footer={null}
+        width={800}
+        className="[&_.ant-modal-content]:bg-gray-900/95 [&_.ant-modal-content]:backdrop-blur-xl [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white [&_.ant-modal-mask]:bg-black/50"
+      >
+        {groupTeamsLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Spin size="large" />
+          </div>
+        ) : groupTeams.length > 0 ? (
+          <Table
+            dataSource={groupTeams}
+            rowKey={(record) => record.groupTeamId || record.teamId || record.id}
+            pagination={false}
+            columns={[
+              {
+                title: 'Hạng',
+                key: 'rank',
+                width: 80,
+                render: (_, record, index) => {
+                  const rank = record.rank || index + 1;
+                  if (rank === 1) return <TrophyOutlined className="text-yellow-400 text-xl" />;
+                  if (rank === 2) return <TrophyOutlined className="text-gray-400 text-xl" />;
+                  if (rank === 3) return <TrophyOutlined className="text-amber-600 text-xl" />;
+                  return <span className="text-white">{rank}</span>;
+                },
+              },
+              {
+                title: 'Tên đội',
+                dataIndex: 'teamName',
+                key: 'teamName',
+                render: (teamName) => <span className="font-semibold">{teamName}</span>,
+              },
+              {
+                title: 'Điểm trung bình',
+                dataIndex: 'averageScore',
+                key: 'averageScore',
+                render: (score) => (
+                  <span className="text-primary font-semibold">
+                    {score ? Number(score).toFixed(2) : '-'}
+                  </span>
+                ),
+              },
+              {
+                title: 'Tham gia',
+                dataIndex: 'joinedAt',
+                key: 'joinedAt',
+                render: (joinedAt) =>
+                  joinedAt
+                    ? new Date(joinedAt).toLocaleDateString('vi-VN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : '-',
+              },
+            ]}
+            className="[&_.ant-table]:bg-transparent [&_th]:!bg-card-background [&_th]:!text-text-primary [&_td]:!text-text-secondary [&_td]:border-card-border [&_th]:border-card-border"
+          />
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <TeamOutlined className="text-4xl mb-2 opacity-50" />
+            <p>Chưa có đội nào trong bảng này</p>
+          </div>
+        )}
+      </Modal>
 
       {/* Appeal Modal */}
       <Modal

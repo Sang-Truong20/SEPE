@@ -22,6 +22,7 @@ const PATH_NAME = {
   STUDENT_LEADERBOARD: '/student/leaderboard',
   STUDENT_NOTIFICATIONS: '/student/notifications',
   STUDENT_PHASE_DETAIL: '/student/hackathons/:hackathonId/phases/:phaseId',
+  STUDENT_TEAM_JOIN_SUCCESS: '/student/team-join-success',
   USER_INFO: '/user/profile',
   ADMIN_CHALLENGES: '/admin/challenges',
   ADMIN_TRACKS: '/admin/tracks',
