@@ -6,6 +6,12 @@ import {
   TrophyOutlined,
   UserOutlined,
   RocketOutlined,
+  FireOutlined,
+  CheckCircleOutlined,
+  CalendarOutlined,
+  GiftOutlined,
+  CrownOutlined,
+  AlertOutlined,
 } from '@ant-design/icons';
 import { Avatar, Dropdown, Layout, Menu } from 'antd';
 import React, { useState } from 'react';
@@ -29,25 +35,28 @@ const items = [
     getItem(
       <Link to={PATH_NAME.ADMIN_HACKATHON_PHASES}>Giai đoạn</Link>,
       PATH_NAME.ADMIN_HACKATHON_PHASES,
+      <FireOutlined />,
     ),
     getItem(
       <Link to={PATH_NAME.ADMIN_PRIZES}>Giải thưởng</Link>,
       PATH_NAME.ADMIN_PRIZES,
+      <GiftOutlined />,
     ),
     getItem(
       <Link to={PATH_NAME.ADMIN_RANKINGS}>Xếp hạng</Link>,
       PATH_NAME.ADMIN_RANKINGS,
+      <CrownOutlined />,
     ),
   ]),
   getItem(
     <Link to={PATH_NAME.ADMIN_CHALLENGES}>Thử thách</Link>,
     PATH_NAME.ADMIN_CHALLENGES,
-    <TrophyOutlined />,
+    <CheckCircleOutlined />,
   ),
   getItem(
     <Link to={PATH_NAME.ADMIN_SEASON}>Mùa</Link>,
     PATH_NAME.ADMIN_SEASON,
-    <UserOutlined />,
+    <CalendarOutlined />,
   ),
   getItem(
     <Link to={PATH_NAME.ADMIN_USERS}>Người dùng</Link>,
@@ -62,7 +71,7 @@ const items = [
   getItem(
     <Link to={PATH_NAME.ADMIN_APPEALS}>Khiếu nại</Link>,
     PATH_NAME.ADMIN_APPEALS,
-    <FileOutlined />,
+    <AlertOutlined />,
   ),
   // getItem(
   //   <Link to={PATH_NAME.ADMIN_FILES}>Files</Link>,

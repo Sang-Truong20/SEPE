@@ -57,49 +57,73 @@ const HackathonPhaseDetail = () => {
   const { data: allUsers = [], isLoading: usersLoading } = fetchUsers;
 
   // Lấy danh sách judge assignments
-  const { fetchJudgeAssignmentsByHackathon, createJudgeAssignment, blockJudgeAssignment, reactivateJudgeAssignment } = useJudgeAssignment();
-  const { data: allAssignments = [], isLoading: assignmentsLoading } = fetchJudgeAssignmentsByHackathon(hackathonId);
+  const {
+    fetchJudgeAssignmentsByHackathon,
+    createJudgeAssignment,
+    blockJudgeAssignment,
+    reactivateJudgeAssignment,
+  } = useJudgeAssignment();
+  const { data: allAssignments = [], isLoading: assignmentsLoading } =
+    fetchJudgeAssignmentsByHackathon(hackathonId);
 
   // Filter assignments cho phase hiện tại (chỉ filter theo phaseId)
   // const phaseAssignments = allAssignments.filter(
   //   assignment => String(assignment.phaseId) === String(id)
   // );
 
-  const judgeUsers = allUsers.filter(user =>
-    user.roleName === 'Judge' &&
-    !allAssignments.some(assignment => String(assignment.judgeId) === String(user.userId))
+  const judgeUsers = allUsers.filter(
+    (user) =>
+      user.roleName === 'Judge' &&
+      !allAssignments.some(
+        (assignment) => String(assignment.judgeId) === String(user.userId),
+      ),
   );
 
   // Lấy tiêu chí của phase này
   const { fetchCriteria, deleteCriterion } = useCriteria();
-  const { data: phaseCriteria = [], isLoading: criteriaLoading } = fetchCriteria(id);
+  const { data: phaseCriteria = [], isLoading: criteriaLoading } =
+    fetchCriteria(id);
 
   const {
     data: phase,
     isLoading: phaseLoading,
     error: phaseError,
   } = fetchHackathonPhase(id);
-  const { data: phases = [], isLoading: phasesLoading } = fetchHackathonPhases(hackathonId);
+  const { data: phases = [], isLoading: phasesLoading } =
+    fetchHackathonPhases(hackathonId);
   const { data: allTracks, isLoading: tracksLoading } = fetchTracks;
-  const { data: completesChallenges = [], isLoading: cChallengesLoading } = fetchCompleteChallenge(hackathonId);
-  const { data: groupsData = [], isLoading: groupsLoading } = fetchGroupsByHackathon(hackathonId);
-  const { data: qualifiedTeams = [], isLoading: qualifiedLoading, refetch: qualifiedRefetch } = fetchFinalQualified(id);
+  const { data: completesChallenges = [], isLoading: cChallengesLoading } =
+    fetchCompleteChallenge(hackathonId);
+  const { data: groupsData = [], isLoading: groupsLoading } =
+    fetchGroupsByHackathon(hackathonId);
+  const {
+    data: qualifiedTeams = [],
+    isLoading: qualifiedLoading,
+    refetch: qualifiedRefetch,
+  } = fetchFinalQualified(id);
 
   const phaseTracks =
     allTracks?.filter((track) => track.phaseId === parseInt(id)) || [];
 
-  const trackIds = phaseTracks.map(t => t.trackId);
+  const trackIds = phaseTracks.map((t) => t.trackId);
   const sortedGroups = [...groupsData]
-    .filter(group => trackIds?.includes(group.trackId))
+    .filter((group) => trackIds?.includes(group.trackId))
     ?.sort((a, b) => a.groupName.localeCompare(b.groupName));
 
   const [assignModal, setAssignModal] = useState({ open: false, track: null });
   const [createGroupModal, setCreateGroupModal] = useState(false);
-  const [confirmModal, setConfirmModal] = useState({ open: false, trackId: null });
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    trackId: null,
+  });
   const [showQualifiedTable, setShowQualifiedTable] = useState(false);
   const [isAssignJudgeModalOpen, setIsAssignJudgeModalOpen] = useState(false);
   const [assignJudgeForm] = Form.useForm();
-  const [confirmJudgeModal, setConfirmJudgeModal] = useState({ open: false, type: '', record: null });
+  const [confirmJudgeModal, setConfirmJudgeModal] = useState({
+    open: false,
+    type: '',
+    record: null,
+  });
 
   const computedIsLastPhase = useMemo(() => {
     if (!phases?.length || !phase?.endDate) return null;
@@ -137,9 +161,16 @@ const HackathonPhaseDetail = () => {
     }
   }, [qualifiedTeams]);
 
-
   const [assignForm] = Form.useForm();
   const [createGroupForm] = Form.useForm();
+
+  const handleBlockJudgeAssignment = (record) => {
+    setConfirmJudgeModal({ open: true, type: 'blockAssignment', record });
+  };
+
+  const handleReactivateJudgeAssignment = (record) => {
+    setConfirmJudgeModal({ open: true, type: 'reactivateAssignment', record });
+  };
 
   const model = {
     modelName: 'Giai đoạn',
@@ -169,266 +200,312 @@ const HackathonPhaseDetail = () => {
     ],
   };
 
-  const trackTableModel = useMemo(() => ({
-    entityName: 'phần thi',
-    rowKey: 'trackId',
-    createButton: isAdmin && isFirstPhase ? {
-      label: 'Tạo mới phần thi',
-      action: () =>
-        navigate(
-          `${PATH_NAME.ADMIN_TRACKS}/create?phaseId=${id}&hackathonId=${hackathonId}`,
-        ),
-      icon: true,
-    } : null,
-    columns: [
-      {
-        title: 'Tên',
-        dataIndex: 'name',
-        key: 'name',
-        type: 'text',
-        className: 'font-medium text-white',
-      },
-      {
-        title: 'Mô tả',
-        dataIndex: 'description',
-        key: 'description',
-        type: 'text',
-        ellipsis: { tooltip: true },
-        className: 'text-gray-300',
-      },
-      {
-        title: 'Thử thách',
-        key: 'challenges',
-        type: 'custom',
-        ellipsis: true,
-        render: (record) => {
-          const challenges = record.challenges || [];
-          if (challenges.length === 0) {
-            return <Tag color="default">Chưa có thử thách</Tag>;
-          }
-          return (
-            <Space wrap>
-              {challenges.map((ch) => (
-                <Button
-                  key={ch.challengeId}
-                  size="small"
-                  type="primary"
-                  ghost
-                  className="text-xs"
-                  onClick={() =>
-                    navigate(`${PATH_NAME.ADMIN_CHALLENGES}/${ch.challengeId}`)
-                  }
-                >
-                  {ch.title}
-                </Button>
-              ))}
-            </Space>
-          );
-        },
-      },
-    ],
-    actions: {
-      view: true,
-      edit: isAdmin && isFirstPhase,
-      delete: isAdmin && isFirstPhase,
-      extra: isAdmin && isFirstPhase ? [
+  const trackTableModel = useMemo(
+    () => ({
+      entityName: 'phần thi',
+      rowKey: 'trackId',
+      createButton:
+        isAdmin && isFirstPhase
+          ? {
+              label: 'Tạo mới phần thi',
+              action: () =>
+                navigate(
+                  `${PATH_NAME.ADMIN_TRACKS}/create?phaseId=${id}&hackathonId=${hackathonId}`,
+                ),
+              icon: true,
+            }
+          : null,
+      columns: [
         {
-          key: 'assign-random-challenge',
-          icon: <SyncOutlined />,
-          tooltip: 'Gán thử thách ngẫu nhiên',
-          className: 'text-yellow-500 hover:text-yellow-400',
+          title: 'Tên',
+          dataIndex: 'name',
+          key: 'name',
+          type: 'text',
+          className: 'font-medium text-white',
         },
-      ] : [],
-    },
-  }), [isAdmin, isFirstPhase, id, hackathonId, navigate]);
+        {
+          title: 'Mô tả',
+          dataIndex: 'description',
+          key: 'description',
+          type: 'text',
+          ellipsis: { tooltip: true },
+          className: 'text-gray-300',
+        },
+        {
+          title: 'Thử thách',
+          key: 'challenges',
+          type: 'custom',
+          ellipsis: true,
+          render: (record) => {
+            const challenges = record.challenges || [];
+            if (challenges.length === 0) {
+              return <Tag color="default">Chưa có thử thách</Tag>;
+            }
+            return (
+              <Space wrap>
+                {challenges.map((ch) => (
+                  <Button
+                    key={ch.challengeId}
+                    size="small"
+                    type="primary"
+                    ghost
+                    className="text-xs"
+                    onClick={() =>
+                      navigate(
+                        `${PATH_NAME.ADMIN_CHALLENGES}/${ch.challengeId}`,
+                      )
+                    }
+                  >
+                    {ch.title}
+                  </Button>
+                ))}
+              </Space>
+            );
+          },
+        },
+      ],
+      actions: {
+        view: true,
+        edit: isAdmin && isFirstPhase,
+        delete: isAdmin && isFirstPhase,
+        extra:
+          isAdmin && isFirstPhase
+            ? [
+                {
+                  key: 'assign-random-challenge',
+                  icon: <SyncOutlined />,
+                  tooltip: 'Gán thử thách ngẫu nhiên',
+                  className: 'text-yellow-500 hover:text-yellow-400',
+                },
+              ]
+            : [],
+      },
+    }),
+    [isAdmin, isFirstPhase, id, hackathonId, navigate],
+  );
 
-  const groupTableModel = useMemo(() => ({
-    entityName: 'bảng đấu',
-    rowKey: 'groupId',
-    createButton: isAdmin && isFirstPhase ? {
-      label: 'Tạo bảng đấu Tự Động',
-      action: () => {
-        setCreateGroupModal(true);
-        createGroupForm.setFieldsValue({ teamsPerGroup: 1 });
+  const groupTableModel = useMemo(
+    () => ({
+      entityName: 'bảng đấu',
+      rowKey: 'groupId',
+      createButton:
+        isAdmin && isFirstPhase
+          ? {
+              label: 'Tạo bảng đấu Tự Động',
+              action: () => {
+                setCreateGroupModal(true);
+                createGroupForm.setFieldsValue({ teamsPerGroup: 1 });
+              },
+              icon: true,
+            }
+          : null,
+      columns: [
+        {
+          title: 'Tên bảng đấu',
+          dataIndex: 'groupName',
+          key: 'groupName',
+          type: 'text',
+          className: 'font-medium text-white',
+        },
+        {
+          title: 'Mã đội thi',
+          dataIndex: 'teamIds',
+          key: 'teamIds',
+          type: 'text',
+          transform: (val) => (Array.isArray(val) ? val.length : 0),
+        },
+        {
+          title: 'Ngày Tạo',
+          dataIndex: 'createdAt',
+          key: 'createdAt',
+          type: 'datetime',
+          format: 'DD/MM/YYYY HH:mm',
+        },
+      ],
+      actions: {
+        view: true,
+        edit: false,
+        delete: false,
       },
-      icon: true,
-    } : null,
-    columns: [
-      {
-        title: 'Tên bảng đấu',
-        dataIndex: 'groupName',
-        key: 'groupName',
-        type: 'text',
-        className: 'font-medium text-white'
-      },
-      {
-        title: 'Mã đội thi',
-        dataIndex: 'teamIds',
-        key: 'teamIds',
-        type: 'text',
-        transform: (val) => Array.isArray(val) ? val.length : 0
-      },
-      {
-        title: 'Ngày Tạo',
-        dataIndex: 'createdAt',
-        key: 'createdAt',
-        type: 'datetime',
-        format: 'DD/MM/YYYY HH:mm'
-      }
-    ],
-    actions: {
-      view: true,
-      edit: false,
-      delete: false,
-    }
-  }), [isAdmin, isFirstPhase]);
+    }),
+    [isAdmin, isFirstPhase],
+  );
 
   // Model cho bảng Qualification
-  const qualificationTableModel = useMemo(() => ({
-    entityName: 'đội đủ điều kiện',
-    rowKey: 'teamId',
-    columns: [
-      {
-        title: 'Tên đội',
-        dataIndex: 'teamName',
-        key: 'teamName',
-        type: 'text',
-        className: 'font-medium text-white'
-      },
-      {
-        title: 'Bảng đấu',
-        dataIndex: 'groupName',
-        key: 'groupName',
-        type: 'tag',
-        tagColor: 'green',
-        transform: (val) => val || 'N/A'
-      },
-      {
-        title: 'Hạng mục',
-        dataIndex: 'trackName',
-        key: 'trackName',
-        type: 'text',
-        className: 'text-gray-300'
-      }
-    ],
-    actions: {
-      view: false,
-      edit: false,
-      delete: false,
-    }
-  }), []);
-
-  const judgeAssignmentTableModel = useMemo(() => ({
-    entityName: 'giám khảo được phân công',
-    rowKey: 'assignmentId',
-    createButton: isAdmin && isFirstPhase ? {
-      label: 'Thêm giám khảo',
-      icon: <UserAddOutlined />,
-      action: () => setIsAssignJudgeModalOpen(true),
-    } : null,
-    columns: [
-      {
-        title: 'Tên giám khảo',
-        dataIndex: 'judgeName',
-        key: 'judgeName',
-        className: 'font-medium',
-        render: (text, record) => (
-          <Button
-            type="link"
-            className="p-0 h-auto text-emerald-400"
-            onClick={() => navigate(`${PATH_NAME.ADMIN_USERS}/${record.judgeId}`)}
-          >
-            {text}
-          </Button>
-        ),
-      },
-      {
-        title: 'Gán vào lúc',
-        dataIndex: 'assignedAt',
-        key: 'assignedAt',
-        className: 'text-gray-400',
-        render: (date) => new Date(date).toLocaleDateString('vi-VN'),
-      },
-      {
-        title: 'Trạng thái',
-        dataIndex: 'status',
-        key: 'status',
-        render: (status) => (
-          <Tag color={status === 'Active' ? 'green' : 'red'}>
-            {status == 'Active' ? 'Hoạt động' : 'Đã khoá'}
-          </Tag>
-        ),
-      },
-      ...(isAdmin && isFirstPhase ? [{
-        title: 'Thao tác',
-        key: 'action',
-        render: (record) => (
-          <Space>
-            {record.status === 'Active' ? (
-              <Button
-                danger
-                size="small"
-                onClick={() => handleBlockJudgeAssignment(record)}
-              >
-                Khoá
-              </Button>
-            ) : (
-              <Button
-                type="primary"
-                size="small"
-                onClick={() => handleReactivateJudgeAssignment(record)}
-              >
-                Mở khoá
-              </Button>
-            )}
-          </Space>
-        ),
-      }] : []),
-    ],
-    actions: {},
-  }), [isAdmin, isFirstPhase, navigate, handleBlockJudgeAssignment, handleReactivateJudgeAssignment]);
-
-  const criteriaTableModel = useMemo(() => ({
-    entityName: 'Tiêu chí chấm điểm',
-    rowKey: 'criteriaId',
-    createButton: isAdmin && isFirstPhase ? {
-      label: 'Thêm tiêu chí',
-      action: () =>
-        navigate(
-          `${PATH_NAME.ADMIN_CRITERIAS}/create?phaseId=${id}&hackathonId=${hackathonId}`,
-        ),
-    } : null,
-    columns: [
-      {
-        title: 'Tên tiêu chí',
-        dataIndex: 'name',
-        key: 'name',
-        className: 'font-medium',
-      },
-      {
-        title: 'Hạng mục',
-        dataIndex: 'trackId',
-        key: 'trackId',
-        className: 'text-gray-400',
-        render: (trackId) => {
-          if (!trackId) return 'Tất cả hạng mục';
-          const track = phaseTracks.find(t => String(t.trackId) === String(trackId));
-          return track?.name || 'N/A';
+  const qualificationTableModel = useMemo(
+    () => ({
+      entityName: 'đội đủ điều kiện',
+      rowKey: 'teamId',
+      columns: [
+        {
+          title: 'Tên đội',
+          dataIndex: 'teamName',
+          key: 'teamName',
+          type: 'text',
+          className: 'font-medium text-white',
         },
+        {
+          title: 'Bảng đấu',
+          dataIndex: 'groupName',
+          key: 'groupName',
+          type: 'tag',
+          tagColor: 'green',
+          transform: (val) => val || 'N/A',
+        },
+        {
+          title: 'Hạng mục',
+          dataIndex: 'trackName',
+          key: 'trackName',
+          type: 'text',
+          className: 'text-gray-300',
+        },
+      ],
+      actions: {
+        view: false,
+        edit: false,
+        delete: false,
       },
-      {
-        title: 'Trọng số',
-        dataIndex: 'weight',
-        key: 'weight',
-        className: 'text-gray-400',
-      },
+    }),
+    [],
+  );
+
+  const judgeAssignmentTableModel = useMemo(
+    () => ({
+      entityName: 'giám khảo được phân công',
+      rowKey: 'assignmentId',
+      createButton:
+        isAdmin && isFirstPhase
+          ? {
+              label: 'Thêm giám khảo',
+              icon: <UserAddOutlined />,
+              action: () => setIsAssignJudgeModalOpen(true),
+            }
+          : null,
+      columns: [
+        {
+          title: 'Tên giám khảo',
+          dataIndex: 'judgeName',
+          key: 'judgeName',
+          className: 'font-medium',
+          render: (text, record) => (
+            <Button
+              type="link"
+              className="p-0 h-auto text-emerald-400"
+              onClick={() =>
+                navigate(`${PATH_NAME.ADMIN_USERS}/${record.judgeId}`)
+              }
+            >
+              {text}
+            </Button>
+          ),
+        },
+        {
+          title: 'Gán vào lúc',
+          dataIndex: 'assignedAt',
+          key: 'assignedAt',
+          className: 'text-gray-400',
+          render: (date) => new Date(date).toLocaleDateString('vi-VN'),
+        },
+        {
+          title: 'Trạng thái',
+          dataIndex: 'status',
+          key: 'status',
+          render: (status) => (
+            <Tag color={status === 'Active' ? 'green' : 'red'}>
+              {status == 'Active' ? 'Hoạt động' : 'Đã khoá'}
+            </Tag>
+          ),
+        },
+        ...(isAdmin && isFirstPhase
+          ? [
+              {
+                title: 'Thao tác',
+                key: 'action',
+                render: (record) => (
+                  <Space>
+                    {record.status === 'Active' ? (
+                      <Button
+                        danger
+                        size="small"
+                        onClick={() => handleBlockJudgeAssignment(record)}
+                      >
+                        Khoá
+                      </Button>
+                    ) : (
+                      <Button
+                        type="primary"
+                        size="small"
+                        onClick={() => handleReactivateJudgeAssignment(record)}
+                      >
+                        Mở khoá
+                      </Button>
+                    )}
+                  </Space>
+                ),
+              },
+            ]
+          : []),
+      ],
+      actions: {},
+    }),
+    [
+      isAdmin,
+      isFirstPhase,
+      navigate,
+      handleBlockJudgeAssignment,
+      handleReactivateJudgeAssignment,
     ],
-    actions: {
-      view: true,
-      edit: isAdmin && isFirstPhase,
-      delete: isAdmin && isFirstPhase,
-    },
-  }), [isAdmin, isFirstPhase, id, hackathonId, navigate, phaseTracks]);
+  );
+
+  const criteriaTableModel = useMemo(
+    () => ({
+      entityName: 'Tiêu chí chấm điểm',
+      rowKey: 'criteriaId',
+      createButton:
+        isAdmin && isFirstPhase
+          ? {
+              label: 'Thêm tiêu chí',
+              action: () =>
+                navigate(
+                  `${PATH_NAME.ADMIN_CRITERIAS}/create?phaseId=${id}&hackathonId=${hackathonId}`,
+                ),
+            }
+          : null,
+      columns: [
+        {
+          title: 'Tên tiêu chí',
+          dataIndex: 'name',
+          key: 'name',
+          className: 'font-medium',
+        },
+        {
+          title: 'Hạng mục',
+          dataIndex: 'trackId',
+          key: 'trackId',
+          className: 'text-gray-400',
+          render: (trackId) => {
+            if (!trackId) return 'Tất cả hạng mục';
+            const track = phaseTracks.find(
+              (t) => String(t.trackId) === String(trackId),
+            );
+            return track?.name || 'N/A';
+          },
+        },
+        {
+          title: 'Trọng số',
+          dataIndex: 'weight',
+          key: 'weight',
+          className: 'text-gray-400',
+        },
+      ],
+      actions: {
+        view: true,
+        edit: isAdmin && isFirstPhase,
+        delete: isAdmin && isFirstPhase,
+      },
+    }),
+    [isAdmin, isFirstPhase, id, hackathonId, navigate, phaseTracks],
+  );
 
   const handleAssignRandomClick = (record) => {
     setAssignModal({ open: true, track: record });
@@ -440,36 +517,39 @@ const HackathonPhaseDetail = () => {
 
   const handleAssignSubmit = () => {
     assignForm.validateFields().then((values) => {
-    assignRandomChallenge.mutate(
-      {
-        trackId: assignModal.track?.trackId,
-        quantity: values.quantity,
-        challengeIds:
-          values.challengeIds.length > 0 ? values.challengeIds : null,
-      },
-      {
-        onSuccess: () => {
-          setAssignModal({ open: false, track: null });
-          assignForm.resetFields();
+      assignRandomChallenge.mutate(
+        {
+          trackId: assignModal.track?.trackId,
+          quantity: values.quantity,
+          challengeIds:
+            values.challengeIds.length > 0 ? values.challengeIds : null,
         },
-        onError: () => {},
-      },
-    );
+        {
+          onSuccess: () => {
+            setAssignModal({ open: false, track: null });
+            assignForm.resetFields();
+          },
+          onError: () => {},
+        },
+      );
     });
   };
 
   const handleCreateGroupSubmit = () => {
     createGroupForm.validateFields().then((values) => {
-      autoCreateGroups.mutate({
-        teamsPerGroup: values.teamsPerGroup,
-        phaseId: parseInt(id) || null,
-      }, {
-        onSuccess: () => {
-          setCreateGroupModal(false);
-          createGroupForm.resetFields();
+      autoCreateGroups.mutate(
+        {
+          teamsPerGroup: values.teamsPerGroup,
+          phaseId: parseInt(id) || null,
         },
-        onError: () => {},
-      });
+        {
+          onSuccess: () => {
+            setCreateGroupModal(false);
+            createGroupForm.resetFields();
+          },
+          onError: () => {},
+        },
+      );
     });
   };
 
@@ -520,14 +600,6 @@ const HackathonPhaseDetail = () => {
     }
   };
 
-  const handleBlockJudgeAssignment = (record) => {
-    setConfirmJudgeModal({ open: true, type: 'blockAssignment', record });
-  };
-
-  const handleReactivateJudgeAssignment = (record) => {
-    setConfirmJudgeModal({ open: true, type: 'reactivateAssignment', record });
-  };
-
   const handleConfirmJudgeOk = () => {
     const { type, record } = confirmJudgeModal;
     if (type === 'blockAssignment') {
@@ -547,13 +619,23 @@ const HackathonPhaseDetail = () => {
       navigate(
         `${PATH_NAME.ADMIN_CRITERIAS}/${record.criteriaId}?phaseId=${id}&trackId=${record.trackId || ''}&hackathonId=${hackathonId}`,
       ),
-    onEdit: isAdmin && isFirstPhase ? (record) =>
-      navigate(
-        `${PATH_NAME.ADMIN_CRITERIAS}/edit/${record.criteriaId}?phaseId=${id}&trackId=${record.trackId || ''}&hackathonId=${hackathonId}`,
-      ) : undefined,
-    onDelete: isAdmin && isFirstPhase ? (record) => {
-      setConfirmJudgeModal({ open: true, type: 'deleteCriteria', record });
-    } : undefined,
+    onEdit:
+      isAdmin && isFirstPhase
+        ? (record) =>
+            navigate(
+              `${PATH_NAME.ADMIN_CRITERIAS}/edit/${record.criteriaId}?phaseId=${id}&trackId=${record.trackId || ''}&hackathonId=${hackathonId}`,
+            )
+        : undefined,
+    onDelete:
+      isAdmin && isFirstPhase
+        ? (record) => {
+            setConfirmJudgeModal({
+              open: true,
+              type: 'deleteCriteria',
+              record,
+            });
+          }
+        : undefined,
     isDeleting: (record) =>
       deleteCriterion.isPending &&
       deleteCriterion.variables === record.criteriaId,
@@ -570,11 +652,17 @@ const HackathonPhaseDetail = () => {
       navigate(
         `${PATH_NAME.ADMIN_TRACKS}/${record.trackId}?phaseId=${id}&hackathonId=${hackathonId}`,
       ),
-    onEdit: isAdmin && isFirstPhase ? (record) =>
-      navigate(
-        `${PATH_NAME.ADMIN_TRACKS}/edit/${record.trackId}?phaseId=${id}&hackathonId=${hackathonId}`,
-      ) : undefined,
-    onDelete: isAdmin && isFirstPhase ? (record) => handleDeleteConfirm(record.trackId) : undefined,
+    onEdit:
+      isAdmin && isFirstPhase
+        ? (record) =>
+            navigate(
+              `${PATH_NAME.ADMIN_TRACKS}/edit/${record.trackId}?phaseId=${id}&hackathonId=${hackathonId}`,
+            )
+        : undefined,
+    onDelete:
+      isAdmin && isFirstPhase
+        ? (record) => handleDeleteConfirm(record.trackId)
+        : undefined,
     isDeleting: (record) =>
       deleteTrack.isPending && deleteTrack.variables === record.trackId,
     onExtraAction: (key, record) => {
@@ -598,7 +686,8 @@ const HackathonPhaseDetail = () => {
   };
 
   const groupHandlers = {
-    onView: (record) => navigate(`/admin/groups/${record.groupId}?trackId=${record.trackId}`),
+    onView: (record) =>
+      navigate(`/admin/groups/${record.groupId}?trackId=${record.trackId}`),
   };
 
   if (phaseError) {
@@ -609,7 +698,15 @@ const HackathonPhaseDetail = () => {
     );
   }
 
-  if (phaseLoading || phasesLoading || tracksLoading || cChallengesLoading || usersLoading || assignmentsLoading || criteriaLoading) {
+  if (
+    phaseLoading ||
+    phasesLoading ||
+    tracksLoading ||
+    cChallengesLoading ||
+    usersLoading ||
+    assignmentsLoading ||
+    criteriaLoading
+  ) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spin size="large" />
@@ -650,7 +747,9 @@ const HackathonPhaseDetail = () => {
       >
         {/* Track Section - Không hiển thị nếu là phase cuối (trừ khi chỉ có 1 phase) */}
         {(!isLastPhase || isSinglePhase) && (
-          <Card className={`${isFirstPhase ? 'mt-6' : 'mt-16'} border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm`}>
+          <Card
+            className={`${isFirstPhase ? 'mt-6' : 'mt-16'} border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm`}
+          >
             <EntityTable
               model={trackTableModel}
               data={phaseTracks}
@@ -666,7 +765,9 @@ const HackathonPhaseDetail = () => {
 
         {/* Group Section - Không hiển thị nếu là phase cuối (trừ khi chỉ có 1 phase) */}
         {hackathonId && (!isLastPhase || isSinglePhase) && (
-          <Card className={`${isFirstPhase ? 'mt-6' : 'mt-16'} border border-white/10 bg-white/5 rounded-xl`}>
+          <Card
+            className={`${isFirstPhase ? 'mt-6' : 'mt-16'} border border-white/10 bg-white/5 rounded-xl`}
+          >
             <EntityTable
               model={groupTableModel}
               data={sortedGroups}
@@ -708,8 +809,8 @@ const HackathonPhaseDetail = () => {
         {/* Qualification Section - Chỉ hiển thị nếu là phase cuối và không phải single phase */}
         {isLastPhase && !isSinglePhase && (
           <>
-            {isAdmin && qualifiedTeams?.length === 0 && !showQualifiedTable &&
-              ( <div className="mx-6 mb-6">
+            {isAdmin && qualifiedTeams?.length === 0 && !showQualifiedTable && (
+              <div className="mx-6 mb-6">
                 <Button
                   type="dashed"
                   icon={<PlusOutlined />}
@@ -722,8 +823,8 @@ const HackathonPhaseDetail = () => {
                     ? 'Đang xử lý...'
                     : 'Lấy danh sách đội'}
                 </Button>
-              </div>)
-            }
+              </div>
+            )}
 
             {showQualifiedTable && (
               <Card className="mt-6 border border-white/10 bg-white/5 rounded-xl">
@@ -877,14 +978,21 @@ const HackathonPhaseDetail = () => {
               showSearch
               loading={usersLoading}
               filterOption={(input, option) => {
-                const searchText = `${option?.judgeName || ''} ${option?.judgeEmail || ''}`.toLowerCase();
+                const searchText =
+                  `${option?.judgeName || ''} ${option?.judgeEmail || ''}`.toLowerCase();
                 return searchText.includes(input.toLowerCase());
               }}
               style={{ width: '100%' }}
-              notFoundContent={usersLoading ? <Spin size="small" /> : 'Không tìm thấy giám khảo'}
+              notFoundContent={
+                usersLoading ? (
+                  <Spin size="small" />
+                ) : (
+                  'Không tìm thấy giám khảo'
+                )
+              }
               optionLabelProp="label"
             >
-              {judgeUsers.map(judge => (
+              {judgeUsers.map((judge) => (
                 <Select.Option
                   key={judge.userId}
                   value={judge.userId}
@@ -894,7 +1002,15 @@ const HackathonPhaseDetail = () => {
                 >
                   <div style={{ lineHeight: '1.5' }}>
                     <div style={{ fontWeight: 500 }}>{judge.fullName}</div>
-                    <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>{judge.email}</div>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        color: '#888',
+                        marginTop: '2px',
+                      }}
+                    >
+                      {judge.email}
+                    </div>
                   </div>
                 </Select.Option>
               ))}
@@ -909,8 +1025,8 @@ const HackathonPhaseDetail = () => {
           confirmJudgeModal.type === 'deleteCriteria'
             ? 'Xóa tiêu chí'
             : confirmJudgeModal.type === 'blockAssignment'
-            ? 'Khóa giám khảo'
-            : 'Mở lại'
+              ? 'Khóa giám khảo'
+              : 'Mở lại'
         }
         open={confirmJudgeModal.open}
         onOk={() => {
@@ -925,11 +1041,13 @@ const HackathonPhaseDetail = () => {
           confirmJudgeModal.type === 'deleteCriteria'
             ? 'Xóa'
             : confirmJudgeModal.type === 'blockAssignment'
-            ? 'Khóa'
-            : 'Mở lại'
+              ? 'Khóa'
+              : 'Mở lại'
         }
         okButtonProps={{
-          danger: confirmJudgeModal.type === 'deleteCriteria' || confirmJudgeModal.type === 'blockAssignment'
+          danger:
+            confirmJudgeModal.type === 'deleteCriteria' ||
+            confirmJudgeModal.type === 'blockAssignment',
         }}
         cancelText="Hủy"
         centered
