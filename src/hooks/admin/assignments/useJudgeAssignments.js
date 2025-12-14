@@ -16,11 +16,41 @@ export const judgeAssignmentQueryKeys = {
   all: ['JudgeAssignments'],
   lists: () => [...judgeAssignmentQueryKeys.all, 'list'],
   byHackathon: (hackathonId) => [...judgeAssignmentQueryKeys.lists(), 'hackathon', hackathonId],
+  myAssignments: () => [...judgeAssignmentQueryKeys.lists(), 'my-assignments'],
 };
 
 export const useJudgeAssignment = () => {
   const queryClient = useQueryClient();
   const { getMessage } = useMessage();
+
+  /**
+   * API: GET /api/JudgeAssignment/Hackathon-my-assignments
+   * method: GET
+   * path: /api/JudgeAssignment/Hackathon-my-assignments
+   * request: No parameters
+   * response: 200 OK -> array of hackathon assignments for current judge
+   *
+   * Response body
+   * [
+   *   {
+   *     "hackathonId": 1,
+   *     "hackathonName": "AI Agent",
+   *     "status": "Active",
+   *     "phaseName": "Vong Ban Ket",
+   *     "assignedAt": "2025-11-11T09:27:35.9484064"
+   *   }
+   * ]
+   */
+  const fetchMyHackathonAssignments = () =>
+    useQuery({
+      queryKey: judgeAssignmentQueryKeys.myAssignments(),
+      queryFn: async () => {
+        const response = await axiosClient.get(
+          `/JudgeAssignment/Hackathon-my-assignments`,
+        );
+        return response.data;
+      },
+    });
 
   /**
    * API: GET /api/JudgeAssignment/hackathon/{hackathonId}
@@ -126,6 +156,7 @@ export const useJudgeAssignment = () => {
   });
 
   return {
+    fetchMyHackathonAssignments,
     fetchJudgeAssignmentsByHackathon,
     createJudgeAssignment,
     blockJudgeAssignment,

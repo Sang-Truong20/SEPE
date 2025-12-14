@@ -25,8 +25,6 @@ import {
   TrophyOutlined,
   EditOutlined,
   FileTextOutlined,
-  DownloadOutlined,
-  EyeOutlined,
   FileSearchOutlined,
 } from '@ant-design/icons';
 import EntityTable from '../../../components/ui/EntityTable.jsx';
@@ -63,22 +61,6 @@ const PhaseScores = () => {
   const [editModal, setEditModal] = useState({ open: false, submission: null, track: null, criteria: [] });
   const [submissionModal, setSubmissionModal] = useState({ open: false, submission: null });
   const [form] = Form.useForm();
-
-  const getFileUrl = (filePath) => {
-    if (!filePath) return null;
-    const base = 'https://www.sealfall25.somee.com';
-    return filePath.startsWith('http') ? filePath : `${base}${filePath}`;
-  };
-
-  const getPreviewUrl = (filePath) => {
-    const url = getFileUrl(filePath);
-    if (!url) return null;
-    const ext = (filePath?.split('.')?.pop() || '').toLowerCase();
-    if (['pdf', 'doc', 'docx'].includes(ext)) {
-      return `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
-    }
-    return null;
-  };
 
   // Enrich data
   const enrichedSubmissions = useMemo(() => {
@@ -266,9 +248,6 @@ const PhaseScores = () => {
   };
 
   const currentSubmission = submissionModal?.submission;
-  const submissionFileUrl = getFileUrl(currentSubmission?.filePath);
-  const submissionPreviewUrl = getPreviewUrl(currentSubmission?.filePath);
-  const submissionFileName = currentSubmission?.filePath?.split?.('/')?.pop?.();
 
   if (!phaseId) return <div className="text-center py-16 text-gray-400">Vui lòng chọn giai đoạn</div>;
 
@@ -342,53 +321,6 @@ const PhaseScores = () => {
                     <Col span={12}><Text strong>Đội thi:</Text> {currentSubmission?.teamName}</Col>
                     <Col span={12}><Text strong>Người nộp:</Text> {currentSubmission?.submittedBy || '--'}</Col>
                   </Row>
-                </Card>
-
-                <Card title="File bài thi" className="bg-neutral-900 border border-neutral-800">
-                  {submissionFileUrl ? (
-                    <div className="space-y-3">
-                      <Space>
-                        <Tag color="blue">{submissionFileName}</Tag>
-                        <Button
-                          type="primary"
-                          ghost
-                          icon={<DownloadOutlined />}
-                          href={submissionFileUrl}
-                          target="_blank"
-                        >
-                          Tải xuống
-                        </Button>
-                        <Button
-                          type="default"
-                          icon={<EyeOutlined />}
-                          href={submissionFileUrl}
-                          target="_blank"
-                        >
-                          Mở tab mới
-                        </Button>
-                      </Space>
-
-                      {submissionPreviewUrl ? (
-                        <div className="border border-neutral-800 rounded-lg overflow-hidden">
-                          <iframe
-                            src={submissionPreviewUrl}
-                            title="Preview submission file"
-                            className="w-full"
-                            style={{ minHeight: '480px' }}
-                            frameBorder="0"
-                          />
-                        </div>
-                      ) : (
-                        <Alert
-                          type="warning"
-                          message="File không hỗ trợ xem trước. Vui lòng mở tab mới hoặc tải xuống."
-                          showIcon
-                        />
-                      )}
-                    </div>
-                  ) : (
-                    <Empty description="Không có file đính kèm" />
-                  )}
                 </Card>
               </div>
             ) : (

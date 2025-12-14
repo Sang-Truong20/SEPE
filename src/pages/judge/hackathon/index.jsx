@@ -1,17 +1,15 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useMemo } from 'react';
-import { ConfigProvider, theme, Modal, Button } from 'antd';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { useMemo } from 'react';
+import { ConfigProvider, theme, Button, Tag } from 'antd';
 import dayjs from 'dayjs';
 import { PATH_NAME } from '../../../constants';
-import { useHackathons } from '../../../hooks/admin/hackathons/useHackathons';
+import { useJudgeAssignment } from '../../../hooks/admin/assignments/useJudgeAssignments.js';
 import EntityTable from '../../../components/ui/EntityTable.jsx';
 
 const Hackathons = () => {
   const navigate = useNavigate();
-  const { fetchHackathons, deleteHackathon } = useHackathons();
-  const { data: hackathonData = [], isLoading, error } = fetchHackathons;
-  const [deletingId, setDeletingId] = useState(null);
+  const { fetchMyHackathonAssignments } = useJudgeAssignment();
+  const { data: hackathonData = [], isLoading, error } = fetchMyHackathonAssignments();
 
   // Model cho bảng
   const tableModel = useMemo(
@@ -20,41 +18,33 @@ const Hackathons = () => {
       rowKey: 'hackathonId',
       columns: [
         {
-          title: 'Tên',
-          dataIndex: 'name',
-          key: 'name',
+          title: 'Tên hackathon',
+          dataIndex: 'hackathonName',
+          key: 'hackathonName',
           type: 'text',
           className: 'font-medium text-white'
         },
         {
-          title: 'Mùa',
-          dataIndex: 'seasonName',
-          key: 'seasonName',
+          title: 'Giai đoạn',
+          dataIndex: 'phaseName',
+          key: 'phaseName',
           type: 'tag',
-          tagColor: 'gold',
-          transform: (val) => val?.toUpperCase()
+          tagColor: 'purple',
         },
         {
-          title: 'Mô tả',
-          dataIndex: 'description',
-          key: 'description',
-          type: 'text',
-          ellipsis: true,
-          className: 'text-gray-300'
-        },
-        {
-          title: 'Ngày bắt đầu',
-          dataIndex: 'startDate',
-          key: 'startDate',
+          title: 'Ngày phân công',
+          dataIndex: 'assignedAt',
+          key: 'assignedAt',
           type: 'datetime',
-          format: 'DD/MM/YYYY'
+          format: 'DD/MM/YYYY HH:mm'
         },
         {
-          title: 'Ngày kết thúc',
-          dataIndex: 'endDate',
-          key: 'endDate',
-          type: 'datetime',
-          format: 'DD/MM/YYYY'
+          title: 'Trạng thái',
+          dataIndex: 'status',
+          key: 'status',
+          type: 'tag',
+          tagColor: (status) => status === 'Active' ? 'green' : 'red',
+          transform: (status) => status === 'Active' ? 'Hoạt động' : 'Đã khóa'
         },
         {
           title: 'Quản lý',
