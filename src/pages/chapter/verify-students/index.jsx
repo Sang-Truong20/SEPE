@@ -1,38 +1,35 @@
-import { useMemo, useState } from 'react';
 import {
-  UserOutlined,
-  ClockCircleOutlined,
+  ArrowLeftOutlined,
+  CalendarOutlined,
   CheckCircleOutlined,
+  ClockCircleOutlined,
   CloseCircleOutlined,
+  ExclamationCircleOutlined,
   EyeOutlined,
   FileTextOutlined,
-  ReadOutlined,
-  CalendarOutlined,
   MailOutlined,
-  ExclamationCircleOutlined,
-  DownloadOutlined,
+  ReadOutlined,
   SearchOutlined,
-  ArrowLeftOutlined,
+  UserOutlined
 } from '@ant-design/icons';
 import {
-  Card,
   Badge,
   Button,
-  Input,
-  Select,
-  Modal,
-  Form,
-  message,
-  Space,
-  Tag,
-  Spin,
+  Card,
   Image,
+  Input,
+  message,
+  Modal,
+  Select,
+  Spin,
+  Tag
 } from 'antd';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../../constants';
 import {
-  useGetPendingOrRejectedStudentVerifications,
   useApproveStudentVerification,
+  useGetPendingOrRejectedStudentVerifications,
   useRejectStudentVerification,
 } from '../../../hooks/chapter/student-verification';
 
@@ -45,7 +42,6 @@ const ChapterVerifyStudents = () => {
   const [selectedVerification, setSelectedVerification] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [form] = Form.useForm();
 
   const { data: verificationsData, isLoading } = useGetPendingOrRejectedStudentVerifications();
   const approveMutation = useApproveStudentVerification();

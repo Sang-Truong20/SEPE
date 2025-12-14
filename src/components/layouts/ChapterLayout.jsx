@@ -97,11 +97,6 @@ const ChapterLayout = ({ children }) => {
 
   const isActivePage = (path) => location.pathname.startsWith(path);
 
-  const handleLogout = () => {
-    mutationLogout();
-    setIsDropdownOpen(false);
-  };
-
   return (
     <div className="min-h-screen ">
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-darkv2-secondary/80 border-b border-white/5">
@@ -284,7 +279,10 @@ const ChapterLayout = ({ children }) => {
                         </button>
 
                         <button
-                          onClick={handleLogout}
+                          onClick={() => {
+                            setIsDropdownOpen(false);
+                            mutationLogout();
+                          }}
                           className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-500/10 transition-colors"
                         >
                           <LogOut className="w-5 h-5 text-red-400" />
