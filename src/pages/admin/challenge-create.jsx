@@ -78,10 +78,6 @@ const AdminChallengeCreate = () => {
               title: <HomeOutlined />,
             },
             {
-              href: PATH_NAME.ADMIN_DASHBOARD,
-              title: 'Dashboard',
-            },
-            {
               title: 'Create Challenge',
             },
           ]}

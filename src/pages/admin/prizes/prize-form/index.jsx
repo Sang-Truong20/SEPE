@@ -14,14 +14,20 @@ const PrizeForm = ({ mode = 'create' }) => {
     const { fetchPrizes, createPrize, updatePrize } = usePrizes();
 
     const PrizeType = [
-      { value: 'Cash', text: 'Tiền mặt' },
-      { value: 'Medal', text: 'Huy chương' },
-      { value: 'Certificate', text: 'Chứng nhận' },
-      { value: 'Gift', text: 'Quà tặng' },
+      { value: 'Cash', text: 'Tiền mặt' },      // index 0 -> enum 1
+      { value: 'Medal', text: 'Huy chương' },   // index 1 -> enum 2
+      { value: 'Gift', text: 'Quà tặng' },      // index 2 -> enum 3
+      { value: 'Certificate', text: 'Chứng nhận' }, // index 3 -> enum 4
     ]
 
     const PrizeTypeEnum = PrizeType.reduce((acc, p, index) => {
-      acc[p.value] = { ...p, index };
+      acc[p.value] = { ...p, index: index + 1 };
+      return acc;
+    }, {});
+
+    // Reverse mapping: index -> value (for edit mode)
+    const PrizeTypeIndexToValue = PrizeType.reduce((acc, p, index) => {
+      acc[index + 1] = p.value;
       return acc;
     }, {});
 
@@ -54,8 +60,8 @@ const PrizeForm = ({ mode = 'create' }) => {
                 items: [
                   { value: 'Cash', text: 'Tiền mặt' },
                   { value: 'Medal', text: 'Huy chương' },
-                  { value: 'Certificate', text: 'Chứng nhận' },
                   { value: 'Gift', text: 'Quà tặng' },
+                  { value: 'Certificate', text: 'Chứng nhận' },
                 ]
             },
             {
@@ -89,9 +95,14 @@ const PrizeForm = ({ mode = 'create' }) => {
     // Initial values cho edit
     const initialValues = useMemo(() => {
         if (mode === 'edit' && prize) {
+            // Convert prizeType from number (1,2,3,4) to string ('Cash', 'Medal', etc.)
+            const prizeTypeValue = typeof prize.prizeType === 'number'
+                ? PrizeTypeIndexToValue[prize.prizeType]
+                : prize.prizeType;
+
             return {
                 prizeName: prize.prizeName,
-                prizeType: prize.prizeType,
+                prizeType: prizeTypeValue,
                 rank: prize.rank,
                 reward: prize.reward,
             };
@@ -114,7 +125,7 @@ const PrizeForm = ({ mode = 'create' }) => {
                 const payload = {
                     prizeId: parseInt(id),
                     prizeName: values.prizeName,
-                    prizeType: PrizeTypeEnum[prize.prizeType]?.index,
+                    prizeType: PrizeTypeEnum[values.prizeType]?.index,
                     rank: parseInt(values.rank),
                     reward: values.reward,
                 };

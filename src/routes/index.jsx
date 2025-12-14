@@ -30,11 +30,11 @@ import GroupDetail from '../pages/admin/group/group-detail/index.jsx';
 
 const LandingPage = lazy(() => import('../pages/landing'));
 const MemberPage = lazy(() => import('../pages/member'));
-const DashboardPage = lazy(() => import('../pages/admin/dashboard'));
 const Hackathons = lazy(() => import('../pages/admin/hackathon'));
 const HackathonPhases = lazy(() => import('../pages/admin/hackathon-phase'));
 const Challenges = lazy(() => import('../pages/admin/challenge/index.jsx'));
 const Prizes = lazy(() => import('../pages/admin/prizes'));
+const Rankings = lazy(() => import('../pages/admin/ranking'));
 const Seasons = lazy(() => import('../pages/admin/season'));
 const Appeals = lazy(() => import('../pages/admin/appeal'));
 const Groups = lazy(() => import('../pages/admin/group'));
@@ -125,7 +125,6 @@ const router = createBrowserRouter([
       {
         path: PATH_NAME.ADMIN,
         children: [
-          { path: 'dashboard', element: withSuspense(DashboardPage) },
           {
             path: 'challenges',
             children: [
@@ -186,6 +185,12 @@ const router = createBrowserRouter([
                     path: 'edit/:id',
                     element: withSuspense(() => <PrizeForm mode="edit" />),
                   },
+                ],
+              },
+              {
+                path: 'rankings',
+                children: [
+                  { index: true, element: withSuspense(Rankings) },
                 ],
               },
             ],

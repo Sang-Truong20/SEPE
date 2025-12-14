@@ -77,7 +77,7 @@ export const useTracks = () => {
     mutationFn: (payload) => axiosClient.post('/Track', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: trackQueryKeys.lists() });
-      message.success('Tạo phần thi thành công!');
+      message.success('Tạo hạng mục thành công!');
     },
     onError: (error) => {
       console.error('Error creating track:', error);
@@ -103,7 +103,7 @@ export const useTracks = () => {
         queryKey: trackQueryKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: trackQueryKeys.lists() });
-      message.success('Cập nhật phần thi thành công!');
+      message.success('Cập nhật hạng mục thành công!');
     },
     onError: (error) => {
       console.error('Error updating track:', error);
@@ -123,7 +123,7 @@ export const useTracks = () => {
     mutationFn: (id) => axiosClient.delete(`/Track/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: trackQueryKeys.lists() });
-      message.success('Xóa phần thi thành công!');
+      message.success('Xóa hạng mục thành công!');
     },
     onError: (error) => {
       console.error('Error deleting track:', error);
@@ -169,7 +169,7 @@ export const useTracks = () => {
     mutationFn: (payload) => axiosClient.post('/TeamTrack/select', payload),
     onSuccess: () => {
       // Có thể cần invalidate thêm key của team hoặc challenge nếu có
-      message.success('Đội đã chọn phần thi thành công!');
+      message.success('Đội đã chọn hạng mục thành công!');
     },
     onError: (error) => {
       console.error('Error selecting track for team:', error);

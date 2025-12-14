@@ -14,6 +14,7 @@ export const ReactQueryClientProvider = ({ children }) => {
             refetchOnWindowFocus: false, // Don't refetch on window focus for better UX
             refetchOnReconnect: true, // Refetch when network reconnects
             refetchOnMount: false, // Don't refetch fresh data on mount
+            retry: 0
           },
         },
       }),

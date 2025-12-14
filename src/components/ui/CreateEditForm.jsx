@@ -1,10 +1,10 @@
-import { Form, Input, Button, Select, DatePicker, Card, Space, Divider } from 'antd';
+import { Form, Input, InputNumber, Button, Select, DatePicker, Card, Space, Divider } from 'antd';
 import { ArrowLeftOutlined, FileTextOutlined, SaveOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 
 // Hỗ trợ các type
-const SUPPORTED_TYPES = ['input', 'textarea', 'dropdown', 'datetime', 'column'];
+const SUPPORTED_TYPES = ['input', 'inputNumber', 'textarea', 'dropdown', 'datetime', 'column'];
 const normalizeFields = (fields = []) =>
   fields.filter(f => !f.type || SUPPORTED_TYPES.includes(f.type));
 
@@ -288,6 +288,27 @@ const CreateEditForm = ({
                 placeholder={field.placeholder || ''}
                 disabled={field.disabled || disabledBatch}
                 maxLength={field.maxLength}
+                className="h-10 text-base text-white placeholder:text-gray-400 bg-neutral-900 border border-neutral-700 rounded
+                           hover:bg-neutral-800 hover:border-primary focus:bg-neutral-800 focus:border-primary focus:outline-none
+                           transition-colors duration-150"
+              />
+            </Form.Item>
+          </div>
+        );
+      case 'inputNumber':
+        return (
+          <div key={fieldName} className="mb-6">
+            <label className="block text-gray-300 text-sm font-medium mb-2">
+              {field.key}
+            </label>
+            <Form.Item {...commonItemProps}>
+              <InputNumber
+                placeholder={field.placeholder || ''}
+                disabled={field.disabled || disabledBatch}
+                min={field.min}
+                max={field.max}
+                step={field.step || 1}
+                style={{ width: '100%' }}
                 className="h-10 text-base text-white placeholder:text-gray-400 bg-neutral-900 border border-neutral-700 rounded
                            hover:bg-neutral-800 hover:border-primary focus:bg-neutral-800 focus:border-primary focus:outline-none
                            transition-colors duration-150"
@@ -637,7 +658,7 @@ const CreateEditForm = ({
                 return (
                   <Card
                     key={index}
-                    className={`border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm mx-6 mb-6 
+                    className={`border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm mx-6 mb-6
                   ${skipped ? 'opacity-60 pointer-events-none' : ''}`}
                     title={
                       <div className="flex items-center justify-between">

@@ -23,9 +23,9 @@ const Prizes = () => {
     const selectedHackathon = hackathons.find(h => h.hackathonId === parseInt(hackathonId));
     const  prizeTypes =  [
       { value: 'Cash', text: 'Tiền mặt' },
-      { value: 'Certificate', text: 'Chứng nhận' },
-      { value: 'Medal', text: 'Huy chuong' },
+      { value: 'Medal', text: 'Huy chương' },
       { value: 'Gift', text: 'Quà tặng' },
+      { value: 'Certificate', text: 'Chứng nhận' },
     ]
 
 
@@ -133,7 +133,7 @@ const Prizes = () => {
                         icon={<ArrowLeftOutlined />}
                         className="mb-4 !text-light-primary hover:!text-primary"
                     >
-                        Quay lại danh sách Hackathons
+                        Quay lại
                     </Button>
 
                     <div className="mb-4">
@@ -168,7 +168,7 @@ const Prizes = () => {
                         >
                             <div className="space-y-2">
                             <p className="text-gray-200 text-base font-medium">
-                                {selectedHackathon.name} - {selectedHackathon.season}
+                                {selectedHackathon.name} - {selectedHackathon.seasonName}
                             </p>
                             <p className="text-gray-400 text-sm italic">
                                 {selectedHackathon.theme}
