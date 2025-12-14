@@ -1,4 +1,4 @@
-import { ArrowLeftOutlined, CalendarOutlined, TeamOutlined, TrophyOutlined, ExclamationCircleOutlined, FileTextOutlined, UploadOutlined, SendOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, CalendarOutlined, TeamOutlined, TrophyOutlined, ExclamationCircleOutlined, FileTextOutlined, UploadOutlined, SendOutlined, BarChartOutlined } from '@ant-design/icons';
 import { Alert, Button, Card, Form, Input, Modal, Spin, Table, Tag, Tabs, message } from 'antd';
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -22,6 +22,8 @@ import { useGetTeamMembers } from '../../hooks/student/team-member';
 import { useSelectTeamTrack } from '../../hooks/student/team-track';
 import { useGetTracksByPhase } from '../../hooks/student/track';
 import { useGetGroupTeams } from '../../hooks/student/group';
+import { useGetMyScoresGrouped, useGetTeamOverview } from '../../hooks/student/score';
+import { useGetCriteriaByPhase } from '../../hooks/student/criterion';
 import { useUserData } from '../../hooks/useUserData';
 
 const StudentPhaseDetail = () => {
@@ -247,6 +249,57 @@ const StudentPhaseDetail = () => {
     hackathonId,
     { enabled: isPhase2 && isPhaseCompleted }
   );
+
+  // Get my scores grouped by phase
+  const { data: scoresData, isLoading: scoresLoading } = useGetMyScoresGrouped(
+    phaseId,
+    { enabled: !!phaseId && hasJoinedHackathon }
+  );
+
+  // Get team overview scores
+  const { data: teamOverviewData, isLoading: teamOverviewLoading } = useGetTeamOverview(
+    teamId,
+    phaseId,
+    { enabled: !!teamId && !!phaseId && hasJoinedHackathon }
+  );
+
+  // Get criteria for mapping criterionId to name
+  const { data: criteriaData } = useGetCriteriaByPhase(phaseId);
+  const criteria = React.useMemo(() => {
+    if (!criteriaData) return [];
+    return Array.isArray(criteriaData) 
+      ? criteriaData 
+      : Array.isArray(criteriaData?.data) 
+        ? criteriaData.data 
+        : [];
+  }, [criteriaData]);
+
+  // Check if we have team overview data (new format)
+  const isTeamOverviewFormat = React.useMemo(() => {
+    return teamOverviewData && teamOverviewData.criteriaScores && Array.isArray(teamOverviewData.criteriaScores);
+  }, [teamOverviewData]);
+
+  const scores = React.useMemo(() => {
+    // If team overview format, return it as is
+    if (isTeamOverviewFormat) {
+      return teamOverviewData;
+    }
+    
+    // Otherwise use grouped scores format
+    const dataToUse = scoresData;
+    if (!dataToUse) return null;
+    
+    // Handle different response structures
+    return Array.isArray(dataToUse)
+      ? dataToUse
+      : Array.isArray(dataToUse?.data)
+        ? dataToUse.data
+        : Array.isArray(dataToUse?.scores)
+          ? dataToUse.scores
+          : null;
+  }, [scoresData, teamOverviewData, isTeamOverviewFormat]);
+
+  const scoresLoadingState = scoresLoading || teamOverviewLoading;
 
   // Tìm track đã chọn từ danh sách tracks dựa vào registration
   const selectedTrack = React.useMemo(() => {
@@ -808,6 +861,147 @@ const StudentPhaseDetail = () => {
             registration={registration}
             phaseId={phaseId}
           />
+
+          {/* Scores Section */}
+          {hasJoinedHackathon && (
+            <Card className="bg-card-background border border-card-border backdrop-blur-xl">
+              <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+                <BarChartOutlined />
+                Điểm số
+              </h3>
+              {scoresLoadingState ? (
+                <div className="flex items-center justify-center py-8">
+                  <Spin size="large" />
+                </div>
+              ) : isTeamOverviewFormat && scores ? (
+                <div className="space-y-4">
+                  {/* Team Overview Summary */}
+                  <div className="space-y-3">
+                    {scores.averageScore !== undefined && scores.averageScore !== null && (
+                      <div>
+                        <p className="text-muted-foreground text-sm">Điểm trung bình</p>
+                        <p className="text-text-primary font-semibold text-lg">
+                          {Number(scores.averageScore).toFixed(2)}
+                        </p>
+                      </div>
+                    )}
+                    {scores.rank !== undefined && scores.rank !== null && (
+                      <div>
+                        <p className="text-muted-foreground text-sm">Hạng</p>
+                        <p className="text-text-primary font-semibold text-lg">
+                          #{scores.rank}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Criteria Scores */}
+                  {Array.isArray(scores.criteriaScores) && scores.criteriaScores.length > 0 ? (
+                    <div className="mt-4">
+                      <h5 className="text-md font-semibold text-text-primary mb-3">
+                        Chi tiết điểm theo tiêu chí
+                      </h5>
+                      <div className="space-y-3">
+                        {scores.criteriaScores.map((criteriaScore, idx) => {
+                          const criterion = criteria.find(c => 
+                            (c.criterionId || c.id) === criteriaScore.criterionId
+                          );
+                          return (
+                            <div
+                              key={criteriaScore.criterionId || `criterion-${idx}`}
+                              className="p-3 bg-card-background/50 rounded-lg border border-card-border/50"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-text-primary font-medium text-sm">
+                                  {criterion?.name || `Tiêu chí ${criteriaScore.criterionId}`}
+                                </span>
+                                <Tag color="green" className="font-semibold">
+                                  {criteriaScore.score !== undefined && criteriaScore.score !== null 
+                                    ? Number(criteriaScore.score).toFixed(2) 
+                                    : '-'}
+                                </Tag>
+                              </div>
+                              {criteriaScore.comment && (
+                                <p className="text-text-secondary text-xs mt-2">
+                                  {criteriaScore.comment}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <BarChartOutlined className="text-2xl mb-2 opacity-50" />
+                      <p className="text-xs">Chưa có điểm số theo tiêu chí</p>
+                    </div>
+                  )}
+                </div>
+              ) : scores && Array.isArray(scores) && scores.length > 0 ? (
+                <div className="space-y-4">
+                  {scores.map((scoreGroup, index) => (
+                    <div
+                      key={scoreGroup.groupId || scoreGroup.id || index}
+                      className="space-y-3"
+                    >
+                      {scoreGroup.groupName && (
+                        <div className="flex items-center justify-between">
+                          <h5 className="text-md font-semibold text-text-primary">
+                            {scoreGroup.groupName}
+                          </h5>
+                          {scoreGroup.totalScore !== undefined && (
+                            <Tag color="green" className="text-sm px-2 py-1">
+                              Tổng: {scoreGroup.totalScore}
+                            </Tag>
+                          )}
+                        </div>
+                      )}
+                      
+                      {Array.isArray(scoreGroup.scores) && scoreGroup.scores.length > 0 ? (
+                        <div className="space-y-2">
+                          {scoreGroup.scores.map((score, scoreIdx) => (
+                            <div
+                              key={score.scoreId || score.id || `score-${scoreIdx}`}
+                              className="p-2 bg-card-background/50 rounded border border-card-border/50"
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-text-primary text-sm font-medium">
+                                  {score.criteriaName || 'N/A'}
+                                </span>
+                                <span className="text-primary font-semibold text-sm">
+                                  {score.score !== undefined && score.score !== null 
+                                    ? Number(score.score).toFixed(2) 
+                                    : '-'}
+                                </span>
+                              </div>
+                              {score.maxScore !== undefined && score.maxScore !== null && (
+                                <p className="text-muted-foreground text-xs">
+                                  Tối đa: {Number(score.maxScore).toFixed(2)}
+                                </p>
+                              )}
+                              {score.note && (
+                                <p className="text-text-secondary text-xs mt-1">
+                                  {score.note}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-400 text-xs">Chưa có điểm số</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  <BarChartOutlined className="text-2xl mb-2 opacity-50" />
+                  <p className="text-xs">Chưa có điểm số nào</p>
+                </div>
+              )}
+            </Card>
+          )}
         </div>
       </div>
 
