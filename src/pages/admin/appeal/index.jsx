@@ -161,7 +161,7 @@ const Appeals = () => {
             },
         ],
         actions: {
-            edit: true,
+            edit: (record) => !record.reviewedAt, // Ẩn nút edit nếu đã được review
         }
     }), [navigate]);
 

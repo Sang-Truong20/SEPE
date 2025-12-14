@@ -27,10 +27,30 @@ const ChallengeDetail = () => {
 
       return {
         ...challenge,
-        user: user || { fullName: 'Ẩn danh' },        // fallback nếu không tìm thấy
-        hackathon: hackathon || { name: 'N/A' },      // fallback nếu không tìm thấy
+        user: user || { fullName: 'Ẩn danh' },
+        hackathon: hackathon || { name: 'N/A' },
       };
   }, [challenge, userData, hackData]);
+
+  const handleDownload = async (url, fileName) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      window.open(url, '_blank');
+    }
+  };
 
   // Xác định loại file để preview
   const getPreviewUrl = (filePath) => {
@@ -39,7 +59,6 @@ const ChallengeDetail = () => {
     const url = filePath.startsWith('http') ? filePath : base + filePath;
     const ext = filePath.split('.').pop().toLowerCase();
     if (['pdf', 'doc', 'docx'].includes(ext)) {
-      // Google Docs Viewer cho DOC/PDF
       return `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
     }
     return null;
@@ -61,7 +80,10 @@ const ChallengeDetail = () => {
             return <span className="text-gray-500">Không có file</span>;
 
           const fileName = filePath.split('/').pop();
-          const downloadUrl = `https://www.sealfall25.somee.com${filePath}`;
+
+          const downloadUrl = filePath.startsWith('http')
+            ? filePath
+            : `https://www.sealfall25.somee.com${filePath}`;
           const previewUrl = getPreviewUrl(filePath);
 
           return (
@@ -79,11 +101,12 @@ const ChallengeDetail = () => {
                 <Button
                   size="small"
                   icon={<DownloadOutlined />}
-                  href={downloadUrl}
-                  target="_blank"
+                  onClick={() => handleDownload(downloadUrl, fileName)}
                   type="link"
                   className="text-emerald-400 p-0"
-                />
+                >
+                  Tải xuống
+                </Button>
               </Space>
 
               {previewUrl && (
@@ -113,7 +136,6 @@ const ChallengeDetail = () => {
         }
       },
 
-      // === CHỈ 2 CỘT CHO MÙA & NGƯỜI TẠO ===
       {
         key: 'Hackathon',
         type: 'input',
@@ -134,8 +156,6 @@ const ChallengeDetail = () => {
       },
     ],
   };
-
-
 
   if (isLoading) {
     return (

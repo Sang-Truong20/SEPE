@@ -63,26 +63,25 @@ export const useScores = () => {
 
   // 3. Tạo score mới cho submission (POST)
   /**
-   * API: POST /api/Score/score
+   * API: POST /api/Score/submit
    * method: POST
-   * path: /api/Score/score
-   * request body: SubmissionScoreInputDto (OpenAPI component)
+   * path: /api/Score/submit
+   * request body:
    *   - submissionId: integer
-   *   - scores: array of ScoreItemDto
-   *       - ScoreItemDto:
-   *           - criteriaId: integer
-   *           - scoreValue: number (double)
-   *           - comment: string | null
+   *   - criteriaScores: array of criteria score objects
+   *       - criterionId: integer
+   *       - score: number (double)
+   *       - comment: string | null
    * response: 200 OK
    * describe: Submit or create scores for a submission
    * example payload:
    * {
    *   "submissionId": 10,
-   *   "scores": [ { "criteriaId": 1, "scoreValue": 8.5, "comment": "Good" } ]
+   *   "criteriaScores": [ { "criterionId": 1, "score": 8.5, "comment": "Good" } ]
    * }
    */
   const createScore = useMutation({
-    mutationFn: (payload) => axiosClient.post("/Score/score", payload),
+    mutationFn: (payload) => axiosClient.post("/Score/submit", payload),
     onSuccess: () => {
       // Invalidate lists liên quan đến submission hoặc phase/group (giả sử dựa trên submissionId)
       // Có thể cần thêm logic lấy phaseId/groupId từ context nếu biết
@@ -95,17 +94,22 @@ export const useScores = () => {
     },
   });
 
-  // 4. Cập nhật score cho submission (PUT)
+  // 4. Cập nhật score cho submission (POST - dùng cùng API với create)
   /**
-   * API: PUT /api/Score/score
-   * method: PUT
-   * path: /api/Score/score
-   * request body: SubmissionScoreInputDto (same shape as POST)
+   * API: POST /api/Score/submit
+   * method: POST
+   * path: /api/Score/submit
+   * request body: Same shape as create
+   *   - submissionId: integer
+   *   - criteriaScores: array of criteria score objects
+   *       - criterionId: integer
+   *       - score: number (double)
+   *       - comment: string | null
    * response: 200 OK
-   * describe: Update existing scores for a submission
+   * describe: Update existing scores for a submission (dùng POST giống create)
    */
   const updateScore = useMutation({
-    mutationFn: (payload) => axiosClient.put("/Score/score", payload),
+    mutationFn: (payload) => axiosClient.post("/Score/submit", payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: scoreQueryKeys.all });
       message.success("Cập nhật điểm thành công!");

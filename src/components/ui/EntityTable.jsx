@@ -190,19 +190,26 @@ const EntityTable = ({
         }
 
         if (actions.edit) {
-          const cfg = actions.edit === true ? {} : actions.edit;
-          actionNodes.push(
-            <Tooltip key="edit" title={cfg.tooltip || 'Chỉnh sửa'}>
-              <Button
-                type="text"
-                size="small"
-                disabled={record.disableEdit || false}
-                className={cfg.className || 'text-white hover:text-primary'}
-                icon={cfg.icon || <EditOutlined />}
-                onClick={() => handlers.onEdit?.(record)}
-              />
-            </Tooltip>,
-          );
+          // Hỗ trợ function để kiểm tra điều kiện hiển thị
+          const shouldShowEdit = typeof actions.edit === 'function'
+            ? actions.edit(record)
+            : actions.edit !== false;
+
+          if (shouldShowEdit) {
+            const cfg = actions.edit === true ? {} : (typeof actions.edit === 'function' ? {} : actions.edit);
+            actionNodes.push(
+              <Tooltip key="edit" title={cfg.tooltip || 'Chỉnh sửa'}>
+                <Button
+                  type="text"
+                  size="small"
+                  disabled={record.disableEdit || false}
+                  className={cfg.className || 'text-white hover:text-primary'}
+                  icon={cfg.icon || <EditOutlined />}
+                  onClick={() => handlers.onEdit?.(record)}
+                />
+              </Tooltip>,
+            );
+          }
         }
 
         if (actions.delete) {

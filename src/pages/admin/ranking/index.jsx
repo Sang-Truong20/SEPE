@@ -1,18 +1,14 @@
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useMemo } from 'react';
 import { ConfigProvider, theme, Button, Select, Card, Tag } from 'antd';
-import {
-  ArrowLeftOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+import { ArrowLeftOutlined, CalendarOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { PATH_NAME } from '../../../constants/index.js';
-import { useHackathonPhases } from '../../../hooks/admin/hackathon-phases/useHackathonPhases.js';
+import { useRankings } from '../../../hooks/admin/ranking/useRanking.js';
 import { useHackathons } from '../../../hooks/admin/hackathons/useHackathons.js';
 import EntityTable from '../../../components/ui/EntityTable.jsx';
 
-const HackathonPhases = () => {
-  const navigate = useNavigate();
+const Rankings = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const hackathonId = searchParams.get('hackathonId');
 
@@ -20,73 +16,71 @@ const HackathonPhases = () => {
   const { data: hackathons = [], isLoading: hackathonsLoading } =
     fetchHackathons;
 
-  const { fetchHackathonPhases } = useHackathonPhases();
+  const { fetchRankings } = useRankings();
   const {
-    data: phasesDataRaw = [],
-    isLoading,
-  } = fetchHackathonPhases(hackathonId);
-
-  const phasesData = phasesDataRaw.sort(
-    (a, b) => new Date(a.endDate) - new Date(b.endDate)
-  );
+    data: rankingsData = [],
+    isLoading: rankingsLoading,
+  } = fetchRankings(hackathonId);
 
   const selectedHackathon = hackathons.find(
     (h) => h.hackathonId === parseInt(hackathonId),
   );
 
-  // Model cho bảng phases
+  // Model cho bảng rankings
   const tableModel = useMemo(
     () => ({
-      entityName: 'giai đoạn',
-      rowKey: 'phaseId',
+      entityName: 'xếp hạng',
+      rowKey: 'rankingId',
       columns: [
         {
-          title: 'Tên giai đoạn',
-          dataIndex: 'phaseName',
-          key: 'phaseName',
+          title: 'Hạng',
+          dataIndex: 'rank',
+          key: 'rank',
+          type: 'badge',
+          transform: (val) => `Hạng ${val}`,
+          className: 'font-bold text-primary',
+        },
+        {
+          title: 'Tên đội',
+          dataIndex: 'teamName',
+          key: 'teamName',
           type: 'text',
           className: 'font-medium text-white',
         },
         {
-          title: 'Ngày bắt đầu',
-          dataIndex: 'startDate',
-          key: 'startDate',
-          type: 'datetime',
-          format: 'DD/MM/YYYY HH:mm',
+          title: 'Tên Hackathon',
+          dataIndex: 'hackathonName',
+          key: 'hackathonName',
+          type: 'text',
+          className: 'text-gray-300',
         },
         {
-          title: 'Ngày kết thúc',
-          dataIndex: 'endDate',
-          key: 'endDate',
+          title: 'Tổng điểm',
+          dataIndex: 'totalScore',
+          key: 'totalScore',
+          type: 'custom',
+          render: (value, record) => (
+            <span className="text-green-400 font-semibold">
+              {value?.toFixed(2) || record?.totalScore?.toFixed(2) || '0.00'}
+            </span>
+          ),
+        },
+        {
+          title: 'Cập nhật',
+          dataIndex: 'updatedAt',
+          key: 'updatedAt',
           type: 'datetime',
           format: 'DD/MM/YYYY HH:mm',
         },
       ],
-      actions: hackathonId
-        ? {
-            view: true,
-          }
-        : {},
+      actions: {},
     }),
-    [hackathonId, phasesData, navigate],
+    [],
   );
-
-  const handlers = {
-    onView: ({ phaseId }) => {
-      const lastPhaseId = phasesData.at(-1)?.phaseId
-      const isLastPhase = phasesData.length > 1 && phaseId === lastPhaseId
-
-      navigate(
-        `/partner/hackathons/hackathon-phases/${phaseId}?hackathonId=${hackathonId}&isLastPhase=${isLastPhase}`
-      )
-    },
-  };
 
   const handleHackathonChange = (newHackathonId) => {
     setSearchParams({ hackathonId: newHackathonId });
   };
-
-
 
   return (
     <ConfigProvider
@@ -105,7 +99,7 @@ const HackathonPhases = () => {
       <div className="bg-dark-secondary border border-dark-accent rounded-xl p-6 shadow-md">
         <div className="mb-6">
           <Button
-            onClick={() => navigate(PATH_NAME.PARTNER_HACKATHONS)}
+            onClick={() => window.history.back()}
             type="link"
             icon={<ArrowLeftOutlined />}
             className="mb-4 !text-light-primary hover:!text-primary"
@@ -118,7 +112,7 @@ const HackathonPhases = () => {
               Chọn Hackathon
             </label>
             <Select
-              placeholder="Chọn hackathon để xem phases"
+              placeholder="Chọn hackathon để xem xếp hạng"
               value={hackathonId}
               onChange={handleHackathonChange}
               loading={hackathonsLoading}
@@ -182,10 +176,10 @@ const HackathonPhases = () => {
         {hackathonId ? (
           <EntityTable
             model={tableModel}
-            data={phasesData}
-            loading={isLoading}
-            handlers={handlers}
-            emptyText="Không có giai đoạn nào cho hackathon này"
+            data={rankingsData}
+            loading={rankingsLoading}
+            handlers={{}}
+            emptyText="Không có dữ liệu xếp hạng cho hackathon này"
             dateFormatter={(value, fmt) =>
               value ? dayjs(value).format(fmt) : '--'
             }
@@ -193,7 +187,7 @@ const HackathonPhases = () => {
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-400">
-              Vui lòng chọn một hackathon để xem các phases
+              Vui lòng chọn một hackathon để xem xếp hạng
             </p>
           </div>
         )}
@@ -202,4 +196,4 @@ const HackathonPhases = () => {
   );
 };
 
-export default HackathonPhases;
+export default Rankings;
