@@ -27,6 +27,7 @@ export const useCreateTeam = () => {
         onSuccess: () => {
             // Invalidate and refetch teams list
             queryClient.invalidateQueries({ queryKey: teamQueryKeys.teams() });
+            queryClient.invalidateQueries({ queryKey: teamQueryKeys.myTeams() });
         },
     });
 };

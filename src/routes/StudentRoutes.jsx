@@ -4,9 +4,9 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useUserData } from '../hooks/useUserData';
 
 const StudentRoutes = () => {
-  const { isLoading,  } = useUserData();
+  const { isLoading, userInfo } = useUserData();
 
-  const isStudent = true; 
+  const isStudent = userInfo && (userInfo.roleName?.toLowerCase() === "member" || userInfo.roleId === 1 || userInfo.role === 1); 
 
   if (isLoading) {
     return (
@@ -21,7 +21,7 @@ const StudentRoutes = () => {
       <Outlet />
     </StudentLayout>
   ) : (
-    <Navigate to="/login" replace />
+    <Navigate to="/" replace />
   );
 };
 
