@@ -19,18 +19,6 @@ function App() {
 
   // useFirebaseMessaging();
 
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false,
-        staleTime: 5 * 60 * 1000,
-        gcTime: 30 * 60 * 1000,
-        retry: 0,
-      },
-    },
-  });
-
   return (
     <ReactQueryClientProvider>
       <AntdProvider>
