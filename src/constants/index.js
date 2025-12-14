@@ -4,7 +4,6 @@ const PATH_NAME = {
   NOT_FOUND: '*',
   MEMBER: '/member',
   ADMIN: '/admin',
-  ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_USERS: '/admin/users',
   ADMIN_SEASON: '/admin/season',
   ADMIN_TEAMS: '/admin/team',

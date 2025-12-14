@@ -4,6 +4,10 @@ const loginGoogle = (payload) => {
   return axiosClient.post(`/Auth/google-login`, payload);
 };
 
+const login = (payload) => {
+  return axiosClient.post(`/Auth/login`, payload);
+};
+
 const getMe = () => {
   return axiosClient.get(`/Auth/me`);
 };
@@ -16,4 +20,4 @@ const callRefreshToken = (payload) => {
   return axiosClient.post(`/Auth/refresh-token`, payload);
 };
 
-export { loginGoogle, logout, callRefreshToken, getMe };
+export { loginGoogle, login, logout, callRefreshToken, getMe };

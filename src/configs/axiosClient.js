@@ -44,7 +44,9 @@ axiosClient.interceptors.response.use(
     if (
       error?.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes('/auth/refresh')
+      !originalRequest.url?.includes('/auth/refresh') &&
+      !originalRequest.url?.includes('/Auth/login') &&
+      !originalRequest.url?.includes('/Auth/google-login')
     ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
