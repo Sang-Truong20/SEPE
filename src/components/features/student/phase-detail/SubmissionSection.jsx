@@ -87,7 +87,11 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader: propIsLea
 
   const handleCreateDraft = async (values) => {
     if (!teamId || !phaseId) {
-      message.error('Thiếu thông tin team hoặc phase');
+      const missing = [];
+      if (!teamId) missing.push('team');
+      if (!phaseId) missing.push('phase');
+      console.error('[SubmissionSection] Missing info:', { teamId, phaseId, missing });
+      message.error(`Thiếu thông tin ${missing.join(' và ')}. TeamId: ${teamId || 'null'}, PhaseId: ${phaseId || 'null'}`);
       return;
     }
 

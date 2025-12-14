@@ -29,7 +29,7 @@ const StudentPhaseDetail = () => {
   
   const { userInfo } = useUserData();
   const { data: teamsData } = useGetTeams();
-  const { data: myTeamsData } = useGetMyTeams();
+  const { data: myTeamsData, isLoading: myTeamsLoading } = useGetMyTeams();
   const { data: hackathon } = useGetHackathon(hackathonId);
   const { data: phases = [] } = useGetHackathonPhases(hackathonId);
   const phase = phases.find(p => p.phaseId === parseInt(phaseId));
@@ -51,36 +51,66 @@ const StudentPhaseDetail = () => {
   const teamId = React.useMemo(() => {
     // First try to get from my-teams API matching hackathon
     if (myTeamsData) {
-      const myTeams = Array.isArray(myTeamsData) 
-        ? myTeamsData 
-        : Array.isArray(myTeamsData?.data) 
-          ? myTeamsData.data 
-          : Array.isArray(myTeamsData?.teams)
-            ? myTeamsData.teams
-            : [];
+      // Handle different response structures
+      let myTeams = [];
+      if (Array.isArray(myTeamsData)) {
+        myTeams = myTeamsData;
+      } else if (Array.isArray(myTeamsData?.data)) {
+        myTeams = myTeamsData.data;
+      } else if (Array.isArray(myTeamsData?.teams)) {
+        myTeams = myTeamsData.teams;
+      }
+      
+      // Debug: log teams and hackathonId for troubleshooting
+      if (myTeams.length > 0) {
+        console.log('[PhaseDetail] My teams:', myTeams);
+        console.log('[PhaseDetail] Looking for hackathonId:', hackathonId);
+      }
       
       // Find team that matches current hackathon
       const matchedTeam = myTeams.find(team => {
         const teamHackathonId = team.hackathonId || team.hackathon?.hackathonId || team.hackathon?.id;
-        return teamHackathonId && Number(teamHackathonId) === Number(hackathonId);
+        const matches = teamHackathonId && Number(teamHackathonId) === Number(hackathonId);
+        if (matches) {
+          console.log('[PhaseDetail] Found matching team:', team);
+        }
+        return matches;
       });
       
       if (matchedTeam) {
-        return matchedTeam.teamId || matchedTeam.id || null;
+        const foundTeamId = matchedTeam.teamId || matchedTeam.id || null;
+        console.log('[PhaseDetail] Using teamId from my-teams:', foundTeamId);
+        return foundTeamId;
+      } else if (myTeams.length > 0) {
+        console.warn('[PhaseDetail] No team found for hackathonId:', hackathonId, 'Available teams:', myTeams.map(t => ({ teamId: t.teamId || t.id, hackathonId: t.hackathonId })));
       }
     }
     
     // Try to get teamId from myRegistration
-    if (myRegistration?.teamId) return myRegistration.teamId;
-    if (myRegistration?.team?.teamId) return myRegistration.team.teamId;
-    if (myRegistration?.team?.id) return myRegistration.team.id;
+    if (myRegistration?.teamId) {
+      console.log('[PhaseDetail] Using teamId from registration:', myRegistration.teamId);
+      return myRegistration.teamId;
+    }
+    if (myRegistration?.team?.teamId) {
+      console.log('[PhaseDetail] Using teamId from registration.team:', myRegistration.team.teamId);
+      return myRegistration.team.teamId;
+    }
+    if (myRegistration?.team?.id) {
+      console.log('[PhaseDetail] Using teamId from registration.team.id:', myRegistration.team.id);
+      return myRegistration.team.id;
+    }
     
     // Fallback: try to find from teamsData
-    const userTeam = teamsData && Array.isArray(teamsData) 
-      ? teamsData.find(t => t.leaderId === (userInfo?.id || userInfo?.userId))
-      : null;
+    if (teamsData && Array.isArray(teamsData)) {
+      const userTeam = teamsData.find(t => t.leaderId === (userInfo?.id || userInfo?.userId));
+      if (userTeam) {
+        console.log('[PhaseDetail] Using teamId from teamsData:', userTeam.teamId || userTeam.id);
+        return userTeam.teamId || userTeam.id || null;
+      }
+    }
     
-    return userTeam?.teamId || userTeam?.id || null;
+    console.error('[PhaseDetail] No teamId found. myTeamsData:', myTeamsData, 'hackathonId:', hackathonId, 'myRegistration:', myRegistration);
+    return null;
   }, [myTeamsData, hackathonId, myRegistration, teamsData, userInfo]);
   
   // Get penalties for team in current phase
@@ -156,6 +186,12 @@ const StudentPhaseDetail = () => {
   
   // Alias để giữ tương thích với code cũ
   const registration = myRegistration;
+  
+  // Check if user has joined hackathon (has team for this hackathon)
+  const hasJoinedHackathon = React.useMemo(() => {
+    return !!(teamId || myRegistration);
+  }, [teamId, myRegistration]);
+  
   const {
     data: tracksData = [],
     isLoading: tracksLoading,
@@ -321,22 +357,37 @@ const StudentPhaseDetail = () => {
 
           {/* Only show track selection for phase 1 */}
           {showTrackSelection && (
-            <TracksSelection
-              tracks={tracks}
-              isLoading={tracksLoading}
-              selectedTrackId={selectedTrackId}
-              onTrackSelect={handleTrackSelect}
-              form={form}
-              onFinish={handleSelectTrack}
-              phaseId={phaseId}
-            />
+            <>
+              {!myTeamsLoading && !hasJoinedHackathon && (
+                <Card className="bg-card-background border border-card-border backdrop-blur-xl mb-6">
+                  <Alert
+                    message="Bạn cần tham gia hackathon để có thể chọn track"
+                    description="Vui lòng tham gia hoặc tạo team cho hackathon này trước khi chọn track."
+                    type="warning"
+                    showIcon
+                  />
+                </Card>
+              )}
+              {hasJoinedHackathon && (
+                <TracksSelection
+                  tracks={tracks}
+                  isLoading={tracksLoading}
+                  selectedTrackId={selectedTrackId}
+                  onTrackSelect={handleTrackSelect}
+                  form={form}
+                  onFinish={handleSelectTrack}
+                  phaseId={phaseId}
+                />
+              )}
+            </>
           )}
 
           {/* Submission, Penalty and Appeal Tabs */}
-          <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-            <Tabs
-              defaultActiveKey="submission"
-              items={[
+          {hasJoinedHackathon ? (
+            <Card className="bg-card-background border border-card-border backdrop-blur-xl">
+              <Tabs
+                defaultActiveKey="submission"
+                items={[
                 {
                   key: 'submission',
                   label: (
@@ -546,10 +597,31 @@ const StudentPhaseDetail = () => {
                     </div>
                   ),
                 },
-              ]}
-              className="[&_.ant-tabs-tab]:text-text-secondary [&_.ant-tabs-tab-active]:text-text-primary [&_.ant-tabs-ink-bar]:bg-primary"
-            />
-          </Card>
+                ]}
+                className="[&_.ant-tabs-tab]:text-text-secondary [&_.ant-tabs-tab-active]:text-text-primary [&_.ant-tabs-ink-bar]:bg-primary"
+              />
+            </Card>
+          ) : (
+            <Card className="bg-card-background border border-card-border backdrop-blur-xl">
+              <Alert
+                message="Bạn cần tham gia hackathon để có thể nộp bài"
+                description={
+                  <div>
+                    <p>Bạn cần tham gia hoặc tạo team cho hackathon này trước khi có thể nộp bài, xem penalty và appeal.</p>
+                    <p className="mt-2 text-sm">
+                      {!myTeamsLoading && myTeamsData && Array.isArray(myTeamsData) && myTeamsData.length > 0 ? (
+                        <>Bạn có {myTeamsData.length} team(s), nhưng không có team nào thuộc hackathon {hackathonId}.</>
+                      ) : (
+                        <>Bạn chưa có team nào. Vui lòng tham gia hoặc tạo team trước.</>
+                      )}
+                    </p>
+                  </div>
+                }
+                type="warning"
+                showIcon
+              />
+            </Card>
+          )}
 
           {/* Groups Section - Phase 1 */}
           {isPhase1 && (

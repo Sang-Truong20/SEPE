@@ -18,7 +18,7 @@ export const useCreateDraftSubmission = () => {
     return useMutation({
         mutationKey: submissionQueryKeys.createDraft(),
         mutationFn: async (submissionData) => {
-            const response = await axiosClient.post('/Submission/create-draft', {
+            const response = await axiosClient.post('/Submission/draft', {
                 teamId: submissionData.teamId,
                 phaseId: submissionData.phaseId,
                 title: submissionData.title,
