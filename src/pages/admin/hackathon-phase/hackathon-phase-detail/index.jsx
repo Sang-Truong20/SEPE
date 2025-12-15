@@ -39,7 +39,6 @@ import { useJudgeAssignment } from '../../../../hooks/admin/assignments/useJudge
 import { UserAddOutlined } from '@ant-design/icons';
 import { useUserData } from '../../../../hooks/useUserData.js';
 import { usePenalty } from '../../../../hooks/admin/penalty/usePenalty.js';
-import { useTeams } from '../../../../hooks/admin/teams/useTeams.js';
 import { Table, Empty } from 'antd';
 
 const HackathonPhaseDetail = () => {
@@ -86,12 +85,6 @@ const HackathonPhaseDetail = () => {
   const { data: phaseCriteria = [], isLoading: criteriaLoading } =
     fetchCriteria(id);
 
-  // Lấy danh sách teams của phase này (chỉ phase 1)
-  const { fetchTeamsByPhase } = useTeams();
-  const isPhaseOne = parseInt(id) === 1;
-  const teamsQuery = fetchTeamsByPhase(isPhaseOne ? 1 : null);
-  const phaseTeams = Array.isArray(teamsQuery?.data) ? teamsQuery.data : [];
-  const teamsLoading = teamsQuery?.isLoading || false;
 
   // Hook để lấy penalties của team
   const { fetchPenaltiesByTeamAndPhase } = usePenalty();
@@ -475,33 +468,6 @@ const HackathonPhaseDetail = () => {
     ],
   );
 
-  // Table model cho Quản lý Đội tham gia (chỉ phase 1)
-  const teamsTableModel = useMemo(
-    () => ({
-      entityName: 'Đội tham gia',
-      rowKey: 'teamId',
-      columns: [
-        {
-          title: 'Tên đội',
-          dataIndex: 'teamName',
-          key: 'teamName',
-          className: 'font-medium text-white',
-        },
-        {
-          title: 'Mã đội',
-          dataIndex: 'teamId',
-          key: 'teamId',
-          className: 'text-gray-300',
-        },
-      ],
-      actions: {
-        view: false,
-        edit: false,
-        delete: false,
-      },
-    }),
-    [],
-  );
 
   const criteriaTableModel = useMemo(
     () => ({
@@ -861,42 +827,6 @@ const HackathonPhaseDetail = () => {
               data={allAssignments}
               loading={assignmentsLoading}
               emptyText="Chưa có giám khảo nào được phép chấm cho giai đoạn này"
-            />
-          </Card>
-        )}
-
-        {/* Quản lý Đội tham gia Section - Chỉ hiển thị ở phase 1 */}
-        {hackathonId && isPhaseOne && (
-          <Card className="mt-6 border border-white/10 bg-white/5 rounded-xl">
-            <div className="mb-4 px-6 pt-6">
-              <Button
-                onClick={() =>
-                  navigate(
-                    `${PATH_NAME.ADMIN_HACKATHON_PHASES}?hackathonId=${hackathonId}`,
-                  )
-                }
-                type="link"
-                icon={<ArrowLeftOutlined />}
-                className="mb-4 !text-light-primary hover:!text-primary"
-              >
-                Quay lại
-              </Button>
-            </div>
-            <EntityTable
-              model={teamsTableModel}
-              data={phaseTeams}
-              loading={teamsLoading}
-              emptyText="Chưa có đội tham gia nào cho giai đoạn này"
-              expandable={{
-                expandedRowRender: (record) => (
-                  <TeamPenaltiesExpanded
-                    teamId={record.teamId}
-                    phaseId={id}
-                    fetchPenaltiesByTeamAndPhase={fetchPenaltiesByTeamAndPhase}
-                  />
-                ),
-                rowExpandable: () => true,
-              }}
             />
           </Card>
         )}
