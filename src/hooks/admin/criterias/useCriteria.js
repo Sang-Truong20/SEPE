@@ -73,6 +73,7 @@ export const useCriteria = () => {
         return response.data;
       },
       enabled: !!phaseId,
+      refetchOnMount: true, // Đảm bảo refetch khi component mount
     });
 
   // 2. Lấy chi tiết một criterion theo id
@@ -132,6 +133,11 @@ export const useCriteria = () => {
   const createCriterion = useMutation({
     mutationFn: (payload) => axiosClient.post('/Criterion', payload),
     onSuccess: (_, variables) => {
+      // Invalidate tất cả danh sách criteria để đảm bảo cập nhật ở mọi nơi
+      queryClient.invalidateQueries({
+        queryKey: criterionQueryKeys.lists(),
+      });
+      // Cũng invalidate query cụ thể theo phaseId
       queryClient.invalidateQueries({
         queryKey: criterionQueryKeys.list(variables.phaseId),
       });

@@ -8,6 +8,7 @@ import {
   Card,
   Button,
   Form,
+  Input,
   InputNumber,
   Select,
   Space,
@@ -25,6 +26,9 @@ import {
   ExclamationCircleOutlined,
   PlusOutlined,
   SyncOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  ArrowLeftOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useChallenges } from '../../../../hooks/admin/challanges/useChallenges.js';
@@ -34,6 +38,9 @@ import { useUsers } from '../../../../hooks/admin/users/useUsers';
 import { useJudgeAssignment } from '../../../../hooks/admin/assignments/useJudgeAssignments.js';
 import { UserAddOutlined } from '@ant-design/icons';
 import { useUserData } from '../../../../hooks/useUserData.js';
+import { usePenalty } from '../../../../hooks/admin/penalty/usePenalty.js';
+import { useTeams } from '../../../../hooks/admin/teams/useTeams.js';
+import { Table, Empty } from 'antd';
 
 const HackathonPhaseDetail = () => {
   const { id } = useParams();
@@ -84,6 +91,17 @@ const HackathonPhaseDetail = () => {
   const { data: phaseCriteria = [], isLoading: criteriaLoading } =
     fetchCriteria(id);
 
+  // Lấy danh sách teams của phase này (chỉ phase 1)
+  const { fetchTeamsByPhase } = useTeams();
+  const isPhaseOne = parseInt(id) === 1;
+  const teamsQuery = fetchTeamsByPhase(isPhaseOne ? 1 : null);
+  const phaseTeams = Array.isArray(teamsQuery?.data) ? teamsQuery.data : [];
+  const teamsLoading = teamsQuery?.isLoading || false;
+
+
+  // Hook để lấy penalties của team
+  const { fetchPenaltiesByTeamAndPhase } = usePenalty();
+
   const {
     data: phase,
     isLoading: phaseLoading,
@@ -102,11 +120,15 @@ const HackathonPhaseDetail = () => {
     refetch: qualifiedRefetch,
   } = fetchFinalQualified(id);
 
+  // Đảm bảo allTracks và groupsData là array
+  const safeAllTracks = Array.isArray(allTracks) ? allTracks : [];
+  const safeGroupsData = Array.isArray(groupsData) ? groupsData : [];
+
   const phaseTracks =
-    allTracks?.filter((track) => track.phaseId === parseInt(id)) || [];
+    safeAllTracks.filter((track) => track.phaseId === parseInt(id)) || [];
 
   const trackIds = phaseTracks.map((t) => t.trackId);
-  const sortedGroups = [...groupsData]
+  const sortedGroups = [...safeGroupsData]
     .filter((group) => trackIds?.includes(group.trackId))
     ?.sort((a, b) => a.groupName.localeCompare(b.groupName));
 
@@ -386,18 +408,7 @@ const HackathonPhaseDetail = () => {
           title: 'Tên giám khảo',
           dataIndex: 'judgeName',
           key: 'judgeName',
-          className: 'font-medium',
-          render: (text, record) => (
-            <Button
-              type="link"
-              className="p-0 h-auto text-emerald-400"
-              onClick={() =>
-                navigate(`${PATH_NAME.ADMIN_USERS}/${record.judgeId}`)
-              }
-            >
-              {text}
-            </Button>
-          ),
+          className: 'font-medium text-white',
         },
         {
           title: 'Phân công',
@@ -457,6 +468,34 @@ const HackathonPhaseDetail = () => {
     ],
   );
 
+  // Table model cho Quản lý Đội tham gia (chỉ phase 1)
+  const teamsTableModel = useMemo(
+    () => ({
+      entityName: 'Đội tham gia',
+      rowKey: 'teamId',
+      columns: [
+        {
+          title: 'Tên đội',
+          dataIndex: 'teamName',
+          key: 'teamName',
+          className: 'font-medium text-white',
+        },
+        {
+          title: 'Mã đội',
+          dataIndex: 'teamId',
+          key: 'teamId',
+          className: 'text-gray-300',
+        },
+      ],
+      actions: {
+        view: false,
+        edit: false,
+        delete: false,
+      },
+    }),
+    [],
+  );
+
   const criteriaTableModel = useMemo(
     () => ({
       entityName: 'Tiêu chí chấm điểm',
@@ -506,6 +545,7 @@ const HackathonPhaseDetail = () => {
     }),
     [isAdmin, isFirstPhase, id, hackathonId, navigate, phaseTracks],
   );
+
 
   const handleAssignRandomClick = (record) => {
     setAssignModal({ open: true, track: record });
@@ -641,6 +681,7 @@ const HackathonPhaseDetail = () => {
       deleteCriterion.variables === record.criteriaId,
   };
 
+
   const handleConfirmCriteriaDelete = () => {
     const { record } = confirmJudgeModal;
     deleteCriterion.mutate(record.criteriaId);
@@ -687,7 +728,7 @@ const HackathonPhaseDetail = () => {
 
   const groupHandlers = {
     onView: (record) =>
-      navigate(`/admin/groups/${record.groupId}?trackId=${record.trackId}`),
+      navigate(`/admin/groups/${record.groupId}?trackId=${record.trackId}&phaseId=${id}`),
   };
 
   if (phaseError) {
@@ -793,6 +834,42 @@ const HackathonPhaseDetail = () => {
           </Card>
         )}
 
+        {/* Quản lý Đội tham gia Section - Chỉ hiển thị ở phase 1 */}
+        {hackathonId && isPhaseOne && (
+          <Card className="mt-6 border border-white/10 bg-white/5 rounded-xl">
+            <div className="mb-4 px-6 pt-6">
+              <Button
+                onClick={() =>
+                  navigate(
+                    `${PATH_NAME.ADMIN_HACKATHON_PHASES}?hackathonId=${hackathonId}`,
+                  )
+                }
+                type="link"
+                icon={<ArrowLeftOutlined />}
+                className="mb-4 !text-light-primary hover:!text-primary"
+              >
+                Quay lại
+              </Button>
+            </div>
+            <EntityTable
+              model={teamsTableModel}
+              data={phaseTeams}
+              loading={teamsLoading}
+              emptyText="Chưa có đội tham gia nào cho giai đoạn này"
+              expandable={{
+                expandedRowRender: (record) => (
+                  <TeamPenaltiesExpanded
+                    teamId={record.teamId}
+                    phaseId={id}
+                    fetchPenaltiesByTeamAndPhase={fetchPenaltiesByTeamAndPhase}
+                  />
+                ),
+                rowExpandable: () => true,
+              }}
+            />
+          </Card>
+        )}
+
         {/* Criteria Section - Chỉ hiển thị ở phase 1 */}
         {hackathonId && isFirstPhase && (
           <Card className="mt-6 border border-white/10 bg-white/5 rounded-xl">
@@ -805,6 +882,7 @@ const HackathonPhaseDetail = () => {
             />
           </Card>
         )}
+
 
         {/* Qualification Section - Chỉ hiển thị nếu là phase cuối và không phải single phase */}
         {isLastPhase && !isSinglePhase && (
@@ -837,6 +915,16 @@ const HackathonPhaseDetail = () => {
                   dateFormatter={(value, fmt) =>
                     value ? dayjs(value).format(fmt) : '--'
                   }
+                  expandable={{
+                    expandedRowRender: (record) => (
+                      <TeamPenaltiesExpanded
+                        teamId={record.teamId}
+                        phaseId={id}
+                        fetchPenaltiesByTeamAndPhase={fetchPenaltiesByTeamAndPhase}
+                      />
+                    ),
+                    rowExpandable: () => true,
+                  }}
                 />
               </Card>
             )}
@@ -1063,7 +1151,469 @@ const HackathonPhaseDetail = () => {
           </span>
         </div>
       </Modal>
+
     </ConfigProvider>
+  );
+};
+
+// Component hiển thị penalties trong expanded row của team
+const TeamPenaltiesExpanded = ({ teamId, phaseId, fetchPenaltiesByTeamAndPhase }) => {
+  return (
+    <TeamPenaltiesSection
+      teamId={teamId}
+      phaseId={phaseId}
+      fetchPenaltiesByTeamAndPhase={fetchPenaltiesByTeamAndPhase}
+    />
+  );
+};
+
+// Component hiển thị penalties của một team
+const TeamPenaltiesSection = ({ teamId, phaseId, fetchPenaltiesByTeamAndPhase }) => {
+  const [createPenaltyModal, setCreatePenaltyModal] = useState(false);
+  const [editPenaltyModal, setEditPenaltyModal] = useState({ open: false, penalty: null });
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState({ open: false, penalty: null });
+  const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
+  const { createPenalty, updatePenalty, deletePenalty } = usePenalty();
+
+  const { data: penalties = [], isLoading } = fetchPenaltiesByTeamAndPhase(
+    teamId,
+    phaseId,
+  );
+
+  const penaltiesArray = Array.isArray(penalties) ? penalties : [];
+
+  const handleCreatePenalty = async (values) => {
+    try {
+      // Đảm bảo points là number, không phải string
+      const pointsValue = values.points != null ? Number(values.points) : 0;
+      await createPenalty.mutateAsync({
+        teamId: parseInt(teamId),
+        phaseId: parseInt(phaseId),
+        type: values.type || 'Penalty',
+        points: pointsValue,
+        reason: values.reason || '',
+      });
+      setCreatePenaltyModal(false);
+      form.resetFields();
+    } catch (error) {
+      console.error('Error creating penalty:', error);
+    }
+  };
+
+  const handleOpenModal = () => {
+    setCreatePenaltyModal(true);
+    // Reset form với giá trị mặc định
+    form.setFieldsValue({
+      type: 'Penalty',
+      points: undefined, // Không set giá trị mặc định để người dùng tự nhập
+      reason: '',
+    });
+  };
+
+  const handleEditPenalty = (penalty) => {
+    setEditPenaltyModal({ open: true, penalty });
+    editForm.setFieldsValue({
+      points: penalty.points,
+      reason: penalty.reason,
+    });
+  };
+
+  const handleUpdatePenalty = async (values) => {
+    try {
+      // Đảm bảo points là number, không phải string
+      const pointsValue = values.points != null ? Number(values.points) : 0;
+      await updatePenalty.mutateAsync({
+        id: editPenaltyModal.penalty.adjustmentId,
+        payload: {
+          points: pointsValue,
+          reason: values.reason || '',
+        },
+      });
+      setEditPenaltyModal({ open: false, penalty: null });
+      editForm.resetFields();
+    } catch (error) {
+      console.error('Error updating penalty:', error);
+    }
+  };
+
+  const handleDeletePenalty = async () => {
+    try {
+      await deletePenalty.mutateAsync(deleteConfirmModal.penalty.adjustmentId);
+      setDeleteConfirmModal({ open: false, penalty: null });
+    } catch (error) {
+      console.error('Error deleting penalty:', error);
+    }
+  };
+
+  const columns = [
+    {
+      title: 'Điểm',
+      dataIndex: 'points',
+      key: 'points',
+      className: 'text-gray-300',
+      width: 120,
+      fixed: 'left',
+      render: (points) => (
+        <Tag color={points >= 0 ? 'green' : 'red'}>
+          {points >= 0 ? `+${points}` : points}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Lý do',
+      dataIndex: 'reason',
+      key: 'reason',
+      className: 'text-gray-300',
+      ellipsis: {
+        showTitle: false,
+      },
+      render: (text) => (
+        <span title={text} className="block truncate">
+          {text || '--'}
+        </span>
+      ),
+    },
+    {
+      title: 'Ngày tạo',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      className: 'text-gray-400',
+      width: 180,
+      render: (date) =>
+        date ? dayjs(date).format('DD/MM/YYYY HH:mm') : '--',
+    },
+    {
+      title: 'Thao tác',
+      key: 'action',
+      width: 120,
+      fixed: 'right',
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => handleEditPenalty(record)}
+            className="!text-blue-400 hover:!text-blue-300"
+            size="small"
+            title="Sửa"
+          />
+          <Button
+            type="link"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => setDeleteConfirmModal({ open: true, penalty: record })}
+            className="!text-red-400 hover:!text-red-300"
+            size="small"
+            title="Xóa"
+          />
+        </Space>
+      ),
+    },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="p-4">
+        <div className="flex items-center justify-center py-4">
+          <Spin size="small" />
+          <span className="ml-2 text-gray-400">Đang tải vi phạm...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (penaltiesArray.length === 0 && !isLoading) {
+    return (
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h5 className="text-white font-medium">Danh sách vi phạm</h5>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleOpenModal}
+            className="bg-primary hover:bg-primary/90"
+          >
+            Thêm vi phạm
+          </Button>
+        </div>
+        <Empty description="Không có vi phạm nào" />
+        {/* Modal tạo vi phạm */}
+        <Modal
+          title="Thêm vi phạm cho đội"
+          open={createPenaltyModal}
+          onCancel={() => {
+            setCreatePenaltyModal(false);
+            form.resetFields();
+          }}
+          footer={null}
+          width={600}
+          centered
+        >
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleCreatePenalty}
+            initialValues={{
+              type: 'Penalty',
+              points: 0,
+            }}
+          >
+            <Form.Item
+              name="type"
+              label="Loại"
+              initialValue="Penalty"
+            >
+              <Input
+                value="Vi phạm (Penalty)"
+                disabled
+                className="bg-white/5"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="points"
+              label="Điểm"
+              rules={[
+                { required: true, message: 'Vui lòng nhập điểm!' },
+                { type: 'number', message: 'Điểm phải là số!' },
+              ]}
+            >
+              <InputNumber
+                style={{ width: '100%' }}
+                placeholder="Nhập điểm"
+                min={-1000}
+                max={1000}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="reason"
+              label="Lý do"
+              rules={[{ required: true, message: 'Vui lòng nhập lý do!' }]}
+            >
+              <Input.TextArea
+                rows={4}
+                placeholder="Nhập lý do vi phạm/thưởng..."
+              />
+            </Form.Item>
+
+            <Form.Item className="mb-0">
+              <div className="flex justify-end gap-2">
+                <Button onClick={() => {
+                  setCreatePenaltyModal(false);
+                  form.resetFields();
+                }}>
+                  Hủy
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={createPenalty.isPending}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Tạo vi phạm
+                </Button>
+              </div>
+            </Form.Item>
+          </Form>
+        </Modal>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h5 className="text-white font-medium">Danh sách vi phạm</h5>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={handleOpenModal}
+          className="bg-primary hover:bg-primary/90"
+        >
+          Thêm vi phạm
+        </Button>
+      </div>
+      <div className="w-full">
+        <Table
+          columns={columns}
+          dataSource={penaltiesArray}
+          rowKey="adjustmentId"
+          pagination={false}
+          scroll={{ x: 'max-content' }}
+          locale={{
+            emptyText: <Empty description="Không có vi phạm" />,
+          }}
+          className="[&_.ant-table]:bg-transparent [&_th]:!bg-white/5 [&_th]:!text-white [&_td]:!text-gray-300"
+        />
+      </div>
+
+      {/* Modal tạo vi phạm */}
+      <Modal
+        title="Thêm vi phạm cho đội"
+        open={createPenaltyModal}
+        onCancel={() => {
+          setCreatePenaltyModal(false);
+          form.resetFields();
+        }}
+        footer={null}
+        width={600}
+        centered
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleCreatePenalty}
+          initialValues={{
+            type: 'Penalty',
+            points: 0,
+          }}
+        >
+          <Form.Item
+            name="type"
+            label="Loại"
+            rules={[{ required: true, message: 'Vui lòng chọn loại!' }]}
+          >
+            <Select placeholder="Chọn loại">
+              <Select.Option value="Penalty">Vi phạm (Penalty)</Select.Option>
+              <Select.Option value="Bonus">Thưởng (Bonus)</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="points"
+            label="Điểm"
+            rules={[
+              { required: true, message: 'Vui lòng nhập điểm!' },
+              { type: 'number', message: 'Điểm phải là số!' },
+            ]}
+          >
+            <InputNumber
+              style={{ width: '100%' }}
+              placeholder="Nhập điểm"
+              min={-1000}
+              max={1000}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="reason"
+            label="Lý do"
+            rules={[{ required: true, message: 'Vui lòng nhập lý do!' }]}
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="Nhập lý do vi phạm/thưởng..."
+            />
+          </Form.Item>
+
+          <Form.Item className="mb-0">
+            <div className="flex justify-end gap-2">
+              <Button onClick={() => {
+                setCreatePenaltyModal(false);
+                form.resetFields();
+              }}>
+                Hủy
+              </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={createPenalty.isPending}
+                className="bg-primary hover:bg-primary/90"
+              >
+                Tạo vi phạm
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal sửa vi phạm */}
+      <Modal
+        title="Sửa vi phạm"
+        open={editPenaltyModal.open}
+        onCancel={() => {
+          setEditPenaltyModal({ open: false, penalty: null });
+          editForm.resetFields();
+        }}
+        footer={null}
+        width={600}
+        centered
+      >
+        <Form
+          form={editForm}
+          layout="vertical"
+          onFinish={handleUpdatePenalty}
+        >
+          <Form.Item
+            name="points"
+            label="Điểm"
+            rules={[
+              { required: true, message: 'Vui lòng nhập điểm!' },
+              { type: 'number', message: 'Điểm phải là số!' },
+            ]}
+          >
+            <InputNumber
+              style={{ width: '100%' }}
+              placeholder="Nhập điểm"
+              min={-1000}
+              max={1000}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="reason"
+            label="Lý do"
+            rules={[{ required: true, message: 'Vui lòng nhập lý do!' }]}
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="Nhập lý do vi phạm/thưởng..."
+            />
+          </Form.Item>
+
+          <Form.Item className="mb-0">
+            <div className="flex justify-end gap-2">
+              <Button onClick={() => {
+                setEditPenaltyModal({ open: false, penalty: null });
+                editForm.resetFields();
+              }}>
+                Hủy
+              </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={updatePenalty.isPending}
+                className="bg-primary hover:bg-primary/90"
+              >
+                Cập nhật
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal xác nhận xóa */}
+      <Modal
+        title="Xác nhận xóa"
+        open={deleteConfirmModal.open}
+        onOk={handleDeletePenalty}
+        onCancel={() => setDeleteConfirmModal({ open: false, penalty: null })}
+        okText="Xóa"
+        cancelText="Hủy"
+        okButtonProps={{ danger: true }}
+        confirmLoading={deletePenalty.isPending}
+        centered
+      >
+        <div className="flex items-start gap-3">
+          <ExclamationCircleOutlined className="text-yellow-500 text-xl mt-1" />
+          <span>
+            Bạn có chắc chắn muốn xóa vi phạm này không? Hành động này không thể hoàn tác.
+          </span>
+        </div>
+      </Modal>
+    </div>
   );
 };
 

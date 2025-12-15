@@ -102,6 +102,7 @@ const EntityTable = ({
   handlers = {},
   emptyText = 'Không có dữ liệu',
   dateFormatter,
+  expandable,
 }) => {
   const {
     columns = [],
@@ -115,21 +116,24 @@ const EntityTable = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
 
+  // Đảm bảo data luôn là array
+  const dataArray = Array.isArray(data) ? data : [];
+
   // Reset về trang 1 nếu trang hiện tại vượt quá số trang có thể
   useEffect(() => {
-    const totalPages = Math.ceil((data?.length || 0) / pageSize);
+    const totalPages = Math.ceil((dataArray?.length || 0) / pageSize);
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
     }
-  }, [data, pageSize, currentPage]);
+  }, [dataArray, pageSize, currentPage]);
 
   // Tính toán dữ liệu phân trang
   const paginatedData = useMemo(() => {
-    if (!data || data.length === 0) return [];
+    if (!dataArray || dataArray.length === 0) return [];
     const start = (currentPage - 1) * pageSize;
     const end = start + pageSize;
-    return data.slice(start, end);
-  }, [data, currentPage, pageSize]);
+    return dataArray.slice(start, end);
+  }, [dataArray, currentPage, pageSize]);
 
   const columnsWithAutoScroll = (columns || []).map((col) => {
     if (col?.dataIndex && (paginatedData?.length || 0) > 0) {
@@ -315,10 +319,11 @@ const EntityTable = ({
         loading={loading}
         locale={{ emptyText: loading ? ' ' : emptyText }}
         rowKey={rowKey}
+        expandable={expandable}
         pagination={{
           current: currentPage,
           pageSize: pageSize,
-          total: data.length,
+          total: dataArray.length,
           showSizeChanger: true,
           showTotal: (total, range) =>
             `${range[0]}-${range[1]} của ${total} mục`,
@@ -334,7 +339,7 @@ const EntityTable = ({
           // className: '[&_.ant-pagination-item]:bg-white/5 [&_.ant-pagination-item]:border-white/10 [&_.ant-pagination-item]:text-white [&_.ant-pagination-item-active]:!bg-primary [&_.ant-pagination-item-active]:!text-black [&_.ant-pagination-item-active]:!border-primary [&_.ant-pagination-prev]:text-white [&_.ant-pagination-next]:text-white [&_.ant-pagination-options]:text-white [&_.ant-select-selector]:bg-white/5 [&_.ant-select-selector]:border-white/10 [&_.ant-select-selector]:text-white',
         }}
         scroll={{ x: 'max-content' }}
-        className="[&_.ant-table]:bg-transparent [&_th]:!bg-white/5 [&_th]:!text-white [&_td]:!text-gray-300 [&_td]:border-white/10 [&_th]:border-white/10 [&_tr:hover_td]:!bg-white/[0.03] [&_.ant-table-tbody_tr]:transition-colors"
+        className="[&_.ant-table]:bg-transparent [&_th]:!bg-white/5 [&_th]:!text-white [&_td]:!text-gray-300 [&_td]:border-white/10 [&_th]:border-white/10 [&_tr:hover_td]:!bg-white/[0.03] [&_.ant-table-tbody_tr]:transition-colors [&_.ant-table-expand-icon]:!text-white [&_.ant-table-expand-icon:hover]:!text-white [&_.ant-table-row-expand-icon]:!text-white [&_.ant-table-row-expand-icon:hover]:!text-white [&_.ant-table-expand-icon-cell]:!text-white [&_.ant-table-expand-icon-cell:hover]:!text-white [&_.ant-table-expand-icon]:!opacity-100"
       />
     </>
   );
