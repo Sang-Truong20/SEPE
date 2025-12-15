@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Trophy, Users, TrendingUp, Award, Medal, Crown } from 'lucide-react';
 import { useGroups } from '../../../hooks/admin/groups/useGroups.js';
-import { Spin } from 'antd';
+import { Spin, Button } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 // Mock hooks - replace with your actual hooks
 // const useGroups = () => ({
@@ -48,6 +50,7 @@ import { Spin } from 'antd';
 //   })
 
 const HackathonLeaderboard = () => {
+  const navigate = useNavigate();
   const [hackathonId, setHackathonId] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState('all');
   const { fetchGroupsByHackathon, fetchMultipleGroupTeams } = useGroups();
@@ -171,6 +174,14 @@ const HackathonLeaderboard = () => {
       {/* Header */}
       <div className="bg-dark-secondary/50 backdrop-blur-sm border-b border-primary/20 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <Button
+            onClick={() => navigate(-1)}
+            type="link"
+            icon={<ArrowLeftOutlined />}
+            className="mb-4 !text-light-primary hover:!text-primary"
+          >
+            Quay lại
+          </Button>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="bg-gradient-to-br from-primary to-secondary p-3 rounded-xl shadow-lg shadow-primary/20">

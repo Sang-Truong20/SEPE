@@ -20,7 +20,7 @@ const JudgeRoutes = () => {
 
   // Redirect to score page if navigating to /judge directly
   if (isJudge && location.pathname === PATH_NAME.JUDGE) {
-    return <Navigate to={`${PATH_NAME.JUDGE}/score`} replace />;
+    return <Navigate to={`${PATH_NAME.JUDGE}/score/hackathon`} replace />;
   }
 
   return isJudge ? (

@@ -16,12 +16,14 @@ import EntityTable from '../../../components/ui/EntityTable.jsx';
 import { useChallenges } from '../../../hooks/admin/challanges/useChallenges.js';
 import { useUsers } from '../../../hooks/admin/users/useUsers.js';
 import { useHackathons } from '../../../hooks/admin/hackathons/useHackathons.js';
+import { useUserData } from '../../../hooks/useUserData.js';
 
 const Challenges = () => {
   const navigate = useNavigate();
   const { fetchChallenges, deleteChallenge, updateChallengeStatus } = useChallenges();
   const { fetchUsers,  } = useUsers();
   const { fetchHackathons  } = useHackathons();
+  const { userInfo } = useUserData();
   const { data: challengesData = [], isLoading, error } = fetchChallenges;
   const { data: userData = [] } = fetchUsers;
   const { data: hackData = [] } = fetchHackathons;
@@ -34,6 +36,9 @@ const Challenges = () => {
   });
 
   const [statusForm] = Form.useForm();
+
+  // Kiểm tra role partner
+  const isPartner = userInfo?.roleName?.toLowerCase() === 'partner';
 
   const statusMap = [
     {key: 'Complete', title: 'Hoàn thành'},
@@ -114,17 +119,19 @@ const Challenges = () => {
         view: true,
         edit: true,
         delete: true,
-        extra: [
-          {
-            key: 'update-status',
-            icon: <ArrowUpOutlined />,
-            tooltip: 'Cập nhật trạng thái',
-            className: 'text-yellow-500 hover:text-yellow-400',
-          },
-        ],
+        extra: isPartner
+          ? [] // Ẩn nút cập nhật trạng thái đối với role partner
+          : [
+              {
+                key: 'update-status',
+                icon: <ArrowUpOutlined />,
+                tooltip: 'Cập nhật trạng thái',
+                className: 'text-yellow-500 hover:text-yellow-400',
+              },
+            ],
       },
     }),
-    [navigate],
+    [navigate, isPartner],
   );
 
   const handleDeleteConfirm = (id) => {

@@ -52,6 +52,8 @@ const PSHackathons = lazy(() => import('../pages/partner/score/hackathon'));
 const PSHackathonPhases = lazy(() => import('../pages/partner/score/hackathon-phase'));
 const PScore = lazy(() => import('../pages/partner/score'));
 import PScoreDetail from '../pages/partner/score/detail/index.jsx';
+const PPrizes = lazy(() => import('../pages/partner/prizes'));
+import PPrizeDetail from '../pages/partner/prizes/prize-detail/index.jsx';
 
 import JudgeRoutes from './JudgeRoutes.jsx';
 const JHackathons = lazy(() => import('../pages/judge/hackathon'));
@@ -321,6 +323,13 @@ const router = createBrowserRouter([
                 element: withSuspense(PSHackathons)
               },
               { path: ':id', element: withSuspense(PScoreDetail) },
+            ],
+          },
+          {
+            path: 'prizes',
+            children: [
+              { index: true, element: withSuspense(PPrizes) },
+              { path: ':id', element: withSuspense(PPrizeDetail) },
             ],
           },
         ],

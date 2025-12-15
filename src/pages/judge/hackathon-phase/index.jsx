@@ -9,12 +9,15 @@ import dayjs from 'dayjs';
 import { PATH_NAME } from '../../../constants/index.js';
 import { useHackathonPhases } from '../../../hooks/admin/hackathon-phases/useHackathonPhases.js';
 import { useHackathons } from '../../../hooks/admin/hackathons/useHackathons.js';
+import { useUserData } from '../../../hooks/useUserData.js';
 import EntityTable from '../../../components/ui/EntityTable.jsx';
 
 const HackathonPhases = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const hackathonId = searchParams.get('hackathonId');
+  const { userInfo } = useUserData();
+  const isJudge = userInfo?.roleName?.toLowerCase() === 'judge';
 
   const { fetchHackathons } = useHackathons();
   const { data: hackathons = [], isLoading: hackathonsLoading } =
@@ -129,28 +132,30 @@ const HackathonPhases = () => {
             Quay lại
           </Button>
 
-          <div className="mb-4">
-            <label className="block text-gray-300 text-sm font-medium mb-2">
-              Chọn Hackathon
-            </label>
-            <Select
-              placeholder="Chọn hackathon để xem phases"
-              value={hackathonId}
-              onChange={handleHackathonChange}
-              loading={hackathonsLoading}
-              className="w-full max-w-md"
-              style={{ backgroundColor: '#1f1f1f' }}
-            >
-              {hackathons.map((hackathon) => (
-                <Select.Option
-                  key={hackathon.hackathonId}
-                  value={hackathon.hackathonId.toString()}
-                >
-                  {hackathon.name} ({hackathon.seasonName})
-                </Select.Option>
-              ))}
-            </Select>
-          </div>
+          {!isJudge && (
+            <div className="mb-4">
+              <label className="block text-gray-300 text-sm font-medium mb-2">
+                Chọn Hackathon
+              </label>
+              <Select
+                placeholder="Chọn hackathon để xem phases"
+                value={hackathonId}
+                onChange={handleHackathonChange}
+                loading={hackathonsLoading}
+                className="w-full max-w-md"
+                style={{ backgroundColor: '#1f1f1f' }}
+              >
+                {hackathons.map((hackathon) => (
+                  <Select.Option
+                    key={hackathon.hackathonId}
+                    value={hackathon.hackathonId.toString()}
+                  >
+                    {hackathon.name} ({hackathon.seasonName})
+                  </Select.Option>
+                ))}
+              </Select>
+            </div>
+          )}
 
           {selectedHackathon && (
             <Card
