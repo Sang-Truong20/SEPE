@@ -265,7 +265,6 @@ const TeamDetail = () => {
         showEdit={false}
       >
         {/* Penalties Section */}
-        {penaltiesList.length > 0 && (
           <Card className="mt-16 border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm">
             <EntityTable
               model={penaltyTableModel}
@@ -275,7 +274,6 @@ const TeamDetail = () => {
               emptyText="Không có thưởng/phạt nào cho team này"
             />
           </Card>
-        )}
       </EntityDetail>
       {/* Penalty Modal - Tạo/Sửa */}
       <Modal

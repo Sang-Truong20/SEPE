@@ -2,14 +2,20 @@ import { Spin, ConfigProvider, theme } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { useHackathons } from '../../../../hooks/admin/hackathons/useHackathons.js';
+import { useScoreHistories } from '../../../../hooks/admin/scoreHistory/useScoreHistory.js';
 import { PATH_NAME } from '../../../../constants/index.js';
 import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
+import ScoreHistoryCard from '../../../../components/features/score-history/ScoreHistoryCard.jsx';
 
 const HackathonDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { fetchHackathon } = useHackathons();
-  const { data: hackathon, isLoading, error } = fetchHackathon(id);
+  const { data: hackathon, isLoading } = fetchHackathon(id);
+
+  // Fetch score histories
+  const { fetchScoreHistoriesByHackathon } = useScoreHistories();
+  const { data: scoreHistories, isLoading: isLoadingHistory } = fetchScoreHistoriesByHackathon(id);
 
   const model = {
     modelName: 'Cuộc thi',
@@ -96,14 +102,24 @@ const HackathonDetail = () => {
         },
       }}
     >
-      <EntityDetail
-        entityName="Hackathon"
-        model={model}
-        data={hackathon || {}}
-        onBack={() => navigate(PATH_NAME.PARTNER_HACKATHONS)}
-        showEdit={false}
-        valueRenders={valueRenders}
-      />
+      <div className="p-6 space-y-6">
+        <EntityDetail
+          entityName="Hackathon"
+          model={model}
+          data={hackathon || {}}
+          onBack={() => navigate(PATH_NAME.PARTNER_HACKATHONS)}
+          showEdit={false}
+          valueRenders={valueRenders}
+        />
+
+        <ScoreHistoryCard
+          histories={scoreHistories || []}
+          loading={isLoadingHistory}
+          title="Lịch sử chấm điểm Hackathon"
+          showSubmissionInfo={true}
+          showJudgeInfo={true}
+        />
+      </div>
     </ConfigProvider>
   );
 };

@@ -38,6 +38,8 @@ const PATH_NAME = {
   JUDGE_TEAM_SCORES: '/judge/score',
   JUDGE_CHALLENGES: '/judge/challenges',
   JUDGE_HACKATHON_PHASES: '/judge/score/phase',
+  JUDGE_HACKATHONS: '/judge/hackathons',
+  JUDGE_SCORING_HISTORY: '/judge/scoring-history',
   CHAPTER: '/chapter',
   CHAPTER_DASHBOARD: '/chapter/dashboard',
   CHAPTER_VERIFY_STUDENTS: '/chapter/verify-students',
