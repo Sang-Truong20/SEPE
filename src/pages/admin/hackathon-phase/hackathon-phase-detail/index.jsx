@@ -28,7 +28,6 @@ import {
   SyncOutlined,
   EditOutlined,
   DeleteOutlined,
-  ArrowLeftOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useChallenges } from '../../../../hooks/admin/challanges/useChallenges.js';
