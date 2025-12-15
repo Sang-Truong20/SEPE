@@ -73,6 +73,7 @@ const Hackathons = () => {
               <Button
                 size="small"
                 className="text-xs bg-yellow-600/30 text-yellow-300 border-yellow-600/50 hover:bg-yellow-600/50"
+                onClick={() => navigate(`${PATH_NAME.PARTNER_PRIZES}?hackathonId=${record.hackathonId}`)}
               >
                 Giải thưởng
               </Button>

@@ -33,6 +33,7 @@ const PATH_NAME = {
   PARTNER_HACKATHON_PHASES: '/partner/hackathons/hackathon-phases',
   PARTNER_CHALLENGES: '/partner/challenges',
   PARTNER_TEAM_SCORES: '/partner/score',
+  PARTNER_PRIZES: '/partner/prizes',
   JUDGE: '/judge',
   JUDGE_TEAM_SCORES: '/judge/score',
   JUDGE_CHALLENGES: '/judge/challenges',

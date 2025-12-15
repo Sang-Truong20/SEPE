@@ -16,6 +16,7 @@ export const judgeAssignmentQueryKeys = {
   all: ['JudgeAssignments'],
   lists: () => [...judgeAssignmentQueryKeys.all, 'list'],
   byHackathon: (hackathonId) => [...judgeAssignmentQueryKeys.lists(), 'hackathon', hackathonId],
+  byPhase: (phaseId) => [...judgeAssignmentQueryKeys.lists(), 'phase', phaseId],
   myAssignments: () => [...judgeAssignmentQueryKeys.lists(), 'my-assignments'],
 };
 
@@ -87,6 +88,25 @@ export const useJudgeAssignment = () => {
     });
 
   /**
+   * API: GET /api/JudgeAssignment/phase/{phaseId}
+   * method: GET
+   * path: /api/JudgeAssignment/phase/{phaseId}
+   * request: path param phaseId: integer
+   * response: 200 OK -> array of judge assignment objects for the phase
+   */
+  const fetchJudgeAssignmentsByPhase = (phaseId) =>
+    useQuery({
+      queryKey: judgeAssignmentQueryKeys.byPhase(phaseId ? parseInt(phaseId) : phaseId),
+      queryFn: async () => {
+        const response = await axiosClient.get(
+          `/JudgeAssignment/phase/${phaseId}`,
+        );
+        return response.data;
+      },
+      enabled: !!phaseId,
+    });
+
+  /**
    * API: POST /api/JudgeAssignment/Adminassignjugde
    * method: POST
    * path: /api/JudgeAssignment/Adminassignjugde  (note: spelling "assignjugde" as in Swagger)
@@ -101,10 +121,19 @@ export const useJudgeAssignment = () => {
     mutationFn: (payload) =>
       axiosClient.post('/JudgeAssignment/Adminassignjugde', payload),
     onSuccess: (_, variables) => {
-      // Invalidate và refetch danh sách theo hackathonId
-      queryClient.invalidateQueries({
-        queryKey: judgeAssignmentQueryKeys.byHackathon(variables.hackathonId)
-      });
+      // Invalidate và refetch danh sách theo hackathonId và phaseId
+      if (variables.hackathonId) {
+        queryClient.invalidateQueries({
+          queryKey: judgeAssignmentQueryKeys.byHackathon(variables.hackathonId)
+        });
+      }
+      if (variables.phaseId) {
+        // Normalize phaseId về số để đảm bảo khớp với query key
+        const phaseId = parseInt(variables.phaseId);
+        queryClient.invalidateQueries({
+          queryKey: judgeAssignmentQueryKeys.byPhase(phaseId)
+        });
+      }
       message.success('Phân công giám khảo thành công!');
     },
     onError: (error) => {
@@ -121,11 +150,17 @@ export const useJudgeAssignment = () => {
    * response: 200 OK
    */
   const blockJudgeAssignment = useMutation({
-    mutationFn: (assignmentId) =>
+    mutationFn: ({ assignmentId, phaseId }) =>
       axiosClient.put(`/JudgeAssignment/block/${assignmentId}`),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       // Invalidate tất cả queries để refetch
       queryClient.invalidateQueries({ queryKey: judgeAssignmentQueryKeys.all });
+      // Invalidate cụ thể query theo phaseId nếu có
+      if (variables.phaseId) {
+        queryClient.invalidateQueries({
+          queryKey: judgeAssignmentQueryKeys.byPhase(variables.phaseId)
+        });
+      }
       message.success('Đã khóa phân công giám khảo!');
     },
     onError: (error) => {
@@ -142,11 +177,17 @@ export const useJudgeAssignment = () => {
    * response: 200 OK
    */
   const reactivateJudgeAssignment = useMutation({
-    mutationFn: (assignmentId) =>
+    mutationFn: ({ assignmentId, phaseId }) =>
       axiosClient.put(`/JudgeAssignment/reactivate/${assignmentId}`),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       // Invalidate tất cả queries để refetch
       queryClient.invalidateQueries({ queryKey: judgeAssignmentQueryKeys.all });
+      // Invalidate cụ thể query theo phaseId nếu có
+      if (variables.phaseId) {
+        queryClient.invalidateQueries({
+          queryKey: judgeAssignmentQueryKeys.byPhase(variables.phaseId)
+        });
+      }
       message.success('Khôi phục phân công giám khảo thành công!');
     },
     onError: (error) => {
@@ -158,6 +199,7 @@ export const useJudgeAssignment = () => {
   return {
     fetchMyHackathonAssignments,
     fetchJudgeAssignmentsByHackathon,
+    fetchJudgeAssignmentsByPhase,
     createJudgeAssignment,
     blockJudgeAssignment,
     reactivateJudgeAssignment,

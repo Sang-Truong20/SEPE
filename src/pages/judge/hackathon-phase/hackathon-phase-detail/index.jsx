@@ -23,7 +23,7 @@ const HackathonPhaseDetail = () => {
   const { fetchTracks } = useTracks();
   const { fetchGroupsByHackathon } = useGroups();
   const { fetchCriteria } = useCriteria();
-  const { fetchJudgeAssignmentsByHackathon } = useJudgeAssignment();
+  const { fetchJudgeAssignmentsByPhase } = useJudgeAssignment();
   const { fetchFinalQualified } = useQualifications();
 
   const {
@@ -38,7 +38,7 @@ const HackathonPhaseDetail = () => {
   const { data: phaseCriteria = [], isLoading: criteriaLoading } =
     fetchCriteria(id);
   const { data: allAssignments = [], isLoading: assignmentsLoading } =
-    fetchJudgeAssignmentsByHackathon(hackathonId);
+    fetchJudgeAssignmentsByPhase(id);
   const {
     data: qualifiedTeams = [],
     isLoading: qualifiedLoading,
@@ -61,6 +61,19 @@ const HackathonPhaseDetail = () => {
     const firstPhase = sortedByStart[0];
     return firstPhase?.phaseId === phase?.phaseId;
   }, [phases, phase]);
+
+  // Xác định phase 2 (phase thứ hai theo startDate)
+  const isSecondPhase = useMemo(() => {
+    if (!phases?.length || !phase?.startDate) return false;
+    const sortedByStart = [...phases].sort(
+      (a, b) => dayjs(a.startDate).valueOf() - dayjs(b.startDate).valueOf(),
+    );
+    // Check if current phase is the second one
+    return phases.length > 1 && sortedByStart[1]?.phaseId === phase?.phaseId;
+  }, [phases, phase]);
+
+  // Phase 1 hoặc Phase 2
+  const isFirstOrSecondPhase = isFirstPhase || isSecondPhase;
 
   const isSinglePhase = phases?.length === 1;
 
@@ -227,20 +240,20 @@ const HackathonPhaseDetail = () => {
           className: 'font-medium',
           type: 'text',
         },
-        {
-          title: 'Hạng mục',
-          dataIndex: 'trackId',
-          key: 'trackId',
-          className: 'text-gray-400',
-          type: 'text',
-          render: (trackId) => {
-            if (!trackId) return 'Tất cả hạng mục';
-            const track = phaseTracks.find(
-              (t) => String(t.trackId) === String(trackId),
-            );
-            return track?.name || 'N/A';
-          },
-        },
+        // {
+        //   title: 'Hạng mục',
+        //   dataIndex: 'trackId',
+        //   key: 'trackId',
+        //   className: 'text-gray-400',
+        //   type: 'text',
+        //   render: (trackId) => {
+        //     if (!trackId) return 'Tất cả hạng mục';
+        //     const track = phaseTracks.find(
+        //       (t) => String(t.trackId) === String(trackId),
+        //     );
+        //     return track?.name || 'N/A';
+        //   },
+        // },
         {
           title: 'Trọng số',
           dataIndex: 'weight',
@@ -383,8 +396,8 @@ const HackathonPhaseDetail = () => {
           </Card>
         )}
 
-        {/* Judge Assignments Section - Chỉ hiển thị ở phase 1 */}
-        {hackathonId && isFirstPhase && (
+        {/* Judge Assignments Section - Hiển thị ở phase 1 và phase 2 */}
+        {hackathonId && isFirstOrSecondPhase && (
           <Card className="mt-6 border border-white/10 bg-white/5 rounded-xl">
             <EntityTable
               model={judgeAssignmentTableModel}
@@ -399,8 +412,8 @@ const HackathonPhaseDetail = () => {
           </Card>
         )}
 
-        {/* Criteria Section - Chỉ hiển thị ở phase 1 */}
-        {hackathonId && isFirstPhase && (
+        {/* Criteria Section - Hiển thị ở phase 1 và phase 2 */}
+        {hackathonId && isFirstOrSecondPhase && (
           <Card className="mt-6 border border-white/10 bg-white/5 rounded-xl">
             <EntityTable
               model={criteriaTableModel}
