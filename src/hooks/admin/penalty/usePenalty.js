@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { message } from "antd";
-import axiosClient from "../../../configs/axiosClient";
-import useMessage from "../../util/getError";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { message } from 'antd';
+import axiosClient from '../../../configs/axiosClient';
+import useMessage from '../../util/getError';
 
 /**
  * API Group: Penalty (Penalties & Bonuses)
@@ -18,7 +18,12 @@ export const penaltyQueryKeys = {
   lists: () => [...penaltyQueryKeys.all, 'list'],
   listAll: () => [...penaltyQueryKeys.lists(), 'all'],
   listPhase: (phaseId) => [...penaltyQueryKeys.lists(), 'phase', phaseId],
-  listTeamPhase: (teamId, phaseId) => [...penaltyQueryKeys.lists(), 'team-phase', teamId, phaseId],
+  listTeamPhase: (teamId, phaseId) => [
+    ...penaltyQueryKeys.lists(),
+    'team-phase',
+    teamId,
+    phaseId,
+  ],
   details: () => [...penaltyQueryKeys.all, 'detail'],
   detail: (id) => [...penaltyQueryKeys.details(), id],
 };
@@ -128,8 +133,21 @@ export const usePenalty = () => {
    */
   const createPenalty = useMutation({
     mutationFn: (payload) => axiosClient.post('/Penalty', payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: penaltyQueryKeys.all });
+    onSuccess: (data, variables) => {
+      if (variables.teamId && variables.phaseId) {
+        queryClient.invalidateQueries({
+          queryKey: penaltyQueryKeys.listTeamPhase(
+            variables.teamId,
+            variables.phaseId,
+          ),
+        });
+      }
+
+      if (variables.phaseId) {
+        queryClient.invalidateQueries({
+          queryKey: penaltyQueryKeys.listPhase(variables.phaseId),
+        });
+      }
       message.success('Tạo điểm thưởng/phạt thành công!');
     },
     onError: (error) => {
@@ -147,8 +165,17 @@ export const usePenalty = () => {
    */
   const updatePenalty = useMutation({
     mutationFn: ({ id, payload }) => axiosClient.put(`/Penalty/${id}`, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: penaltyQueryKeys.all });
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: penaltyQueryKeys.detail(variables.id),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: [...penaltyQueryKeys.lists(), 'team-phase'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [...penaltyQueryKeys.lists(), 'phase'],
+      });
       message.success('Cập nhật điểm thưởng/phạt thành công!');
     },
     onError: (error) => {
@@ -166,8 +193,17 @@ export const usePenalty = () => {
    */
   const deletePenalty = useMutation({
     mutationFn: (id) => axiosClient.delete(`/Penalty/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: penaltyQueryKeys.all });
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: penaltyQueryKeys.detail(variables),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: [...penaltyQueryKeys.lists(), 'team-phase'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [...penaltyQueryKeys.lists(), 'phase'],
+      });
       message.success('Xóa điểm thưởng/phạt thành công!');
     },
     onError: (error) => {
