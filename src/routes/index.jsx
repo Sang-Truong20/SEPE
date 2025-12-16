@@ -58,10 +58,12 @@ import PPrizeDetail from '../pages/partner/prizes/prize-detail/index.jsx';
 import JudgeRoutes from './JudgeRoutes.jsx';
 const JHackathons = lazy(() => import('../pages/judge/hackathon'));
 const JHackathonPhases = lazy(() => import('../pages/judge/hackathon-phase'));
+const JHackathonDetail = lazy(() => import('../pages/judge/hackathon/detail/index.jsx'));
 import JHackathonPhaseDetail from '../pages/judge/hackathon-phase/hackathon-phase-detail';
 const JScore = lazy(() => import('../pages/judge/score'));
 import JScoreDetail from '../pages/judge/score/detail/index.jsx';
 import JChallengeDetail from '../pages/judge/challenge/detail/index.jsx';
+const JScoringHistoryPage = lazy(() => import('../pages/judge/scoring-history/index.jsx'));
 
 const StudentDashboardPage = lazy(() => import('../pages/student/dashboard'));
 const StudentHackathonsPage = lazy(() => import('../pages/student/hackathons'));
@@ -342,6 +344,17 @@ const router = createBrowserRouter([
       {
         path: PATH_NAME.JUDGE,
         children: [
+          {
+            path: 'hackathons',
+            children: [
+              { index: true, element: withSuspense(JHackathons) },
+              { path: ':id', element: withSuspense(() => <JHackathonDetail />) },
+            ],
+          },
+          {
+            path: 'scoring-history',
+            element: withSuspense(() => <JScoringHistoryPage />),
+          },
           {
             path: 'score',
             children: [

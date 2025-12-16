@@ -4,19 +4,16 @@ import axiosClient from "../../../configs/axiosClient";
 import useMessage from "../../util/getError";
 
 /**
- * API: GET /api/Appeal
- * method: GET
- * path: /api/Appeal
- * request: none
- * response: 200 OK -> array of Appeal objects (inferred)
- * AppealRequest/AppealUpdateDto fields (OpenAPI components, inferred based on standard patterns):
- *   - appealCode: string | null
- *   - title: string | null
- *   - description: string (date-time)
- *   - status: string (enum: Pending, Approved, Rejected)
- *   - teamId: integer (int32)
- *   - phaseId: integer (int32)
- * describe: Manage appeals (list, detail, create, update, delete)
+ * Appeal Management Hooks
+ * Dựa trên Swagger thực tế: https://www.sealfall25.somee.com/swagger/index.html
+ *
+ * Các endpoint chính:
+ * - GET /api/Appeal/all
+ * - GET /api/Appeal/team/{teamId}
+ * - GET /api/Appeal/phase/{phaseId}
+ * - GET /api/Appeal/{appealId}
+ * - POST /api/Appeal
+ * - PUT /api/Appeal/{appealId}/review
  */
 export const appealQueryKeys = {
   all: ['Appeals'],
@@ -24,13 +21,47 @@ export const appealQueryKeys = {
   list: (filters) => [...appealQueryKeys.lists(), filters],
   details: () => [...appealQueryKeys.all, 'detail'],
   detail: (id) => [...appealQueryKeys.details(), id],
+  byTeam: (teamId) => ['Appeals', 'byTeam', teamId],
+  byPhase: (phaseId) => ['Appeals', 'byPhase', phaseId],
 };
 
 export const useAppeal = () => {
   const queryClient = useQueryClient();
   const { getMessage } = useMessage();
 
-  // Fetch all appeals
+  /**
+   * API: GET /api/Appeal/all
+   * method: GET
+   * path: /api/Appeal/all
+   * request: none
+   * response: 200 OK
+   * example response:
+   * {
+   *   "success": true,
+   *   "message": "Appeals retrieved successfully",
+   *   "data": [
+   *     {
+   *       "appealId": 2,
+   *       "appealType": "Score",
+   *       "teamId": 8,
+   *       "teamName": "Fpt",
+   *       "adjustmentId": null,
+   *       "penaltyType": null,
+   *       "submissionId": 3,
+   *       "judgeId": 4,
+   *       "judgeName": "dovuongquang3002",
+   *       "message": "string",
+   *       "reason": "string",
+   *       "status": "Approved",
+   *       "adminResponse": "string",
+   *       "reviewedById": 2,
+   *       "reviewedByName": "quangtrung89000",
+   *       "createdAt": "2025-11-29T23:41:20.6765737",
+   *       "reviewedAt": "2025-11-30T00:17:49.2888989"
+   *     }
+   *   ]
+   * }
+   */
   const fetchAppeals = useQuery({
     queryKey: appealQueryKeys.lists(),
     queryFn: async () => {
@@ -46,27 +77,111 @@ export const useAppeal = () => {
    * request: path param id: integer
    * response: 200 OK -> Appeal object
    * example response:
-   * [
+   * {
+   *   "success": true,
+   *   "message": "Appeals retrieved successfully",
+   *   "data": [
    *     {
-   *     "appealId": 1,
-   *     "appealType": "Penalty",
-   *     "teamId": 8,
-   *     "teamName": "Fpt",
-   *     "adjustmentId": 1,
-   *     "submissionId": null,
-   *     "judgeName": null,
-   *     "message": "Cần đc check var",
-   *     "reason": "Khiếu nại penalty",
-   *     "status": "Approved",
-   *     "adminResponse": "ok",
-   *     "reviewedById": 2,
-   *     "reviewedByName": "quangtrung89000",
-   *     "createdAt": "2025-11-25T16:06:41.3308851",
-   *     "reviewedAt": "2025-11-30T00:01:12.6764836"
-   *   },
-   * ]
+   *       "appealId": 2,
+   *       "appealType": "Score",
+   *       "teamId": 8,
+   *       "teamName": "Fpt",
+   *       "adjustmentId": null,
+   *       "penaltyType": null,
+   *       "submissionId": 3,
+   *       "judgeId": 4,
+   *       "judgeName": "dovuongquang3002",
+   *       "message": "string",
+   *       "reason": "string",
+   *       "status": "Approved",
+   *       "adminResponse": "string",
+   *       "reviewedById": 2,
+   *       "reviewedByName": "quangtrung89000",
+   *       "createdAt": "2025-11-29T23:41:20.6765737",
+   *       "reviewedAt": "2025-11-30T00:17:49.2888989"
+   *     }
+   *   ]
+   * }
    */
-  // Fetch single appeal
+  const fetchAppealsByTeam = (teamId) =>
+    useQuery({
+      queryKey: appealQueryKeys.byTeam(teamId),
+      queryFn: async () => {
+        const response = await axiosClient.get(`/Appeal/team/${teamId}`);
+        return response.data;
+      },
+      enabled: !!teamId,
+    });
+
+  /**
+   * API: GET /api/Appeal/phase/{phaseId}
+   * method: GET
+   * path: /api/Appeal/phase/{phaseId}
+   * request: path param phaseId: integer
+   * response: 200 OK
+   * example response:
+   * {
+   *   "success": true,
+   *   "message": "Appeals retrieved successfully",
+   *   "data": [
+   *     {
+   *       "appealId": 2,
+   *       "appealType": "Score",
+   *       "teamId": 8,
+   *       "teamName": "Fpt",
+   *       "adjustmentId": null,
+   *       "penaltyType": null,
+   *       "submissionId": 3,
+   *       "judgeId": 4,
+   *       "judgeName": "dovuongquang3002",
+   *       "message": "string",
+   *       "reason": "string",
+   *       "status": "Approved",
+   *       "adminResponse": "string",
+   *       "reviewedById": 2,
+   *       "reviewedByName": "quangtrung89000",
+   *       "createdAt": "2025-11-29T23:41:20.6765737",
+   *       "reviewedAt": "2025-11-30T00:17:49.2888989"
+   *     }
+   *   ]
+   * }
+   */
+  const fetchAppealsByPhase = (phaseId) =>
+    useQuery({
+      queryKey: appealQueryKeys.byPhase(phaseId),
+      queryFn: async () => {
+        const response = await axiosClient.get(`/Appeal/phase/${phaseId}`);
+        return response.data;
+      },
+      enabled: !!phaseId,
+    });
+
+  /**
+   * API: GET /api/Appeal/{appealId}
+   * method: GET
+   * path: /api/Appeal/{appealId}
+   * request: path param appealId: integer
+   * response: 200 OK ->
+   * {
+   *   "appealId": 1,
+   *   "appealType": "Penalty",
+   *   "teamId": 8,
+   *   "teamName": "Fpt",
+   *   "adjustmentId": 1,
+   *   "penaltyType": "Penalty",
+   *   "submissionId": null,
+   *   "judgeId": null,
+   *   "judgeName": null,
+   *   "message": "Cần đc check var",
+   *   "reason": "Khiếu nại penalty",
+   *   "status": "Approved",
+   *   "adminResponse": "ok",
+   *   "reviewedById": 2,
+   *   "reviewedByName": "quangtrung89000",
+   *   "createdAt": "2025-11-25T16:06:41.3308851",
+   *   "reviewedAt": "2025-11-30T00:01:12.6764836"
+   * }
+   */
   const fetchAppeal = (id) =>
     useQuery({
       queryKey: appealQueryKeys.detail(id),
@@ -126,31 +241,12 @@ export const useAppeal = () => {
     },
   });
 
-  /**
-   * API: DELETE /api/Appeal/{id}
-   * method: DELETE
-   * path: /api/Appeal/{id}
-   * request: path param id: integer
-   * response: 200 OK
-   */
-  // Delete appeal
-  const deleteAppeal = useMutation({
-    mutationFn: (id) => axiosClient.delete(`/Appeal/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: appealQueryKeys.lists() });
-      message.success('Xóa khiếu nại thành công!');
-    },
-    onError: (error) => {
-      console.error('Error deleting appeal:', error);
-      message.error(getMessage(error));
-    },
-  });
-
   return {
     fetchAppeals,
+    fetchAppealsByTeam,
+    fetchAppealsByPhase,
     fetchAppeal,
     createAppeal,
     updateAppeal,
-    deleteAppeal,
   };
 };

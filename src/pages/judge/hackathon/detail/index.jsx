@@ -7,7 +7,7 @@ import { PATH_NAME } from '../../../../constants/index.js';
 import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
 import ScoreHistoryCard from '../../../../components/features/score-history/ScoreHistoryCard.jsx';
 
-const HackathonDetail = () => {
+const JudgeHackathonDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { fetchHackathon } = useHackathons();
@@ -18,7 +18,7 @@ const HackathonDetail = () => {
   const { data: scoreHistories, isLoading: isLoadingHistory } = fetchScoreHistoriesByHackathon(id);
 
   const model = {
-    modelName: 'Hackathons',
+    modelName: 'Cuộc thi',
     fields: [
       { key: 'Tên Hackathon', type: 'input', name: 'name' },
       { key: 'Mùa', type: 'input', name: 'season' },
@@ -64,7 +64,6 @@ const HackathonDetail = () => {
     endDate: (val) => <span className="text-gray-300">{val ? dayjs(val).format('DD/MM/YYYY') : '--'}</span>
   };
 
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -93,9 +92,8 @@ const HackathonDetail = () => {
           entityName="Hackathon"
           model={model}
           data={hackathon || {}}
-          onBack={() => navigate(PATH_NAME.ADMIN_HACKATHONS)}
-          onEdit={(rec) => navigate(`${PATH_NAME.ADMIN_HACKATHONS}/edit/${rec.hackathonId}`)}
-          showEdit
+          onBack={() => navigate(PATH_NAME.JUDGE)}
+          showEdit={false}
           dateFormatMap={'DD/MM/YYYY'}
           valueRenders={valueRenders}
         />
@@ -112,4 +110,5 @@ const HackathonDetail = () => {
   );
 };
 
-export default HackathonDetail;
+export default JudgeHackathonDetail;
+

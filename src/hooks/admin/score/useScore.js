@@ -94,11 +94,42 @@ export const useScores = () => {
     },
   });
 
+  /**
+   * API: POST /api/Score/re-score
+   * method: POST
+   * path: /api/Score/re-score
+   * request body:
+   *   - submissionId: integer
+   *   - criteriaScores: array of criteria score objects
+   *       - criterionId: integer
+   *       - score: number (double)
+   *       - comment: string | null
+   * response: 200 OK
+   * describe: Submit or create scores for a submission
+   * example payload:
+   * {
+   *   "submissionId": 10,
+   *   "criteriaScores": [ { "criterionId": 1, "score": 8.5, "comment": "Good" } ]
+   * }
+   */
+  const reScore = useMutation({
+    mutationFn: ({ appealId, payload }) =>
+      axiosClient.post(`/Score/re-score/${appealId}`, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: scoreQueryKeys.all });
+      message.success("Chấm lại điểm thành công!");
+    },
+    onError: (error) => {
+      console.error("Error re-scoring:", error);
+      message.error(getMessage(error));
+    },
+  });
+
   // 4. Cập nhật score cho submission (POST - dùng cùng API với create)
   /**
-   * API: POST /api/Score/submit
-   * method: POST
-   * path: /api/Score/submit
+   * API: PUT /api/Score/score/{scoreId}
+   * method: PUT
+   * path: /api/Score/score/{scoreId}
    * request body: Same shape as create
    *   - submissionId: integer
    *   - criteriaScores: array of criteria score objects
@@ -108,8 +139,9 @@ export const useScores = () => {
    * response: 200 OK
    * describe: Update existing scores for a submission (dùng POST giống create)
    */
-  const updateScore = useMutation({
-    mutationFn: (payload) => axiosClient.post("/Score/submit", payload),
+  const updateScoreById = useMutation({
+    mutationFn: ({ scoreId, payload }) =>
+      axiosClient.put(`/Score/scores/${scoreId}`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: scoreQueryKeys.all });
       message.success("Cập nhật điểm thành công!");
@@ -126,7 +158,8 @@ export const useScores = () => {
     fetchMyScoresGrouped,
 
     // Mutations
-    createScore,
-    updateScore,
+    createScore,        // Tạo mới hoặc overwrite toàn bộ scores cho submission
+    reScore,            // Chấm lại theo appeal (dùng appealId)
+    updateScoreById,    // Edit chi tiết một criterion score theo scoreId
   };
 };
