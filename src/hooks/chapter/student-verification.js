@@ -57,9 +57,16 @@ export const useRejectStudentVerification = () => {
 
   return useMutation({
     mutationKey: chapterStudentVerificationQueryKeys.reject(),
-    mutationFn: async ({ verificationId, reason }) => {
+    mutationFn: async (payload) => {
+      const verificationId =
+        typeof payload === 'object' && payload !== null
+          ? payload.verificationId
+          : payload;
+      const reason =
+        typeof payload === 'object' && payload !== null ? payload.reason || '' : '';
+
       const response = await axiosClient.put(`/StudentVerification/reject/${verificationId}`, {
-        reason: reason || '',
+        reason,
       });
       return response.data;
     },

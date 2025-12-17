@@ -1,23 +1,35 @@
 import {
-    ArrowUpOutlined,
-    BankOutlined,
-    ClockCircleOutlined,
-    EnvironmentOutlined,
-    EyeOutlined,
-    MailOutlined,
-    PhoneOutlined,
-    ReadOutlined,
-    TeamOutlined,
-    UserOutlined,
+  ArrowUpOutlined,
+  BankOutlined,
+  ClockCircleOutlined,
+  EnvironmentOutlined,
+  EyeOutlined,
+  FileTextOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  ReadOutlined,
+  TeamOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
-import { Badge, Button, Card, Progress } from 'antd';
+import { Badge, Button, Card, Progress, Skeleton, Tag, Empty } from 'antd';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axiosClient from '../../../configs/axiosClient';
 import { PATH_NAME } from '../../../constants';
 
 const ChapterDashboard = () => {
   const navigate = useNavigate();
+  const [pendingVerifications, setPendingVerifications] = useState([]);
+  const [pendingLoading, setPendingLoading] = useState(true);
 
-
+  const getStatusTag = (statusRaw, statusNormalized) => {
+    const colorMap = {
+      pending: 'processing',
+      approved: 'success',
+      rejected: 'error',
+    };
+    return <Tag color={colorMap[statusNormalized] || 'default'} style={{ marginLeft: 4 }}>{statusRaw}</Tag>;
+  };
 
   const chapterStats = [
     {
@@ -50,35 +62,40 @@ const ChapterDashboard = () => {
     },
   ];
 
-  const pendingVerifications = [
-    {
-      studentName: 'Nguyễn Văn An',
-      studentId: 'SE123456',
-      major: 'Software Engineering',
-      year: 'Năm 3',
-      submittedAt: '2 giờ trước',
-      status: 'pending',
-      documents: ['Thẻ sinh viên', 'Giấy xác nhận'],
-    },
-    {
-      studentName: 'Trần Thị Bình',
-      studentId: 'AI789012',
-      major: 'Artificial Intelligence',
-      year: 'Năm 2',
-      submittedAt: '4 giờ trước',
-      status: 'pending',
-      documents: ['Thẻ sinh viên', 'Bảng điểm'],
-    },
-    {
-      studentName: 'Lê Hoàng Cường',
-      studentId: 'CS345678',
-      major: 'Computer Science',
-      year: 'Năm 4',
-      submittedAt: '6 giờ trước',
-      status: 'pending',
-      documents: ['Thẻ sinh viên'],
-    },
-  ];
+  useEffect(() => {
+    const fetchPendingOrRejected = async () => {
+      try {
+        const res = await axiosClient.get('/StudentVerification/verifications/pending-or-rejected');
+        const raw = Array.isArray(res?.data) ? res.data : res?.data?.data || [];
+        const mapped = raw.map((item) => {
+          const statusRaw = item.status || 'pending';
+          const statusNormalized = statusRaw.toLowerCase();
+          return {
+            id: item.verificationId || item.id || item.userId,
+            studentName: item.fullName || item.studentName || '—',
+            studentId: item.studentCode || item.studentId || '—',
+            major: item.major || undefined,
+            year: item.yearOfAdmission ? `Khóa ${item.yearOfAdmission}` : item.year,
+            submittedAt: item.submittedAt || item.createdAt || item.updatedAt || undefined,
+            status: statusRaw,
+            statusNormalized,
+            documents: [
+              item.frontCardImage && 'Thẻ SV - Mặt trước',
+              item.backCardImage && 'Thẻ SV - Mặt sau',
+            ].filter(Boolean),
+          };
+        });
+        setPendingVerifications(mapped);
+      } catch (error) {
+        console.error('Failed to fetch pending/rejected verifications', error);
+        setPendingVerifications([]);
+      } finally {
+        setPendingLoading(false);
+      }
+    };
+
+    fetchPendingOrRejected();
+  }, []);
 
   const mentorApplications = [
     {
@@ -175,44 +192,87 @@ const ChapterDashboard = () => {
           }
         >
           <div className="space-y-4">
-            {pendingVerifications.map((student, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h4 className="text-white">{student.studentName}</h4>
-                    <Badge
-                      style={{
-                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                        color: '#93c5fd',
-                        borderColor: 'rgba(59, 130, 246, 0.3)',
-                      }}
-                    >
-                      {student.studentId}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-gray-400 mb-1">
-                    {student.major} • {student.year}
-                  </p>
-                  <div className="flex items-center text-xs text-gray-400">
-                    <ClockCircleOutlined className="w-3 h-3 mr-1" />
-                    {student.submittedAt} • {student.documents.length} tài liệu
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    onClick={() => navigate(PATH_NAME.CHAPTER_VERIFY_STUDENTS)}
-                    size="small"
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
-                  >
-                    <EyeOutlined className="w-4 h-4 mr-1" />
-                    Xem
-                  </Button>
-                </div>
+            {pendingLoading ? (
+              Array.from({ length: 2 }).map((_, idx) => (
+                <Card
+                  key={`skeleton-${idx}`}
+                  className="bg-white/5 border-white/10"
+                  size="small"
+                  bodyStyle={{ padding: '16px' }}
+                >
+                  <Skeleton active paragraph={{ rows: 2 }} title={{ width: '40%' }} />
+                </Card>
+              ))
+            ) : pendingVerifications.length === 0 ? (
+              <div className="py-6">
+                <Empty description="Không có yêu cầu verify" />
               </div>
-            ))}
+            ) : (
+              pendingVerifications.map((student, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h4 className="text-white">{student.studentName}</h4>
+                      <Badge
+                        style={{
+                          backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                          color: '#93c5fd',
+                          borderColor: 'rgba(59, 130, 246, 0.3)',
+                        }}
+                      >
+                        {student.studentId}
+                      </Badge>
+                      {getStatusTag(student.status, student.statusNormalized)}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400 mb-2">
+                      {student.email && (
+                        <div className="flex items-center">
+                          <MailOutlined className="w-3 h-3 mr-1" />
+                          {student.email}
+                        </div>
+                      )}
+                      {[student.major, student.year].filter(Boolean).length > 0 && (
+                        <div className="flex items-center">
+                          <ReadOutlined className="w-3 h-3 mr-1" />
+                          {[student.major, student.year].filter(Boolean).join(' • ')}
+                        </div>
+                      )}
+                      {student.universityName && (
+                        <div className="flex items-center">
+                          <BankOutlined className="w-3 h-3 mr-1" />
+                          {student.universityName}
+                        </div>
+                      )}
+                      {student.submittedAt && (
+                        <div className="flex items-center">
+                          <ClockCircleOutlined className="w-3 h-3 mr-1" />
+                          {student.submittedAt}
+                        </div>
+                      )}
+                    </div>
+                    {student.documents?.length > 0 && (
+                      <div className="flex items-center text-xs text-gray-400">
+                        <FileTextOutlined className="w-3 h-3 mr-1" />
+                        {student.documents.length} tài liệu đính kèm
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      onClick={() => navigate(PATH_NAME.CHAPTER_VERIFY_STUDENTS)}
+                      size="small"
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
+                    >
+                      <EyeOutlined className="w-4 h-4 mr-1" />
+                      Xem
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </Card>
 

@@ -15,6 +15,7 @@ import { PATH_NAME } from '../../constants';
 import { useGetNotifications, useGetUnreadCount, useMarkAsRead } from '../../hooks/student/notification';
 import { useUserData } from '../../hooks/useUserData';
 import { useLogout } from '../../hooks/useLogout';
+import { Modal, Button } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -25,8 +26,9 @@ const StudentLayout = () => {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
   const { data: notificationsData, isLoading: notificationsLoading } = useGetNotifications();
-  
+
   const notifications = Array.isArray(notificationsData)
     ? notificationsData
     : notificationsData?.data
@@ -34,7 +36,7 @@ const StudentLayout = () => {
       : notificationsData?.notifications
         ? notificationsData.notifications
         : [];
-  
+
   const { data: unreadCountData } = useGetUnreadCount();
   const unreadCount = unreadCountData?.count ?? 0;
   const markAsRead = useMarkAsRead();
@@ -79,6 +81,21 @@ const StudentLayout = () => {
 
   const isActivePage = (path) => {
     return location.pathname === path;
+  };
+
+  const getNotificationTime = (notification) => {
+    const timeValue =
+      notification?.createdAt || notification?.createdDate || notification?.timestamp;
+    return timeValue ? dayjs(timeValue).format('HH:mm, DD/MM/YYYY') : '';
+  };
+
+  const handleNotificationClick = (notification) => {
+    const notificationId = notification.notificationId || notification.id;
+    if (!notification.isRead && notificationId) {
+      markAsRead.mutate(notificationId);
+    }
+
+    setSelectedNotification(notification);
   };
 
   return (
@@ -149,7 +166,7 @@ const StudentLayout = () => {
                       {/* Header */}
                       <div className="p-4 border-b border-white/10 flex items-center justify-between">
                         <h3 className="text-white font-semibold text-lg">Thông báo</h3>
-                        
+
                       </div>
 
                       {/* Notifications List */}
@@ -162,10 +179,6 @@ const StudentLayout = () => {
                           <div className="divide-y divide-white/10">
                             {recentNotifications.map((notification) => {
                               const isUnread = !notification.isRead;
-                              const isTeamInvite =
-                                notification.type === 'TEAM_INVITE' ||
-                                notification.type === 'team_invite' ||
-                                notification.type?.toLowerCase().includes('team');
 
                               return (
                                 <div
@@ -173,20 +186,7 @@ const StudentLayout = () => {
                                   className={`p-4 hover:bg-white/5 transition-colors cursor-pointer ${
                                     isUnread ? 'bg-blue-500/5' : ''
                                   }`}
-                                  onClick={() => {
-                                    if (isUnread) {
-                                      const notificationId = notification.notificationId || notification.id;
-                                      if (notificationId) {
-                                        markAsRead.mutate(notificationId);
-                                      }
-                                    }
-                                    if (isTeamInvite && notification.teamId) {
-                                      navigate(`${PATH_NAME.STUDENT_TEAMS}/${notification.teamId}`);
-                                    } else {
-                                      navigate(PATH_NAME.STUDENT_NOTIFICATIONS);
-                                    }
-                                    setIsNotificationOpen(false);
-                                  }}
+                                  onClick={() => handleNotificationClick(notification)}
                                 >
                                   <div className="flex items-start space-x-3">
                                     {isUnread && (
@@ -374,6 +374,35 @@ const StudentLayout = () => {
       <main className="pt-6">
         <Outlet />
       </main>
+
+      <Modal
+        open={!!selectedNotification}
+        title={selectedNotification?.title || 'Chi tiết thông báo'}
+        onCancel={() => setSelectedNotification(null)}
+        footer={[
+          <Button
+            key="all"
+            onClick={() => {
+              navigate(PATH_NAME.STUDENT_NOTIFICATIONS);
+              setSelectedNotification(null);
+            }}
+          >
+            Xem tất cả thông báo
+          </Button>,
+          <Button key="close" type="primary" onClick={() => setSelectedNotification(null)}>
+            Đóng
+          </Button>,
+        ]}
+      >
+        <div className="space-y-2">
+          <p className="text-gray-800">
+            {selectedNotification?.message || selectedNotification?.content || '—'}
+          </p>
+          {getNotificationTime(selectedNotification) && (
+            <p className="text-sm text-gray-500">{getNotificationTime(selectedNotification)}</p>
+          )}
+        </div>
+      </Modal>
 
       {/* Footer */}
       <footer className="mt-16 border-t border-white/5 bg-darkv2-secondary/60 backdrop-blur-xl">
