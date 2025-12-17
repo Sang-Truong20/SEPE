@@ -28,6 +28,7 @@ import { useState } from 'react';
 import StudentVerification from '../../components/features/student/profile/StudentVerification';
 import { useCreateMentorVerification } from '../../hooks/mentor/verification';
 import { useGetChapters } from '../../hooks/student/chapter';
+import { useGetHackathons } from '../../hooks/student/hackathon';
 
 const StudentProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -38,6 +39,12 @@ const StudentProfile = () => {
   const [verificationStatus, setVerificationStatus] = useState('unverified'); // 'unverified', 'pending', 'verified'
   const verifyMentorMutation = useCreateMentorVerification();
   const { data: chapters = [], isLoading: chaptersLoading } = useGetChapters();
+  const { data: hackathons = [], isLoading: hackathonsLoading } = useGetHackathons();
+  const hackathonOptions = Array.isArray(hackathons?.data)
+    ? hackathons.data
+    : Array.isArray(hackathons)
+      ? hackathons
+      : [];
 
   const studentProfile = {
     name: 'Nguyễn Văn A',
@@ -505,8 +512,23 @@ const StudentProfile = () => {
                   >
                     <Input.TextArea rows={3} />
                   </Form.Item>
-                  <Form.Item label="HackathonId (tùy chọn)" name="hackathonId">
-                    <Input type="number" />
+                  <Form.Item label="Giải Hackathon (tùy chọn)" name="hackathonId">
+                    <Select
+                      allowClear
+                      placeholder="Chọn giải hackathon"
+                      loading={hackathonsLoading}
+                      optionFilterProp="children"
+                      showSearch
+                      filterOption={(input, option) =>
+                        option?.children?.toLowerCase().includes(input.toLowerCase())
+                      }
+                    >
+                      {hackathonOptions.map((item) => (
+                        <Select.Option key={item.hackathonId} value={item.hackathonId}>
+                          {item.name || `Hackathon ${item.hackathonId}`}
+                        </Select.Option>
+                      ))}
+                    </Select>
                   </Form.Item>
                   <Form.Item label="Chapter (tùy chọn)" name="chapterId">
                     <Select

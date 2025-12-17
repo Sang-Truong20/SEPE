@@ -76,6 +76,7 @@ const StudentNotificationsPage = lazy(() => import('../pages/student/notificatio
 const StudentMentorRegistrationPage = lazy(() => import('../pages/student/mentor-registration'));
 const StudentPhaseDetailPage = lazy(() => import('../pages/student/phase-detail'));
 const StudentTeamJoinSuccessPage = lazy(() => import('../pages/student/team-join-success'));
+const TeamInviteAcceptPage = lazy(() => import('../pages/team-invitation/accept-link'));
 
 const ChapterDashboardPage = lazy(() => import('../pages/chapter/dashboard'));
 const ChapterVerifyStudentsPage = lazy(() => import('../pages/chapter/verify-students'));
@@ -123,6 +124,10 @@ const router = createBrowserRouter([
         ],
       },
     ],
+  },
+  {
+    path: PATH_NAME.TEAM_INVITE_ACCEPT,
+    element: withSuspense(TeamInviteAcceptPage),
   },
   {
     element: <AdminRoutes />,

@@ -6,10 +6,10 @@ import { jwtDecode } from 'jwt-decode';
 import { PATH_NAME } from '../../constants';
 import { loginGoogle, login } from '../../services/auth';
 import { notify } from '../../utils/index';
-import { useLoading } from '../../context/LoadingContext.jsx';
+import useLoadingStore from '../../store/loadingStore';
 
 function Login() {
-  const { showLoading, hideLoading } = useLoading();
+  const { showLoading, hideLoading } = useLoadingStore();
   const [form] = Form.useForm();
 
   const handleLoginSuccess = (res) => {
