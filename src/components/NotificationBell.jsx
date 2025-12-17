@@ -1,7 +1,12 @@
 import { useState } from 'react';
+import { Modal, Button } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { PATH_NAME } from '../constants';
 
 const NotificationBell = ({ count = 0 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const navigate = useNavigate();
 
   const notifications = [
     {
@@ -73,6 +78,11 @@ const NotificationBell = ({ count = 0 }) => {
                     className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
                       !notification.read ? 'bg-blue-50/30' : ''
                     }`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSelected(notification);
+                }}
                   >
                     <div className="flex items-start">
                       <div className="flex-1">
@@ -100,13 +110,37 @@ const NotificationBell = ({ count = 0 }) => {
             </div>
 
             <div className="p-3 border-t border-gray-200">
-              <button className="text-blue-600 text-sm font-medium hover:text-blue-700 w-full text-center">
+              <button
+                className="text-blue-600 text-sm font-medium hover:text-blue-700 w-full text-center"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsOpen(false);
+                  navigate(PATH_NAME.STUDENT_NOTIFICATIONS || '/student/notifications');
+                }}
+              >
                 Xem tất cả thông báo
               </button>
             </div>
           </div>
         </>
       )}
+
+      <Modal
+        open={!!selected}
+        title={selected?.title || 'Chi tiết thông báo'}
+        onCancel={() => setSelected(null)}
+        footer={[
+          <Button key="close" type="primary" onClick={() => setSelected(null)}>
+            Đóng
+          </Button>,
+        ]}
+      >
+        <div className="space-y-2">
+          <div className="text-gray-800">{selected?.message}</div>
+          <div className="text-sm text-gray-500">{selected?.time}</div>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -1,6 +1,5 @@
 import {
   ArrowLeftOutlined,
-  CalendarOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
@@ -10,15 +9,14 @@ import {
   MailOutlined,
   ReadOutlined,
   SearchOutlined,
-  UserOutlined
+  UserOutlined,
+  BankOutlined
 } from '@ant-design/icons';
 import {
-  Badge,
   Button,
   Card,
   Image,
   Input,
-  message,
   Modal,
   Select,
   Spin,
@@ -33,14 +31,11 @@ import {
   useRejectStudentVerification,
 } from '../../../hooks/chapter/student-verification';
 
-const { TextArea } = Input;
-
 const ChapterVerifyStudents = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedVerification, setSelectedVerification] = useState(null);
-  const [rejectionReason, setRejectionReason] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const { data: verificationsData, isLoading } = useGetPendingOrRejectedStudentVerifications();
@@ -50,44 +45,50 @@ const ChapterVerifyStudents = () => {
   // Transform API data to match component structure
   const verificationRequests = useMemo(() => {
     if (!verificationsData) return [];
-    
-    const data = Array.isArray(verificationsData) 
-      ? verificationsData 
-      : Array.isArray(verificationsData?.data) 
-      ? verificationsData.data 
+
+    const data = Array.isArray(verificationsData)
+      ? verificationsData
+      : Array.isArray(verificationsData?.data)
+      ? verificationsData.data
       : [];
 
-    return data.map((item) => ({
-      id: item.verificationId || item.id,
-      studentName: item.fullName || item.studentName,
-      studentId: item.studentCode || item.studentId,
-      email: item.email,
-      major: item.major,
-      year: item.yearOfAdmission ? `Năm ${item.yearOfAdmission}` : item.year,
-      semester: item.semester || 'N/A',
-      submittedAt: item.submittedAt || item.createdAt || 'N/A',
-      status: item.status?.toLowerCase() || 'pending',
-      documents: [
-        ...(item.frontCardImage ? [{ name: 'Mặt trước thẻ SV', type: 'image', url: item.frontCardImage }] : []),
-        ...(item.backCardImage ? [{ name: 'Mặt sau thẻ SV', type: 'image', url: item.backCardImage }] : []),
-      ],
-      rejectionReason: item.rejectionReason || item.rejectReason,
-      additionalInfo: item.additionalInfo,
-    }));
+    return data.map((item) => {
+      const statusRaw = item.status || 'pending';
+      const statusNormalized = statusRaw.toLowerCase();
+      return {
+        id: item.verificationId || item.id || item.userId,
+        studentName: item.fullName || item.studentName || '—',
+        studentId: item.studentCode || item.studentId || '—',
+        email: item.email || undefined,
+        universityName: item.universityName,
+        major: item.major || undefined,
+        year: item.yearOfAdmission ? `Khóa ${item.yearOfAdmission}` : item.year,
+        submittedAt: item.submittedAt || item.createdAt || item.updatedAt || undefined,
+        status: statusRaw,
+        statusNormalized,
+        documents: [
+          ...(item.frontCardImage ? [{ name: 'Mặt trước thẻ SV', type: 'image', url: item.frontCardImage }] : []),
+          ...(item.backCardImage ? [{ name: 'Mặt sau thẻ SV', type: 'image', url: item.backCardImage }] : []),
+        ],
+        rejectionReason: item.rejectionReason || item.rejectReason,
+        additionalInfo: item.additionalInfo,
+      };
+    });
   }, [verificationsData]);
 
   const filteredRequests = verificationRequests.filter((request) => {
+    const email = request.email || '';
     const matchesSearch =
-      request.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
+      (request.studentName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (request.studentId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || request.statusNormalized === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const pendingCount = verificationRequests.filter((r) => r.status === 'pending').length;
-  const approvedCount = verificationRequests.filter((r) => r.status === 'approved').length;
-  const rejectedCount = verificationRequests.filter((r) => r.status === 'rejected').length;
+  const pendingCount = verificationRequests.filter((r) => r.statusNormalized === 'pending').length;
+  const approvedCount = verificationRequests.filter((r) => r.statusNormalized === 'approved').length;
+  const rejectedCount = verificationRequests.filter((r) => r.statusNormalized === 'rejected').length;
 
   const handleApprove = async (id) => {
     try {
@@ -100,41 +101,22 @@ const ChapterVerifyStudents = () => {
   };
 
   const handleReject = async (id) => {
-    if (!rejectionReason.trim()) {
-      message.warning('Vui lòng nhập lý do từ chối!');
-      return;
-    }
     try {
-      await rejectMutation.mutateAsync({ verificationId: id, reason: rejectionReason });
+      await rejectMutation.mutateAsync({ verificationId: id, reason: '' });
       setIsModalVisible(false);
       setSelectedVerification(null);
-      setRejectionReason('');
     } catch (error) {
       console.error('Reject error:', error);
     }
   };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'pending':
-        return (
-          <Badge
-            status="processing"
-            text="Chờ duyệt"
-            style={{ color: '#fbbf24' }}
-          />
-        );
-      case 'approved':
-        return (
-          <Badge status="success" text="Đã duyệt" style={{ color: '#10b981' }} />
-        );
-      case 'rejected':
-        return (
-          <Badge status="error" text="Từ chối" style={{ color: '#ef4444' }} />
-        );
-      default:
-        return null;
-    }
+  const getStatusTag = (statusRaw, statusNormalized) => {
+    const colorMap = {
+      pending: 'processing',
+      approved: 'success',
+      rejected: 'error',
+    };
+    return <Tag color={colorMap[statusNormalized] || 'default'}>{statusRaw}</Tag>;
   };
 
   const showModal = (request) => {
@@ -145,7 +127,6 @@ const ChapterVerifyStudents = () => {
   const handleModalCancel = () => {
     setIsModalVisible(false);
     setSelectedVerification(null);
-    setRejectionReason('');
   };
 
   return (
@@ -276,32 +257,42 @@ const ChapterVerifyStudents = () => {
                   <div className="flex items-center space-x-3 mb-2">
                     <h4 className="text-white">{request.studentName}</h4>
                     <Tag color="green">{request.studentId}</Tag>
-                    {getStatusBadge(request.status)}
+                    {getStatusTag(request.status, request.statusNormalized)}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400 mb-2">
-                    <div className="flex items-center">
-                      <MailOutlined className="w-3 h-3 mr-1" />
-                      {request.email}
-                    </div>
-                    <div className="flex items-center">
-                      <ReadOutlined className="w-3 h-3 mr-1" />
-                      {request.major} • {request.year}
-                    </div>
-                    <div className="flex items-center">
-                      <CalendarOutlined className="w-3 h-3 mr-1" />
-                      {request.semester}
-                    </div>
-                    <div className="flex items-center">
-                      <ClockCircleOutlined className="w-3 h-3 mr-1" />
-                      {request.submittedAt}
-                    </div>
+                    {request.email && (
+                      <div className="flex items-center">
+                        <MailOutlined className="w-3 h-3 mr-1" />
+                        {request.email}
+                      </div>
+                    )}
+                    {[request.major, request.year].filter(Boolean).length > 0 && (
+                      <div className="flex items-center">
+                        <ReadOutlined className="w-3 h-3 mr-1" />
+                        {[request.major, request.year].filter(Boolean).join(' • ')}
+                      </div>
+                    )}
+                    {request.universityName && (
+                      <div className="flex items-center">
+                        <BankOutlined className="w-3 h-3 mr-1" />
+                        {request.universityName}
+                      </div>
+                    )}
+                    {request.submittedAt && (
+                      <div className="flex items-center">
+                        <ClockCircleOutlined className="w-3 h-3 mr-1" />
+                        {request.submittedAt}
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex items-center text-xs text-gray-400">
-                    <FileTextOutlined className="w-3 h-3 mr-1" />
-                    {request.documents.length} tài liệu đính kèm
-                  </div>
+                  {request.documents.length > 0 && (
+                    <div className="flex items-center text-xs text-gray-400">
+                      <FileTextOutlined className="w-3 h-3 mr-1" />
+                      {request.documents.length} tài liệu đính kèm
+                    </div>
+                  )}
 
                     {request.rejectionReason && (
                       <div className="mt-2 p-2 bg-red-500/10 border border-red-500/30 rounded text-xs text-red-200">
@@ -321,20 +312,22 @@ const ChapterVerifyStudents = () => {
                     Xem
                   </Button>
 
-                  {request.status === 'pending' && (
+                  {request.statusNormalized === 'pending' && (
                     <>
                       <Button
                         size="small"
-                        icon={<CheckCircleOutlined />}
                         onClick={() => handleApprove(request.id)}
                         className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
-                      />
+                      >
+                        Duyệt
+                      </Button>
                       <Button
                         size="small"
-                        icon={<CloseCircleOutlined />}
-                        onClick={() => showModal(request)}
+                        onClick={() => handleReject(request.id)}
                         className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white border-0"
-                      />
+                      >
+                        Từ chối
+                      </Button>
                     </>
                   )}
                 </div>
@@ -372,22 +365,36 @@ const ChapterVerifyStudents = () => {
                   <label className="text-white block mb-1">MSSV</label>
                   <p className="text-gray-400">{selectedVerification.studentId}</p>
                 </div>
-                <div>
-                  <label className="text-white block mb-1">Email</label>
-                  <p className="text-gray-400">{selectedVerification.email}</p>
-                </div>
-                <div>
-                  <label className="text-white block mb-1">Chuyên ngành</label>
-                  <p className="text-gray-400">{selectedVerification.major}</p>
-                </div>
-                <div>
-                  <label className="text-white block mb-1">Năm học</label>
-                  <p className="text-gray-400">{selectedVerification.year}</p>
-                </div>
-                <div>
-                  <label className="text-white block mb-1">Học kỳ</label>
-                  <p className="text-gray-400">{selectedVerification.semester}</p>
-                </div>
+                  {selectedVerification.status && (
+                    <div>
+                      <label className="text-white block mb-1">Status</label>
+                      <div>{getStatusTag(selectedVerification.status, selectedVerification.statusNormalized)}</div>
+                    </div>
+                  )}
+                  {selectedVerification.email && (
+                    <div>
+                      <label className="text-white block mb-1">Email</label>
+                      <p className="text-gray-400">{selectedVerification.email}</p>
+                    </div>
+                  )}
+                  {selectedVerification.major && (
+                    <div>
+                      <label className="text-white block mb-1">Chuyên ngành</label>
+                      <p className="text-gray-400">{selectedVerification.major}</p>
+                    </div>
+                  )}
+                  {selectedVerification.year && (
+                    <div>
+                      <label className="text-white block mb-1">Năm học</label>
+                      <p className="text-gray-400">{selectedVerification.year}</p>
+                    </div>
+                  )}
+                  {selectedVerification.universityName && (
+                    <div>
+                      <label className="text-white block mb-1">Trường</label>
+                      <p className="text-gray-400">{selectedVerification.universityName}</p>
+                    </div>
+                  )}
               </div>
 
               {/* Documents */}
@@ -445,41 +452,24 @@ const ChapterVerifyStudents = () => {
               )}
 
               {/* Actions */}
-              {selectedVerification.status === 'pending' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-white block mb-1">
-                      Lý do từ chối (nếu có)
-                    </label>
-                    <TextArea
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                      placeholder="Nhập lý do từ chối nếu không phê duyệt..."
-                      rows={3}
-                      className="bg-white/5 border-white/10 text-white"
-                    />
-                  </div>
-
-                  <div className="flex space-x-3">
-                    <Button
-                      onClick={() => handleApprove(selectedVerification.id)}
-                      icon={<CheckCircleOutlined />}
-                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
-                      loading={approveMutation.isPending}
-                      disabled={approveMutation.isPending || rejectMutation.isPending}
-                    >
-                      Phê Duyệt
-                    </Button>
-                    <Button
-                      onClick={() => handleReject(selectedVerification.id)}
-                      icon={<CloseCircleOutlined />}
-                      className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white border-0"
-                      loading={rejectMutation.isPending}
-                      disabled={approveMutation.isPending || rejectMutation.isPending}
-                    >
-                      Từ Chối
-                    </Button>
-                  </div>
+                  {selectedVerification.statusNormalized === 'pending' && (
+                <div className="flex space-x-3">
+                  <Button
+                    onClick={() => handleApprove(selectedVerification.id)}
+                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
+                    loading={approveMutation.isPending}
+                    disabled={approveMutation.isPending || rejectMutation.isPending}
+                  >
+                    Phê Duyệt
+                  </Button>
+                  <Button
+                    onClick={() => handleReject(selectedVerification.id)}
+                    className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white border-0"
+                    loading={rejectMutation.isPending}
+                    disabled={approveMutation.isPending || rejectMutation.isPending}
+                  >
+                    Từ Chối
+                  </Button>
                 </div>
               )}
             </div>

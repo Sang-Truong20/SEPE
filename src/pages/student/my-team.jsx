@@ -71,22 +71,22 @@ const MyTeamPage = () => {
   });
 
   const [teamData, setTeamData] = useState(null);
-  
+
   // Invite team member hook
   const inviteMemberMutation = useInviteTeamMember();
-  
+
   // Get team members from API
   const { data: teamMembersResponse, isLoading: membersLoading } = useGetTeamMembers(id, {
     enabled: !!id,
   });
-  
+
   // Extract members array from API response
-  const apiMembers = Array.isArray(teamMembersResponse?.data) 
-    ? teamMembersResponse.data 
+  const apiMembers = Array.isArray(teamMembersResponse?.data)
+    ? teamMembersResponse.data
     : Array.isArray(teamMembersResponse)
       ? teamMembersResponse
       : [];
-  
+
   // Map API members to component format
   const members = apiMembers.map((member) => ({
     id: member.userId,
@@ -113,9 +113,9 @@ const MyTeamPage = () => {
   const currentUserId = userInfo?.id || userInfo?.userId;
   const currentUserName = userInfo?.name || userInfo?.fullName || userInfo?.userName;
   // Check if user is leader by comparing userId or userName with members
-  const isLeader = members.some(m => 
+  const isLeader = members.some(m =>
     (m.userId === currentUserId || m.id === currentUserId) && m.isLeader
-  ) || (teamData?.leaderId === currentUserId) || 
+  ) || (teamData?.leaderId === currentUserId) ||
   (teamData?.leaderName && currentUserName && teamData.leaderName === currentUserName);
 
 
@@ -127,26 +127,26 @@ const MyTeamPage = () => {
   const [selectedChatGroup, setSelectedChatGroup] = useState(null);
   const [messageContent, setMessageContent] = useState('');
   const sendMessageMutation = useSendChatMessage();
-  
-  const chatGroups = Array.isArray(chatGroupsData) 
-    ? chatGroupsData 
-    : Array.isArray(chatGroupsData?.data) 
-      ? chatGroupsData.data 
+
+  const chatGroups = Array.isArray(chatGroupsData)
+    ? chatGroupsData
+    : Array.isArray(chatGroupsData?.data)
+      ? chatGroupsData.data
       : [];
-  
+
   const { data: messagesData = [], isLoading: messagesLoading } = useGetChatGroupMessages(
     selectedChatGroup?.chatGroupId
   );
-  
-  const messages = Array.isArray(messagesData) 
-    ? messagesData 
-    : Array.isArray(messagesData?.data) 
-      ? messagesData.data 
+
+  const messages = Array.isArray(messagesData)
+    ? messagesData
+    : Array.isArray(messagesData?.data)
+      ? messagesData.data
       : [];
 
   const handleSendMessage = async () => {
     if (!messageContent.trim() || !selectedChatGroup?.chatGroupId) return;
-    
+
     try {
       await sendMessageMutation.mutateAsync({
         chatGroupId: selectedChatGroup.chatGroupId,
@@ -168,8 +168,8 @@ const MyTeamPage = () => {
       form.resetFields();
       setInviteModalVisible(false);
     } catch (error) {
+      // Toast lỗi đã được hiển thị trong hook onError
       console.error('Invite member error:', error);
-      // Error message đã được xử lý trong hook
     }
   };
 
@@ -201,11 +201,11 @@ const MyTeamPage = () => {
 
   const handleConfirmTransferLeader = async () => {
     if (!selectedMemberForTransfer) return;
-    
+
     try {
-      await transferLeaderMutation.mutateAsync({ 
-        teamId: id, 
-        newLeaderId: selectedMemberForTransfer 
+      await transferLeaderMutation.mutateAsync({
+        teamId: id,
+        newLeaderId: selectedMemberForTransfer
       });
       message.success('Đã chuyển quyền trưởng nhóm thành công!');
       setTransferLeaderModalVisible(false);
@@ -601,7 +601,7 @@ const MyTeamPage = () => {
                 {/* Chat Messages */}
                 <div className="lg:col-span-2">
                   {selectedChatGroup ? (
-                    <Card 
+                    <Card
                       className="bg-white/5 border-white/10 h-[600px]"
                       styles={{ body: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column' } }}
                     >

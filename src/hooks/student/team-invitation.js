@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { message } from 'antd';
 import axiosClient from '../../configs/axiosClient';
 
 export const teamInvitationQueryKeys = {
@@ -19,11 +20,22 @@ export const useInviteTeamMember = () => {
             const response = await axiosClient.post(`/TeamInvitation/${teamId}/invite`, {
                 email,
             });
-            return response.data;
+            const data = response.data;
+            if (!data?.success) {
+                throw new Error(data?.message || 'Gửi lời mời thất bại');
+            }
+            return data;
         },
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: teamInvitationQueryKeys.status() });
             queryClient.invalidateQueries({ queryKey: teamInvitationQueryKeys.invite(variables.teamId) });
+        },
+        onError: (error) => {
+            const msg =
+                error?.response?.data?.message ||
+                error?.message ||
+                'Không thể gửi lời mời. Vui lòng thử lại.';
+            message.error(msg);
         },
     });
 };

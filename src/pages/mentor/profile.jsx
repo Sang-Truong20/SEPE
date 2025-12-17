@@ -9,11 +9,12 @@ import {
     TeamOutlined,
     UserOutlined
 } from '@ant-design/icons';
- import { Alert, Avatar, Button, Card, Form, Input, message, Select, Space, Statistic, Tabs, Tag, Upload } from 'antd';
+import { Alert, Avatar, Button, Card, Form, Input, message, Select, Space, Statistic, Tabs, Tag, Upload } from 'antd';
  import { useState } from 'react';
  import { useCreateMentorVerification } from '../../hooks/mentor/verification';
  import { useGetChapters } from '../../hooks/student/chapter';
  import { useGetHackathons } from '../../hooks/student/hackathon';
+import { useLogout } from '../../hooks/useLogout';
 
 const MentorProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -22,6 +23,7 @@ const MentorProfile = () => {
   const verifyMutation = useCreateMentorVerification();
   const { data: chapters = [], isLoading: chaptersLoading } = useGetChapters();
   const { data: hackathons = [], isLoading: hackathonsLoading } = useGetHackathons();
+  const logout = useLogout();
   const hackathonOptions = Array.isArray(hackathons?.data)
     ? hackathons.data
     : Array.isArray(hackathons)
@@ -349,17 +351,15 @@ const MentorProfile = () => {
                     label="Họ tên"
                     name="fullName"
                     rules={[{ required: true, message: 'Nhập họ tên' }]}
-                    initialValue={mentorProfile.name}
                   >
-                    <Input />
+                    <Input placeholder="Nhập họ tên" />
                   </Form.Item>
                   <Form.Item
                     label="Email"
                     name="email"
                     rules={[{ required: true, message: 'Nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}
-                    initialValue={mentorProfile.email}
                   >
-                    <Input />
+                    <Input placeholder="Nhập email" />
                   </Form.Item>
                   <Form.Item
                     label="Điện thoại"
@@ -367,7 +367,7 @@ const MentorProfile = () => {
                     rules={[{ required: true, message: 'Nhập điện thoại' }]}
                     initialValue={mentorProfile.phone}
                   >
-                    <Input />
+                    <Input placeholder="Nhập số điện thoại" />
                   </Form.Item>
                   <Form.Item
                     label="Vị trí / Chức vụ"
@@ -375,18 +375,21 @@ const MentorProfile = () => {
                     rules={[{ required: true, message: 'Nhập vị trí' }]}
                     initialValue={mentorProfile.position}
                   >
-                    <Input />
+                    <Input placeholder="Nhập vị trí / chức vụ" />
                   </Form.Item>
                   <Form.Item
                     label="Lý do muốn làm mentor"
                     name="reasonToBecomeMentor"
                     rules={[{ required: true, message: 'Nhập lý do' }]}
                   >
-                    <Input.TextArea rows={3} />
+                    <Input.TextArea rows={3} placeholder="Mô tả ngắn lý do bạn muốn trở thành mentor" />
                   </Form.Item>
-                  <Form.Item label="Giải Hackathon (tùy chọn)" name="hackathonId">
+                  <Form.Item
+                    label="Giải Hackathon"
+                    name="hackathonId"
+                    rules={[{ required: true, message: 'Chọn giải hackathon' }]}
+                  >
                     <Select
-                      allowClear
                       placeholder="Chọn giải hackathon"
                       loading={hackathonsLoading}
                       optionFilterProp="children"
@@ -402,9 +405,12 @@ const MentorProfile = () => {
                       ))}
                     </Select>
                   </Form.Item>
-                  <Form.Item label="Chapter (tùy chọn)" name="chapterId">
+                  <Form.Item
+                    label="Chapter"
+                    name="chapterId"
+                    rules={[{ required: true, message: 'Chọn chapter' }]}
+                  >
                     <Select
-                      allowClear
                       placeholder="Chọn chapter"
                       loading={chaptersLoading}
                       optionFilterProp="children"
@@ -472,6 +478,7 @@ const MentorProfile = () => {
           icon={<LogoutOutlined />}
           className="border border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 transition-all"
           danger
+          onClick={() => logout()}
         >
           Đăng xuất
         </Button>
