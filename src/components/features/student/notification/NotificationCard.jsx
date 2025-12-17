@@ -1,16 +1,9 @@
-import {
-    CheckOutlined,
-    ClockCircleOutlined,
-    CloseOutlined
-} from '@ant-design/icons';
-import {
-    Button,
-    Card,
-    Popconfirm
-} from 'antd';
+import { CheckOutlined, ClockCircleOutlined, CloseOutlined } from '@ant-design/icons';
+import { Button, Card, Popconfirm } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { PATH_NAME } from '../../../../constants';
 
 dayjs.extend(relativeTime);
@@ -58,6 +51,7 @@ const NotificationCard = ({
   isRejectingInvite,
 }) => {
   const navigate = useNavigate();
+  const [expanded, setExpanded] = useState(false);
   const isTeamInvite =
     notification.type === 'TEAM_INVITE' ||
     notification.type === 'team_invite' ||
@@ -76,12 +70,13 @@ const NotificationCard = ({
         if (isUnread) {
           onMarkAsRead(notificationId);
         }
+        setExpanded((prev) => !prev);
       }}
     >
       {isUnread && (
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-blue-400 rounded-l-lg" />
       )}
-      
+
       <div className="flex items-start gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3 mb-2">
@@ -89,20 +84,20 @@ const NotificationCard = ({
               <div className="flex items-center gap-2 mb-1.5">
                 <h4
                   className={`${
-                    isUnread 
-                      ? 'text-white font-semibold' 
+                    isUnread
+                      ? 'text-white font-semibold'
                       : 'text-muted-foreground font-medium'
                   } text-base leading-tight line-clamp-2`}
                 >
                   {notification.title || notification.message}
                 </h4>
-                
+
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
                 {notification.message || notification.content}
               </p>
                <div className="flex items-center gap-3">
-                 <span 
+                 <span
                    className="text-xs text-muted-foreground font-medium flex items-center gap-1.5"
                    title={formatFullDateTime(
                      notification.sentAt ||
@@ -203,6 +198,48 @@ const NotificationCard = ({
               >
                 Đánh dấu đã đọc
               </Button>
+            </div>
+          )}
+
+          {expanded && (
+            <div className="mt-4 p-4 rounded-lg border border-white/10 bg-white/5 text-sm text-gray-200 space-y-2">
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400">Loại</span>
+                <span className="text-white">{notification.type || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400">Tiêu đề</span>
+                <span className="text-white text-right">{notification.title || notification.message || '—'}</span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400">Nội dung</span>
+                <span className="text-white text-right">{notification.message || notification.content || '—'}</span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400">Thời gian</span>
+                <span className="text-white text-right">
+                  {formatFullDateTime(
+                    notification.sentAt ||
+                      notification.createdAt ||
+                      notification.createdDate ||
+                      notification.timestamp,
+                  ) || '—'}
+                </span>
+              </div>
+              {(notification.teamName || notification.teamId) && (
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-400">Đội</span>
+                  <span className="text-white text-right">
+                    {notification.teamName || notification.teamId}
+                  </span>
+                </div>
+              )}
+              {notification.relatedId && (
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-400">Liên quan ID</span>
+                  <span className="text-white text-right">{notification.relatedId}</span>
+                </div>
+              )}
             </div>
           )}
         </div>

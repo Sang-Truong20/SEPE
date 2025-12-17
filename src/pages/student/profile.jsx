@@ -29,11 +29,13 @@ import StudentVerification from '../../components/features/student/profile/Stude
 import { useCreateMentorVerification } from '../../hooks/mentor/verification';
 import { useGetChapters } from '../../hooks/student/chapter';
 import { useGetHackathons } from '../../hooks/student/hackathon';
+import { useLogout } from '../../hooks/useLogout';
 
 const StudentProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [mentorVerificationStatus, setMentorVerificationStatus] = useState('unverified'); // 'unverified', 'pending', 'verified'
   const [mentorVerificationForm] = Form.useForm();
+  const logout = useLogout();
 
   // Mock verification status - in real app, this would come from API
   const [verificationStatus, setVerificationStatus] = useState('unverified'); // 'unverified', 'pending', 'verified'
@@ -605,6 +607,7 @@ const StudentProfile = () => {
             icon={<LogoutOutlined />}
             className="border border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 transition-all"
             danger
+            onClick={() => logout()}
           >
             Đăng xuất
           </Button>

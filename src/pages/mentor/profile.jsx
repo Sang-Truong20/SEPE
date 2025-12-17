@@ -9,11 +9,12 @@ import {
     TeamOutlined,
     UserOutlined
 } from '@ant-design/icons';
- import { Alert, Avatar, Button, Card, Form, Input, message, Select, Space, Statistic, Tabs, Tag, Upload } from 'antd';
+import { Alert, Avatar, Button, Card, Form, Input, message, Select, Space, Statistic, Tabs, Tag, Upload } from 'antd';
  import { useState } from 'react';
  import { useCreateMentorVerification } from '../../hooks/mentor/verification';
  import { useGetChapters } from '../../hooks/student/chapter';
  import { useGetHackathons } from '../../hooks/student/hackathon';
+import { useLogout } from '../../hooks/useLogout';
 
 const MentorProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -22,6 +23,7 @@ const MentorProfile = () => {
   const verifyMutation = useCreateMentorVerification();
   const { data: chapters = [], isLoading: chaptersLoading } = useGetChapters();
   const { data: hackathons = [], isLoading: hackathonsLoading } = useGetHackathons();
+  const logout = useLogout();
   const hackathonOptions = Array.isArray(hackathons?.data)
     ? hackathons.data
     : Array.isArray(hackathons)
@@ -472,6 +474,7 @@ const MentorProfile = () => {
           icon={<LogoutOutlined />}
           className="border border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 transition-all"
           danger
+          onClick={() => logout()}
         >
           Đăng xuất
         </Button>
