@@ -13,6 +13,7 @@ import {
  import { useState } from 'react';
  import { useCreateMentorVerification } from '../../hooks/mentor/verification';
  import { useGetChapters } from '../../hooks/student/chapter';
+ import { useGetHackathons } from '../../hooks/student/hackathon';
 
 const MentorProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -20,6 +21,12 @@ const MentorProfile = () => {
   const [form] = Form.useForm();
   const verifyMutation = useCreateMentorVerification();
   const { data: chapters = [], isLoading: chaptersLoading } = useGetChapters();
+  const { data: hackathons = [], isLoading: hackathonsLoading } = useGetHackathons();
+  const hackathonOptions = Array.isArray(hackathons?.data)
+    ? hackathons.data
+    : Array.isArray(hackathons)
+      ? hackathons
+      : [];
 
   const mentorProfile = {
     name: 'Trần Minh Mentor',
@@ -377,8 +384,23 @@ const MentorProfile = () => {
                   >
                     <Input.TextArea rows={3} />
                   </Form.Item>
-                  <Form.Item label="HackathonId (tùy chọn)" name="hackathonId">
-                    <Input type="number" />
+                  <Form.Item label="Giải Hackathon (tùy chọn)" name="hackathonId">
+                    <Select
+                      allowClear
+                      placeholder="Chọn giải hackathon"
+                      loading={hackathonsLoading}
+                      optionFilterProp="children"
+                      showSearch
+                      filterOption={(input, option) =>
+                        option?.children?.toLowerCase().includes(input.toLowerCase())
+                      }
+                    >
+                      {hackathonOptions.map((item) => (
+                        <Select.Option key={item.hackathonId} value={item.hackathonId}>
+                          {item.name || `Hackathon ${item.hackathonId}`}
+                        </Select.Option>
+                      ))}
+                    </Select>
                   </Form.Item>
                   <Form.Item label="Chapter (tùy chọn)" name="chapterId">
                     <Select

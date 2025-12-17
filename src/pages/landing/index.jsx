@@ -195,7 +195,10 @@ const SEALLandingPage = () => {
               data-aos-delay="200"
               className="flex flex-wrap gap-6 justify-center"
             >
-              <button className="bg-primary text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform hover-glow">
+              <button
+                onClick={() => setShowLoginModal(true)}
+                className="bg-primary text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform hover-glow"
+              >
                 Bắt đầu →
               </button>
               <button className="border border-white/20 px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/10 transition-all">
@@ -545,7 +548,7 @@ const SEALLandingPage = () => {
                   </Form.Item>
 
                   <Form.Item>
-                    
+
                   </Form.Item>
                 </Form>
 

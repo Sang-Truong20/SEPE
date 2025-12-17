@@ -71,11 +71,21 @@ const MentorAssignments = () => {
       ),
     },
     {
-      title: 'Hackathon',
-      dataIndex: 'hackathonName',
-      key: 'hackathonName',
-      render: (val) => <span className="text-gray-300">{val || 'N/A'}</span>,
+      title: 'Trưởng nhóm',
+      dataIndex: 'leaderName',
+      key: 'leaderName',
+      render: (val) => (
+        <span className="text-gray-300 flex items-center gap-2">
+          <UserOutlined /> {val || '—'}
+        </span>
+      ),
     },
+    // {
+    //   title: 'Hackathon',
+    //   dataIndex: 'hackathonName',
+    //   key: 'hackathonName',
+    //   render: (val) => <span className="text-gray-300">{val || 'N/A'}</span>,
+    // },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
@@ -312,7 +322,7 @@ const MentorAssignments = () => {
               </div>
             </div>
 
-            {(String(selected.status || '').toLowerCase().trim() === 'pending' || 
+            {(String(selected.status || '').toLowerCase().trim() === 'pending' ||
               String(selected.status || '').toLowerCase().trim() === 'waitingmentor') && (
               <div className="flex gap-2">
                 <Button

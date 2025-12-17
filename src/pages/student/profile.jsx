@@ -10,24 +10,41 @@ import {
   LogoutOutlined,
 } from '@ant-design/icons';
 import {
+  Alert,
+  Avatar,
   Button,
   Card,
-  Avatar,
-  Tag,
-  Statistic,
   Form,
   Input,
+  Select,
+  Space,
+  Statistic,
   Tabs,
+  Tag,
+  Upload,
   message,
 } from 'antd';
 import { useState } from 'react';
 import StudentVerification from '../../components/features/student/profile/StudentVerification';
+import { useCreateMentorVerification } from '../../hooks/mentor/verification';
+import { useGetChapters } from '../../hooks/student/chapter';
+import { useGetHackathons } from '../../hooks/student/hackathon';
 
 const StudentProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
+  const [mentorVerificationStatus, setMentorVerificationStatus] = useState('unverified'); // 'unverified', 'pending', 'verified'
+  const [mentorVerificationForm] = Form.useForm();
 
   // Mock verification status - in real app, this would come from API
   const [verificationStatus, setVerificationStatus] = useState('unverified'); // 'unverified', 'pending', 'verified'
+  const verifyMentorMutation = useCreateMentorVerification();
+  const { data: chapters = [], isLoading: chaptersLoading } = useGetChapters();
+  const { data: hackathons = [], isLoading: hackathonsLoading } = useGetHackathons();
+  const hackathonOptions = Array.isArray(hackathons?.data)
+    ? hackathons.data
+    : Array.isArray(hackathons)
+      ? hackathons
+      : [];
 
   const studentProfile = {
     name: 'Nguyễn Văn A',
@@ -410,6 +427,162 @@ const StudentProfile = () => {
             </div>
           </Card>
         </div>
+      ),
+    },
+    {
+      key: '7',
+      label: 'Xác minh mentor',
+      children: (
+        <Card className="bg-card-background border border-card-border backdrop-blur-xl">
+          <div className="space-y-4">
+            {mentorVerificationStatus === 'verified' ? (
+              <Alert
+                type="success"
+                message="Bạn đã được xác minh"
+                description="Hồ sơ mentor đã được xác thực. Không cần gửi lại."
+                showIcon
+                className="bg-green-500/10 border-green-500/30 text-white"
+              />
+            ) : (
+              <>
+                <Alert
+                  type="info"
+                  message="Gửi yêu cầu xác minh mentor"
+                  description="Cung cấp thông tin và CV để chapter phê duyệt."
+                  showIcon
+                  className="bg-blue-500/10 border-blue-500/30 text-white"
+                />
+                <Form
+                  layout="vertical"
+                  form={mentorVerificationForm}
+                  onFinish={(values) => {
+                    const payload = {
+                      fullName: values.fullName,
+                      email: values.email,
+                      phone: values.phone,
+                      position: values.position,
+                      reasonToBecomeMentor: values.reasonToBecomeMentor,
+                      hackathonId: values.hackathonId ? Number(values.hackathonId) : undefined,
+                      chapterId: values.chapterId ? Number(values.chapterId) : undefined,
+                      cvFile: values.cvFile?.[0]?.originFileObj,
+                    };
+                    verifyMentorMutation.mutate(payload, {
+                      onSuccess: () => {
+                        setMentorVerificationStatus('pending');
+                        mentorVerificationForm.resetFields();
+                      },
+                    });
+                  }}
+                  className="max-w-2xl"
+                >
+                  <Form.Item
+                    label="Họ tên"
+                    name="fullName"
+                    rules={[{ required: true, message: 'Nhập họ tên' }]}
+                    initialValue={studentProfile.name}
+                  >
+                    <Input />
+                  </Form.Item>
+                  <Form.Item
+                    label="Email"
+                    name="email"
+                    rules={[{ required: true, message: 'Nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}
+                    initialValue={studentProfile.email}
+                  >
+                    <Input />
+                  </Form.Item>
+                  <Form.Item
+                    label="Điện thoại"
+                    name="phone"
+                    rules={[{ required: true, message: 'Nhập điện thoại' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                  <Form.Item
+                    label="Vị trí / Chức vụ"
+                    name="position"
+                    rules={[{ required: true, message: 'Nhập vị trí' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                  <Form.Item
+                    label="Lý do muốn làm mentor"
+                    name="reasonToBecomeMentor"
+                    rules={[{ required: true, message: 'Nhập lý do' }]}
+                  >
+                    <Input.TextArea rows={3} />
+                  </Form.Item>
+                  <Form.Item label="Giải Hackathon (tùy chọn)" name="hackathonId">
+                    <Select
+                      allowClear
+                      placeholder="Chọn giải hackathon"
+                      loading={hackathonsLoading}
+                      optionFilterProp="children"
+                      showSearch
+                      filterOption={(input, option) =>
+                        option?.children?.toLowerCase().includes(input.toLowerCase())
+                      }
+                    >
+                      {hackathonOptions.map((item) => (
+                        <Select.Option key={item.hackathonId} value={item.hackathonId}>
+                          {item.name || `Hackathon ${item.hackathonId}`}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                  <Form.Item label="Chapter (tùy chọn)" name="chapterId">
+                    <Select
+                      allowClear
+                      placeholder="Chọn chapter"
+                      loading={chaptersLoading}
+                      optionFilterProp="children"
+                      showSearch
+                      filterOption={(input, option) =>
+                        option?.children?.toLowerCase().includes(input.toLowerCase())
+                      }
+                    >
+                      {Array.isArray(chapters) &&
+                        chapters.map((ch) => (
+                          <Select.Option key={ch.chapterId} value={ch.chapterId}>
+                            {ch.name || `Chapter ${ch.chapterId}`}
+                          </Select.Option>
+                        ))}
+                    </Select>
+                  </Form.Item>
+                  <Form.Item
+                    label="CV / Portfolio (PDF)"
+                    name="cvFile"
+                    rules={[{ required: true, message: 'Tải lên CV/Portfolio' }]}
+                    valuePropName="fileList"
+                    getValueFromEvent={(e) => e?.fileList}
+                  >
+                    <Upload
+                      beforeUpload={() => false}
+                      maxCount={1}
+                      accept=".pdf,.doc,.docx"
+                      listType="text"
+                    >
+                      <Button>Tải CV</Button>
+                    </Upload>
+                  </Form.Item>
+                  <Space>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={verifyMentorMutation.isPending}
+                      className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
+                    >
+                      Gửi xác minh
+                    </Button>
+                    <Button onClick={() => mentorVerificationForm.resetFields()} disabled={verifyMentorMutation.isPending}>
+                      Xóa dữ liệu
+                    </Button>
+                  </Space>
+                </Form>
+              </>
+            )}
+          </div>
+        </Card>
       ),
     },
   ];

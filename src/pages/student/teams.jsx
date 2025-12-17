@@ -25,6 +25,7 @@ import {
   useGetTeamMembers,
   useLeaveTeam,
 } from '../../hooks/student/team-member';
+import useLoadingStore from '../../store/loadingStore';
 
 const StudentTeams = () => {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ const StudentTeams = () => {
   const [activeTab, setActiveTab] = useState('teams');
   const [isJoinModalVisible, setIsJoinModalVisible] = useState(false);
   const [selectedTeamForJoin, setSelectedTeamForJoin] = useState(null);
+  const { showLoading, hideLoading } = useLoadingStore();
 
   // Hooks for team operations
   const createTeamMutation = useCreateTeam();
@@ -54,7 +56,7 @@ const StudentTeams = () => {
 
   // Join requests hooks
   const { data: joinRequestsData, isLoading: joinRequestsLoading } = useGetMyTeamJoinRequests();
-  
+
   // Extract join requests from response
   const joinRequests = Array.isArray(joinRequestsData)
     ? joinRequestsData
@@ -152,23 +154,15 @@ const StudentTeams = () => {
   };
 
   const handleLeaveTeam = async (teamId) => {
+    showLoading('Đang xử lý rời đội...');
     try {
       await leaveTeamMutation.mutateAsync(teamId);
       message.success('Đã rời khỏi đội thành công!');
       setSelectedTeam(null);
     } catch (error) {
-      console.error('Leave team error:', error);
-      if (
-        error?.message?.includes('Network Error') ||
-        error?.code === 'NETWORK_ERROR'
-      ) {
-        message.error('Không thể kết nối đến máy chủ. Vui lòng thử lại.');
-      } else if (error?.response?.status === 401) {
-        message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-      } else {
-        message.error('Có lỗi xảy ra khi rời đội. Vui lòng thử lại.');
-      }
+      message.error(error?.response?.data?.message);
     }
+    hideLoading();
   };
 
   // Show loading spinner while fetching teams
@@ -229,9 +223,9 @@ const StudentTeams = () => {
         />
       </section>
 
-      
 
-      
+
+
     </div>
   );
 
