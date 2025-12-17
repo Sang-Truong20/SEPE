@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { message } from 'antd';
 import axiosClient from '../../configs/axiosClient';
 
 export const teamMemberQueryKeys = {
@@ -101,6 +102,10 @@ export const useInviteTeamMember = () => {
             // Invalidate team members list to show pending invitations
             queryClient.invalidateQueries({ queryKey: teamMemberQueryKeys.members(variables.teamId) });
         },
+        onError: (error) => {
+            const msg = error?.response?.data?.message || 'Không thể gửi lời mời. Vui lòng thử lại.';
+            message.error(msg);
+        },
     });
 };
 
@@ -117,7 +122,7 @@ export const useTransferTeamLeader = () => {
         onSuccess: (data, variables) => {
             // Invalidate team members list to reflect leadership change
             queryClient.invalidateQueries({ queryKey: teamMemberQueryKeys.members(variables.teamId) });
-            
+
             // Invalidate team data to update leader info
             queryClient.invalidateQueries({
                 predicate: (query) => query.queryKey[0] === 'student' && query.queryKey[1] === 'team'
