@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Alert, Button, Spin } from 'antd';
 import axiosClient from '../../configs/axiosClient';
 import { PATH_NAME } from '../../constants';
+import { useUserData } from '../../hooks/useUserData';
 
 const TeamInviteAcceptPage = () => {
   const navigate = useNavigate();
@@ -11,6 +12,20 @@ const TeamInviteAcceptPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [teamInfo, setTeamInfo] = useState(null);
+  const { userInfo } = useUserData();
+
+  const homeByRole = useMemo(() => {
+    const role = userInfo?.roleName || userInfo?.role;
+    if (!role) return PATH_NAME.HOME;
+    const r = String(role).toLowerCase();
+    if (r === 'admin') return PATH_NAME.ADMIN;
+    if (r === 'partner') return PATH_NAME.PARTNER;
+    if (r === 'judge') return PATH_NAME.JUDGE;
+    if (r === 'member' || r === 'student') return PATH_NAME.STUDENT;
+    if (r === 'mentor') return PATH_NAME.MENTOR;
+    if (r === 'chapterleader' || r === 'chapter') return PATH_NAME.CHAPTER;
+    return PATH_NAME.HOME;
+  }, [userInfo]);
 
   useEffect(() => {
     const accept = async () => {
@@ -61,7 +76,7 @@ const TeamInviteAcceptPage = () => {
             showIcon
             className="mb-4"
           />
-          <Button block type="primary" onClick={() => navigate(PATH_NAME.STUDENT_TEAMS)}>
+          <Button block type="primary" onClick={() => navigate(homeByRole)}>
             Về trang đội của tôi
           </Button>
         </div>
@@ -79,7 +94,11 @@ const TeamInviteAcceptPage = () => {
         <Button
           type="primary"
           block
-          onClick={() => navigate(`${PATH_NAME.STUDENT_TEAMS}/${teamInfo?.teamId || ''}`)}
+          onClick={() =>
+            navigate(
+              teamInfo?.teamId ? `${PATH_NAME.STUDENT_TEAMS}/${teamInfo.teamId}` : homeByRole,
+            )
+          }
         >
           Đi tới đội
         </Button>
