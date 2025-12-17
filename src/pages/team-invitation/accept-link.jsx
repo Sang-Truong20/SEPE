@@ -35,9 +35,11 @@ const TeamInviteAcceptPage = () => {
         return;
       }
       try {
-        const res = await axiosClient.get('/TeamInvitation/accept-link', {
-          params: { code },
-        });
+        const res = await axiosClient.post(
+          '/TeamInvitation/accept-link',
+          null,
+          { params: { code } },
+        );
         const payload = res?.data;
         if (payload?.success && payload?.data) {
           setTeamInfo(payload.data);
