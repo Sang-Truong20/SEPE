@@ -24,6 +24,18 @@ const STATUS_DICTIONARY = {
     { keys: ['pending', '0'], text: 'Chưa chấm', color: 'warning' },
     { keys: ['scored', 'done', '1'], text: 'Đã chấm', color: 'success' },
   ],
+  hackathon: [
+    { keys: ['pending', 'upcoming', '0'], text: 'Sắp diễn ra', color: 'warning' },
+    { keys: ['active', 'inprogress', 'in_progress', '1'], text: 'Đang diễn ra', color: 'processing' },
+    { keys: ['completed', 'complete', 'done', '2'], text: 'Đã kết thúc', color: 'default' },
+    { keys: ['closed', 'inactive', '3'], text: 'Đã đóng', color: 'default' },
+  ],
+  phase: [
+    { keys: ['pending', 'upcoming', '0'], text: 'Sắp bắt đầu', color: 'warning' },
+    { keys: ['active', 'inprogress', 'in_progress', '1'], text: 'Đang diễn ra', color: 'processing' },
+    { keys: ['completed', 'complete', 'done', '2'], text: 'Đã hoàn thành', color: 'success' },
+    { keys: ['closed', 'cancelled', '3'], text: 'Đã đóng', color: 'default' },
+  ],
 };
 
 const normalizeStatus = (status) => {

@@ -26,6 +26,7 @@ import { useGetTrackRanking } from '../../hooks/student/team-ranking';
 import { useUserData } from '../../hooks/useUserData';
 import { useGroups } from '../../hooks/admin/groups/useGroups';
 import { useGetHackathonPhases } from '../../hooks/student/hackathon-phase';
+import { getStatusDisplay } from '../../configs/statusConfig';
 
 const StudentHackathonDetail = () => {
   const navigate = useNavigate();
@@ -37,9 +38,9 @@ const StudentHackathonDetail = () => {
   const phase1 = phases.find(p => p.phaseNumber === 1 || p.phaseId === phases[0]?.phaseId);
   const { fetchGroupsByHackathon } = useGroups();
   const { data: groupsData = [], isLoading: groupsLoading } = fetchGroupsByHackathon(id);
-  
+
   const { data: myRegistrations } = useGetMyHackathonRegistrations();
-  
+
   // Normalize myTeamsData to always be an array
   const teamsArray = useMemo(() => {
     if (!myTeamsData) return [];
@@ -47,45 +48,45 @@ const StudentHackathonDetail = () => {
     if (Array.isArray(myTeamsData.data)) return myTeamsData.data;
     return [];
   }, [myTeamsData]);
-  
+
   // Check if user has any teams
   const hasTeams = teamsArray.length > 0;
-  
+
   // Filter teams where user is leader and hasn't joined any hackathon yet
   const availableTeams = useMemo(() => {
     if (!hasTeams || !userInfo) return [];
-    
+
     const userName = userInfo?.name || userInfo?.fullName || userInfo?.userName;
     const userId = userInfo?.id || userInfo?.userId;
-    
+
     return teamsArray.filter(t => {
       const teamLeaderName = t.teamLeaderName || t.leaderName || t.leader?.name;
       const teamLeaderId = t.teamLeaderId || t.leaderId || t.leader?.id || t.leader?.userId;
-      
+
       // Check if user is leader
       const isLeader = (teamLeaderName && userName && teamLeaderName === userName) ||
                       (teamLeaderId && userId && teamLeaderId === userId);
-      
+
       // Check if team hasn't joined any hackathon (hackathonId is null)
-      const hasNotJoined = t.hackathonId === null || t.hackathonId === undefined || 
+      const hasNotJoined = t.hackathonId === null || t.hackathonId === undefined ||
                           t.hackathonName === "(No hackathon)" || t.hackathonName === null;
-      
+
       return isLeader && hasNotJoined;
     });
   }, [teamsArray, userInfo, hasTeams]);
-  
+
   // Tìm registration của user cho hackathon hiện tại
   const myRegistration = useMemo(() => {
     if (!myRegistrations || !Array.isArray(myRegistrations)) return null;
     return myRegistrations.find(reg => reg.hackathonId === parseInt(id)) || null;
   }, [myRegistrations, id]);
-  
+
   // Alias để giữ tương thích với code cũ
   const registration = myRegistration;
-  
+
   const registerMutation = useRegisterHackathon();
   const assignMentorMutation = useAssignMentor();
-  
+
   const [rankingModalVisible, setRankingModalVisible] = useState(false);
   const [registerModalVisible, setRegisterModalVisible] = useState(false);
   const [mentorSelectModalVisible, setMentorSelectModalVisible] = useState(false);
@@ -96,22 +97,22 @@ const StudentHackathonDetail = () => {
 
   // Mock mentors data
   const mockMentors = [
-    { 
-      mentorId: 1, 
-      username: 'quangtrung89000', 
+    {
+      mentorId: 1,
+      username: 'quangtrung89000',
       email: '0583301@gmail.com',
       chapterName: 'FPT University',
       position: 'SE'
     },
-    { 
-      mentorId: 13, 
-      username: 'vy94307', 
+    {
+      mentorId: 13,
+      username: 'vy94307',
       email: 'vy94307@donga.edu.vn',
       chapterName: 'FPT University',
       position: 'SE'
     },
   ];
-  
+
   // Get ranking data when phase is selected
   const { data: rankingData = [] } = useGetTrackRanking(
     id,
@@ -134,10 +135,10 @@ const StudentHackathonDetail = () => {
       console.error('No team selected');
       return;
     }
-    
+
     try {
-      await registerMutation.mutateAsync({ 
-        hackathonId: parseInt(id), 
+      await registerMutation.mutateAsync({
+        hackathonId: parseInt(id),
         link: values.link || '',
         teamId: values.teamId
       });
@@ -181,9 +182,9 @@ const StudentHackathonDetail = () => {
 
   const getMyRegistrationStatusTag = (status) => {
     if (!status) return null;
-    
+
     const normalizedStatus = status?.toLowerCase();
-    
+
     switch (normalizedStatus) {
       case 'approved':
         return {
@@ -219,29 +220,19 @@ const StudentHackathonDetail = () => {
   };
 
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return 'orange';
-      case 'active':
-        return 'green';
-      case 'completed':
-        return 'default';
-      default:
-        return 'default';
-    }
+    const statusDisplay = getStatusDisplay(status, 'hackathon');
+    const colorMap = {
+      warning: 'orange',
+      processing: 'blue',
+      success: 'green',
+      default: 'default',
+    };
+    return colorMap[statusDisplay.color] || 'default';
   };
 
   const getStatusText = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return 'SẮP DIỄN RA';
-      case 'active':
-        return 'ĐANG DIỄN RA';
-      case 'completed':
-        return 'ĐÃ KẾT THÚC';
-      default:
-        return status?.toUpperCase() || 'UNKNOWN';
-    }
+    const statusDisplay = getStatusDisplay(status, 'hackathon');
+    return statusDisplay.text.toUpperCase();
   };
 
 
@@ -462,7 +453,7 @@ const StudentHackathonDetail = () => {
                   </div>
                 );
               })()}
-              
+
               {myRegistration?.chapterResponse && (
                 <div className="mb-2">
                   <p className="text-sm text-muted-foreground">
@@ -470,7 +461,7 @@ const StudentHackathonDetail = () => {
                   </p>
                 </div>
               )}
-              
+
               {!myRegistration && (
                 <Button
                   type="primary"
@@ -481,8 +472,8 @@ const StudentHackathonDetail = () => {
                   disabled={hackathon.status?.toLowerCase() === 'completed' || registerMutation.isPending || availableTeams.length === 0}
                   loading={registerMutation.isPending}
                 >
-                  {hackathon.status?.toLowerCase() === 'completed' 
-                    ? 'Đã kết thúc' 
+                  {hackathon.status?.toLowerCase() === 'completed'
+                    ? 'Đã kết thúc'
                     : 'Đăng ký Hackathon'}
                 </Button>
               )}
@@ -511,7 +502,7 @@ const StudentHackathonDetail = () => {
                 </>
               )}
 
-             
+
             </Space>
           </Card>
 
@@ -647,9 +638,9 @@ const StudentHackathonDetail = () => {
             name="link"
             rules={[
               { required: true, message: 'Vui lòng nhập link GitHub!' },
-              { 
-                type: 'url', 
-                message: 'Vui lòng nhập URL hợp lệ!' 
+              {
+                type: 'url',
+                message: 'Vui lòng nhập URL hợp lệ!'
               },
               {
                 pattern: /^https?:\/\/(www\.)?github\.com\/.+/i,
@@ -712,7 +703,7 @@ const StudentHackathonDetail = () => {
           <p className="text-muted-foreground mb-2">
             Vui lòng chọn một mentor để hỗ trợ đội của bạn trong hackathon này.
           </p>
-          
+
           {/* Search Input */}
           <Input
             placeholder="Tìm kiếm mentor theo tên, email, chapter..."
@@ -723,7 +714,7 @@ const StudentHackathonDetail = () => {
             allowClear
             className="[&_.ant-input]:bg-white/5 [&_.ant-input]:border-white/10 [&_.ant-input]:text-white [&_.ant-input]:placeholder:text-gray-500 [&_.ant-input]:focus:border-green-500/50 [&_.ant-input]:hover:border-green-500/30"
           />
-          
+
           {filteredMentors.length > 0 ? (
             <div className="grid grid-cols-2 gap-4">
               {filteredMentors.map((mentor) => (
@@ -748,7 +739,7 @@ const StudentHackathonDetail = () => {
                         </span>
                       </Avatar>
                     </div>
-                    
+
                     {/* Name and Position */}
                     <div className="flex-1 pt-1">
                       <div className="text-green-400 font-semibold text-xl mb-2">

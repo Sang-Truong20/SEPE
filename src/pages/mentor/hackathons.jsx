@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 import { useGetHackathons } from '../../hooks/student/hackathon';
 import { useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
+import { getStatusDisplay } from '../../configs/statusConfig';
 
 const { Option } = Select;
 
@@ -21,19 +22,19 @@ const MentorHackathons = () => {
 
   // Get hackathons from API
   const { data: hackathonsData, isLoading: hackathonsLoading } = useGetHackathons();
-  
+
   // Get mentor's hackathon registrations
   const { data: myRegistrationsData, isLoading: registrationsLoading } = useGetMyHackathonRegistrations();
 
   // Extract hackathon IDs from registrations
   const registeredHackathonIds = useMemo(() => {
     if (!myRegistrationsData) return [];
-    const registrations = Array.isArray(myRegistrationsData) 
-      ? myRegistrationsData 
-      : Array.isArray(myRegistrationsData?.data) 
-        ? myRegistrationsData.data 
+    const registrations = Array.isArray(myRegistrationsData)
+      ? myRegistrationsData
+      : Array.isArray(myRegistrationsData?.data)
+        ? myRegistrationsData.data
         : [];
-    
+
     return registrations
       .map(reg => reg.hackathonId || reg.hackathon?.hackathonId || reg.hackathon?.id)
       .filter(id => id !== undefined && id !== null);
@@ -43,23 +44,23 @@ const MentorHackathons = () => {
   const filteredHackathons = useMemo(() => {
     if (!hackathonsData || registeredHackathonIds.length === 0) return [];
     const hackathons = Array.isArray(hackathonsData) ? hackathonsData : hackathonsData?.data || [];
-    
+
     return hackathons.filter((hack) => {
       const hackathonId = hack.hackathonId ?? hack.id;
-      
+
       // Only show hackathons that mentor is registered in
       if (!registeredHackathonIds.includes(hackathonId)) return false;
-      
+
       // Exclude completed
       if (hack.status?.toLowerCase() === 'completed') return false;
-      
+
       // Filter by status
       if (statusFilter !== 'all') {
         const hackStatus = hack.status?.toLowerCase();
         if (statusFilter === 'active' && hackStatus !== 'active') return false;
         if (statusFilter === 'pending' && hackStatus !== 'pending' && hackStatus !== 'upcoming') return false;
       }
-      
+
       // Filter by search query
       if (hackathonSearchQuery) {
         const query = hackathonSearchQuery.toLowerCase();
@@ -67,7 +68,7 @@ const MentorHackathons = () => {
         const description = (hack.description || '').toLowerCase();
         if (!name.includes(query) && !description.includes(query)) return false;
       }
-      
+
       return true;
     });
   }, [hackathonsData, registeredHackathonIds, statusFilter, hackathonSearchQuery]);
@@ -80,17 +81,14 @@ const MentorHackathons = () => {
   };
 
   const getStatusBadge = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'active':
-        return <Tag color="green">ĐANG DIỄN RA</Tag>;
-      case 'pending':
-      case 'upcoming':
-        return <Tag color="orange">SẮP DIỄN RA</Tag>;
-      case 'inprogress':
-        return <Tag color="blue">ĐANG TIẾN HÀNH</Tag>;
-      default:
-        return <Tag>{status?.toUpperCase() || 'UNKNOWN'}</Tag>;
-    }
+    const statusDisplay = getStatusDisplay(status, 'hackathon');
+    const colorMap = {
+      warning: 'orange',
+      processing: 'blue',
+      success: 'green',
+      default: 'default',
+    };
+    return <Tag color={colorMap[statusDisplay.color] || 'default'}>{statusDisplay.text.toUpperCase()}</Tag>;
   };
 
   const formatDate = (dateString) => {
