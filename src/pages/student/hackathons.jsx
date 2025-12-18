@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGetHackathons } from '../../hooks/student/hackathon';
 import { useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
+import { getStatusDisplay } from '../../configs/statusConfig';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -21,28 +22,28 @@ const formatDate = (dateString) => {
 
 // Helper lấy màu và icon theo trạng thái
 const getStatusConfig = (status) => {
-  switch (status?.toLowerCase()) {
-    case 'active':
-    case 'inprogress':
-      return {
-        label: 'Đang diễn ra',
-        styles: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]',
-        icon: Zap
-      };
-    case 'pending':
-    case 'upcoming':
-      return {
-        label: 'Sắp diễn ra',
-        styles: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-        icon: Hourglass
-      };
-    default: // Completed, Unactive
-      return {
-        label: 'Đã đóng',
-        styles: 'bg-zinc-800 text-zinc-400 border-zinc-700',
-        icon: Archive
-      };
-  }
+  const statusDisplay = getStatusDisplay(status, 'hackathon');
+
+  // Map color từ statusConfig sang styles
+  const styleMap = {
+    warning: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    processing: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]',
+    success: 'bg-zinc-800 text-zinc-400 border-zinc-700',
+    default: 'bg-zinc-800 text-zinc-400 border-zinc-700',
+  };
+
+  const iconMap = {
+    warning: Hourglass,
+    processing: Zap,
+    success: Archive,
+    default: Archive,
+  };
+
+  return {
+    label: statusDisplay.text,
+    styles: styleMap[statusDisplay.color] || styleMap.default,
+    icon: iconMap[statusDisplay.color] || iconMap.default
+  };
 };
 
 const HackathonCard = ({ item, registration, onViewDetails }) => {
@@ -51,9 +52,9 @@ const HackathonCard = ({ item, registration, onViewDetails }) => {
 
   const getRegistrationBadge = () => {
     if (!registration) return null;
-    
+
     const status = registration.status?.toLowerCase();
-    
+
     switch (status) {
       case 'approved':
         return (
@@ -101,11 +102,11 @@ const HackathonCard = ({ item, registration, onViewDetails }) => {
           <Layers size={12} className="mr-1.5 text-muted-foreground" />
           {item.seasonName || 'Hackathon'}
         </span>
-        
+
         <div className="flex items-center gap-2">
           {/* Registration Badge */}
           {getRegistrationBadge()}
-        
+
         {/* Status Badge */}
         <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusConfig.styles}`}>
           <StatusIcon size={12} className="mr-1.5" />
@@ -132,21 +133,21 @@ const HackathonCard = ({ item, registration, onViewDetails }) => {
             <span className="text-[10px] uppercase text-muted-foreground font-semibold mb-0.5">Bắt đầu</span>
             <span className="text-sm font-medium text-text-primary">{formatDate(item.startDate)}</span>
           </div>
-          
+
           {/* Visual Connector: Dot - Line - Arrow - Line - Dot */}
           <div className="flex-1 px-4 flex items-center justify-center">
              <div className="w-full relative flex items-center">
                 {/* Start Dot */}
                 <div className="w-2 h-2 rounded-full bg-emerald-500/40 ring-2 ring-emerald-500/20 ring-offset-2 ring-offset-card-background z-10 group-hover:bg-emerald-500/60 group-hover:ring-emerald-500/40 transition-all"></div>
-                
+
                 {/* Line */}
                 <div className="flex-1 h-[2px] bg-gradient-to-r from-card-border via-emerald-500/20 to-card-border group-hover:from-emerald-500/40 group-hover:via-emerald-500/50 group-hover:to-emerald-500/40 transition-all"></div>
-                
+
                 {/* Central Arrow */}
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500/10 backdrop-blur-md text-emerald-400 group-hover:bg-emerald-500/20 group-hover:text-emerald-300 group-hover:scale-110 p-2 rounded-full border border-emerald-500/30 group-hover:border-emerald-500/50 shadow-lg shadow-emerald-500/10 group-hover:shadow-emerald-500/20 z-20 transition-all duration-300">
                    <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
                 </div>
-                
+
                 {/* End Dot */}
                 <div className="w-2 h-2 rounded-full bg-emerald-500/40 ring-2 ring-emerald-500/20 ring-offset-2 ring-offset-card-background z-10 group-hover:bg-emerald-500/60 group-hover:ring-emerald-500/40 transition-all"></div>
              </div>
@@ -217,7 +218,7 @@ const StudentHackathons = () => {
   // Filter hackathons based on search, status, and season
   const filteredHackathons = useMemo(() => {
     if (!hackathons || !Array.isArray(hackathons)) return [];
-    
+
     return hackathons.filter(h => {
       // Filter out completed hackathons
       if (h.status?.toLowerCase() === 'completed') return false;
@@ -284,7 +285,7 @@ const StudentHackathons = () => {
           </p>
         </div>
 
-        
+
       </div>
 
       {/* Search and Filter */}

@@ -18,6 +18,7 @@ import {
 import { useMentorChatGroups } from '../../hooks/mentor/chat';
 import { useGetHackathon } from '../../hooks/student/hackathon';
 import { useUserData } from '../../hooks/useUserData';
+import { getStatusDisplay } from '../../configs/statusConfig';
 
 const ChatGroupMessagesModal = ({ chatGroupId, open, onClose, group, currentMentorId }) => {
   const { data: messagesData, isLoading: messagesLoading } = useGetChatGroupMessages(chatGroupId);
@@ -148,7 +149,7 @@ const MentorHackathonDetail = () => {
   const currentMentorId = userInfo?.mentorId || userInfo?.id || userInfo?.userId || null;
 
   const { data: hackathonData, isLoading: hackathonLoading } = useGetHackathon(hackathonId);
-  
+
   // Get chat groups for mentor using /api/Chat/mentor/{mentorId}/groups
   const {
     data: mentorChatGroupsData,
@@ -169,7 +170,7 @@ const MentorHackathonDetail = () => {
 
     // Convert hackathonId from URL (string) to number for comparison
     const currentHackathonId = parseInt(hackathonId, 10);
-    
+
     if (isNaN(currentHackathonId)) return rawGroups;
 
     // Filter groups that belong to the current hackathon
