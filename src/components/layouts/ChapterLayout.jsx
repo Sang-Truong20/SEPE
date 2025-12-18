@@ -381,9 +381,7 @@ const ChapterLayout = ({ children }) => {
                       <div className="py-2">
                         <button
                           onClick={() => {
-                            handleNavigate(
-                              PATH_NAME.CHAPTER_PROFILE || PATH_NAME.USER_INFO,
-                            );
+                            handleNavigate(PATH_NAME.CHAPTER_PROFILE);
                             setIsDropdownOpen(false);
                           }}
                           className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
