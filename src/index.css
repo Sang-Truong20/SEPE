@@ -82,7 +82,7 @@
 /* Normalize Ant Design overlay opacity for dropdowns/modals/popups */
 :where(.ant-dropdown),
 :where(.ant-select-dropdown),
-:where(.ant-modal),
+/* :where(.ant-modal), */
 :where(.ant-popover),
 :where(.ant-picker-dropdown) {
   opacity: 1 !important;
