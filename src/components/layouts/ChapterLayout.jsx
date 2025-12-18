@@ -1,4 +1,4 @@
-import { CheckCircleOutlined, TrophyOutlined, CheckOutlined, CloseOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CheckOutlined, CloseOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { Modal, Button, Popconfirm } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -113,11 +113,6 @@ const ChapterLayout = ({ children }) => {
   const formatFullDateTime = (timestamp) => {
     if (!timestamp) return '—';
     return dayjs(timestamp).format('DD/MM/YYYY HH:mm');
-  };
-
-  const formatTime = (timestamp) => {
-    if (!timestamp) return '';
-    return dayjs(timestamp).fromNow();
   };
 
   const handleNotificationClick = (notification) => {
@@ -450,7 +445,7 @@ const ChapterLayout = ({ children }) => {
           <Button
             key="all"
             onClick={() => {
-              navigate(PATH_NAME.CHAPTER_NOTIFICATIONS || PATH_NAME.STUDENT_NOTIFICATIONS);
+              navigate(PATH_NAME.CHAPTER_NOTIFICATIONS);
               setSelectedNotification(null);
             }}
           >
