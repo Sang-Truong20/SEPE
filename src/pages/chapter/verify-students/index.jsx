@@ -116,7 +116,17 @@ const ChapterVerifyStudents = () => {
       approved: 'success',
       rejected: 'error',
     };
-    return <Tag color={colorMap[statusNormalized] || 'default'}>{statusRaw}</Tag>;
+
+    // Map status to Vietnamese labels
+    const statusLabelMap = {
+      pending: 'Chờ duyệt',
+      approved: 'Đã duyệt',
+      rejected: 'Từ chối',
+    };
+
+    const label = statusLabelMap[statusNormalized] || statusRaw || 'Không rõ';
+
+    return <Tag color={colorMap[statusNormalized] || 'default'}>{label}</Tag>;
   };
 
   const showModal = (request) => {

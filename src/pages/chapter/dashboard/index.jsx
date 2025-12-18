@@ -12,15 +12,19 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { Badge, Button, Card, Progress, Skeleton, Tag, Empty } from 'antd';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../../../configs/axiosClient';
 import { PATH_NAME } from '../../../constants';
+import { useGetMentorVerifications } from '../../../hooks/chapter/mentor-verification';
 
 const ChapterDashboard = () => {
   const navigate = useNavigate();
   const [pendingVerifications, setPendingVerifications] = useState([]);
   const [pendingLoading, setPendingLoading] = useState(true);
+
+  // Fetch mentor verifications
+  const { data: mentorVerificationsData, isLoading: mentorLoading } = useGetMentorVerifications();
 
   const getStatusTag = (statusRaw, statusNormalized) => {
     const colorMap = {
@@ -28,7 +32,17 @@ const ChapterDashboard = () => {
       approved: 'success',
       rejected: 'error',
     };
-    return <Tag color={colorMap[statusNormalized] || 'default'} style={{ marginLeft: 4 }}>{statusRaw}</Tag>;
+
+    // Map status to Vietnamese labels
+    const statusLabelMap = {
+      pending: 'Chờ duyệt',
+      approved: 'Đã duyệt',
+      rejected: 'Từ chối',
+    };
+
+    const label = statusLabelMap[statusNormalized] || statusRaw || 'Không rõ';
+
+    return <Tag color={colorMap[statusNormalized] || 'default'} style={{ marginLeft: 4 }}>{label}</Tag>;
   };
 
   const chapterStats = [
@@ -97,26 +111,42 @@ const ChapterDashboard = () => {
     fetchPendingOrRejected();
   }, []);
 
-  const mentorApplications = [
-    {
-      name: 'TS. Phạm Văn Đức',
-      position: 'Giảng viên Senior',
-      department: 'Khoa Công nghệ thông tin',
-      experience: '8 năm',
-      specialization: 'AI/Machine Learning',
-      submittedAt: '1 ngày trước',
-      status: 'pending',
-    },
-    {
-      name: 'ThS. Nguyễn Thị Mai',
-      position: 'Giảng viên',
-      department: 'Khoa Kỹ thuật phần mềm',
-      experience: '5 năm',
-      specialization: 'Web Development',
-      submittedAt: '2 ngày trước',
-      status: 'pending',
-    },
-  ];
+  // Map mentor verifications from API
+  const mentorApplications = useMemo(() => {
+    if (!mentorVerificationsData) return [];
+    const raw = Array.isArray(mentorVerificationsData)
+      ? mentorVerificationsData
+      : mentorVerificationsData?.data || [];
+
+    return raw.map((item) => {
+      const statusRaw = item.status || 'Pending';
+      const statusNormalized = statusRaw.toLowerCase();
+
+      return {
+        id: item.id,
+        name: item.fullName || '—',
+        position: item.position || '—',
+        email: item.email || '—',
+        phone: item.phone || '—',
+        cv: item.cv || null,
+        reasonToBecomeMentor: item.reasonToBecomeMentor || '—',
+        hackathonId: item.hackathonId,
+        chapterId: item.chapterId,
+        chapterName: item.chapterName || '—',
+        status: statusRaw,
+        statusNormalized,
+        submittedAt: item.createdAt || item.updatedAt || undefined,
+      };
+    });
+  }, [mentorVerificationsData]);
+
+  // Limit to 3 items for display
+  const displayedMentorApplications = mentorApplications.slice(0, 3);
+  const hasMoreMentors = mentorApplications.length > 3;
+
+  // Limit to 3 items for student verifications
+  const displayedPendingVerifications = pendingVerifications.slice(0, 3);
+  const hasMoreVerifications = pendingVerifications.length > 3;
 
   const universityInfo = {
     name: 'FPT University Hà Nội',
@@ -193,7 +223,7 @@ const ChapterDashboard = () => {
         >
           <div className="space-y-4">
             {pendingLoading ? (
-              Array.from({ length: 2 }).map((_, idx) => (
+              Array.from({ length: 3 }).map((_, idx) => (
                 <Card
                   key={`skeleton-${idx}`}
                   className="bg-white/5 border-white/10"
@@ -208,7 +238,7 @@ const ChapterDashboard = () => {
                 <Empty description="Không có yêu cầu verify" />
               </div>
             ) : (
-              pendingVerifications.map((student, index) => (
+              displayedPendingVerifications.map((student, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
@@ -273,6 +303,17 @@ const ChapterDashboard = () => {
                 </div>
               ))
             )}
+            {hasMoreVerifications && (
+              <div className="pt-2">
+                <Button
+                  onClick={() => navigate(PATH_NAME.CHAPTER_VERIFY_STUDENTS)}
+                  type="link"
+                  className="w-full text-center text-green-400 hover:text-green-300"
+                >
+                  Xem thêm ({pendingVerifications.length - 3} yêu cầu khác)
+                </Button>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -287,42 +328,105 @@ const ChapterDashboard = () => {
           }
         >
           <div className="space-y-4">
-            {mentorApplications.map((mentor, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h4 className="text-white">{mentor.name}</h4>
-                    <Badge
-                      style={{
-                        backgroundColor: 'rgba(168, 85, 247, 0.2)',
-                        color: '#c4b5fd',
-                        borderColor: 'rgba(168, 85, 247, 0.3)',
-                      }}
-                    >
-                      {mentor.position}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-gray-400 mb-1">{mentor.department}</p>
-                  <div className="flex items-center text-xs text-gray-400">
-                    <span className="mr-1">⭐</span>
-                    {mentor.experience} • {mentor.specialization}
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    onClick={() => navigate(PATH_NAME.CHAPTER_MENTOR_MANAGEMENT)}
-                    size="small"
-                    className="bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white border-0"
-                  >
-                    <EyeOutlined className="w-4 h-4 mr-1" />
-                    Xem
-                  </Button>
-                </div>
+            {mentorLoading ? (
+              Array.from({ length: 3 }).map((_, idx) => (
+                <Card
+                  key={`mentor-skeleton-${idx}`}
+                  className="bg-white/5 border-white/10"
+                  size="small"
+                  bodyStyle={{ padding: '16px' }}
+                >
+                  <Skeleton active paragraph={{ rows: 2 }} title={{ width: '40%' }} />
+                </Card>
+              ))
+            ) : displayedMentorApplications.length === 0 ? (
+              <div className="py-6">
+                <Empty description="Không có đăng ký mentor" />
               </div>
-            ))}
+            ) : (
+              displayedMentorApplications.map((mentor, index) => (
+                <div
+                  key={mentor.id || index}
+                  className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h4 className="text-white">{mentor.name}</h4>
+                      <Badge
+                        style={{
+                          backgroundColor: 'rgba(168, 85, 247, 0.2)',
+                          color: '#c4b5fd',
+                          borderColor: 'rgba(168, 85, 247, 0.3)',
+                        }}
+                      >
+                        {mentor.position}
+                      </Badge>
+                      {getStatusTag(mentor.status, mentor.statusNormalized)}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400 mb-2">
+                      {mentor.email && (
+                        <div className="flex items-center">
+                          <MailOutlined className="w-3 h-3 mr-1" />
+                          {mentor.email}
+                        </div>
+                      )}
+                      {mentor.phone && (
+                        <div className="flex items-center">
+                          <PhoneOutlined className="w-3 h-3 mr-1" />
+                          {mentor.phone}
+                        </div>
+                      )}
+                      {mentor.chapterName && (
+                        <div className="flex items-center">
+                          <BankOutlined className="w-3 h-3 mr-1" />
+                          {mentor.chapterName}
+                        </div>
+                      )}
+                      {mentor.reasonToBecomeMentor && (
+                        <div className="flex items-center">
+                          <FileTextOutlined className="w-3 h-3 mr-1" />
+                          <span className="truncate">{mentor.reasonToBecomeMentor}</span>
+                        </div>
+                      )}
+                    </div>
+                    {mentor.cv && (
+                      <div className="flex items-center text-xs text-gray-400">
+                        <FileTextOutlined className="w-3 h-3 mr-1" />
+                        <a
+                          href={mentor.cv}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:text-blue-300"
+                        >
+                          Xem CV
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      onClick={() => navigate(PATH_NAME.CHAPTER_MENTOR_MANAGEMENT)}
+                      size="small"
+                      className="bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white border-0"
+                    >
+                      <EyeOutlined className="w-4 h-4 mr-1" />
+                      Xem
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+            {hasMoreMentors && (
+              <div className="pt-2">
+                <Button
+                  onClick={() => navigate(PATH_NAME.CHAPTER_MENTOR_MANAGEMENT)}
+                  type="link"
+                  className="w-full text-center text-emerald-400 hover:text-emerald-300"
+                >
+                  Xem thêm ({mentorApplications.length - 3} đăng ký khác)
+                </Button>
+              </div>
+            )}
           </div>
         </Card>
       </div>

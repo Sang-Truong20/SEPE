@@ -175,11 +175,12 @@ const MyTeamPage = () => {
 
   const handleKickMember = (memberId) => {
     Modal.confirm({
-      title: 'Xác nhận loại thành viên',
-      content: 'Bạn có chắc chắn muốn loại thành viên này khỏi đội?',
+      title: <span className="text-white">Xác nhận loại thành viên</span>,
+      content: <span className="text-white">Bạn có chắc chắn muốn loại thành viên này khỏi đội?</span>,
       okText: 'Xác nhận',
       cancelText: 'Hủy',
       okButtonProps: { danger: true },
+      className: '[&_.ant-modal-content]:bg-dark-secondary [&_.ant-modal-content]:border-white/10 [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white [&_.ant-modal-confirm-title]:text-white [&_.ant-modal-confirm-content]:text-white',
       onOk: async () => {
         try {
           await kickMemberMutation.mutateAsync({ teamId: id, memberId });
