@@ -9,21 +9,27 @@ import {
     TeamOutlined,
     UserOutlined
 } from '@ant-design/icons';
-import { Alert, Avatar, Button, Card, Form, Input, message, Select, Space, Statistic, Tabs, Tag, Upload } from 'antd';
+import { Alert, Avatar, Button, Card, Form, Input, Modal, message, Select, Space, Statistic, Tabs, Tag, Upload } from 'antd';
  import { useState } from 'react';
  import { useCreateMentorVerification } from '../../hooks/mentor/verification';
  import { useGetChapters } from '../../hooks/student/chapter';
  import { useGetHackathons } from '../../hooks/student/hackathon';
 import { useLogout } from '../../hooks/useLogout';
+import { useUpdateUserInfo } from '../../hooks/useUpdateUserInfo';
+import { useUserData } from '../../hooks/useUserData';
 
 const MentorProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isUpdateNameModalVisible, setIsUpdateNameModalVisible] = useState(false);
+  const [updateNameForm] = Form.useForm();
   const [verificationStatus, setVerificationStatus] = useState('unverified'); // 'unverified' | 'pending' | 'verified'
   const [form] = Form.useForm();
   const verifyMutation = useCreateMentorVerification();
   const { data: chapters = [], isLoading: chaptersLoading } = useGetChapters();
   const { data: hackathons = [], isLoading: hackathonsLoading } = useGetHackathons();
   const logout = useLogout();
+  const { userInfo, refetch: refetchUserData } = useUserData();
+  const updateUserInfoMutation = useUpdateUserInfo();
   const hackathonOptions = Array.isArray(hackathons?.data)
     ? hackathons.data
     : Array.isArray(hackathons)
@@ -69,6 +75,7 @@ const MentorProfile = () => {
     message.success('Cập nhật hồ sơ mentor thành công!');
   };
 
+  // Filter tabs - chỉ hiển thị tab Tổng quan và Cài đặt
   const tabItems = [
     {
       key: '1',
@@ -81,228 +88,59 @@ const MentorProfile = () => {
               <div className="flex-1">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h2 className="text-2xl font-semibold text-text-primary mb-1">{mentorProfile.name}</h2>
-                    <p className="text-muted-foreground mb-1">{mentorProfile.email}</p>
-                    <p className="text-muted-foreground">{mentorProfile.phone}</p>
+                    <h2 className="text-2xl font-semibold text-text-primary mb-1">{userInfo?.fullName || userInfo?.name || mentorProfile.name}</h2>
+                    <p className="text-muted-foreground mb-1">{userInfo?.email || mentorProfile.email}</p>
+                    {userInfo?.roleName && (
+                      <p className="text-muted-foreground mb-1">
+                        Vai trò: {userInfo.roleName}
+                      </p>
+                    )}
+                    {userInfo?.isVerified !== undefined && (
+                      <p className="text-muted-foreground">
+                        Trạng thái: {userInfo.isVerified ? 'Đã xác minh' : 'Chưa xác minh'}
+                      </p>
+                    )}
                   </div>
                   <Button
                     type="primary"
                     icon={<EditOutlined />}
                     className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => {
+                      updateNameForm.setFieldsValue({
+                        fullName: userInfo?.fullName || userInfo?.name || mentorProfile.name,
+                      });
+                      setIsUpdateNameModalVisible(true);
+                    }}
                   >
                     Chỉnh sửa hồ sơ
                   </Button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-text-secondary mb-1">Tổ chức</label>
-                    <p className="text-text-primary">{mentorProfile.organization}</p>
-                  </div>
-                  <div>
-                    <label className="block text-text-secondary mb-1">Vị trí</label>
-                    <p className="text-text-primary">{mentorProfile.position}</p>
-                  </div>
-                  <div>
-                    <label className="block text-text-secondary mb-1">Địa điểm</label>
-                    <p className="text-text-primary">{mentorProfile.location}</p>
-                  </div>
+                  {userInfo?.userId && (
+                    <div>
+                      <label className="block text-text-secondary mb-1">User ID</label>
+                      <p className="text-text-primary">{userInfo.userId}</p>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-text-secondary mb-1">Ngày tham gia</label>
-                    <p className="text-text-primary">{mentorProfile.joinDate}</p>
+                    <p className="text-text-primary">
+                      {userInfo?.createdAt
+                        ? new Date(userInfo.createdAt).toLocaleDateString('vi-VN')
+                        : 'Chưa có thông tin'}
+                    </p>
                   </div>
-                </div>
-
-                <div className="mt-4">
-                  <label className="block text-text-secondary mb-2">Giới thiệu</label>
-                  <p className="text-text-primary bg-card-background/50 p-3 rounded-lg border border-card-border">
-                    {mentorProfile.bio}
-                  </p>
-                </div>
-
-                <div className="mt-4">
-                  <label className="block text-text-secondary mb-2">Thời gian có thể mentor</label>
-                  <p className="text-text-primary">{mentorProfile.availability}</p>
                 </div>
               </div>
             </div>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((stat, index) => (
-              <Card
-                key={index}
-                className="bg-card-background border border-card-border backdrop-blur-xl text-center"
-              >
-                <Statistic
-                  title={<span className="text-text-secondary">{stat.title}</span>}
-                  value={stat.value}
-                  suffix={stat.suffix}
-                  prefix={stat.icon}
-                  valueStyle={{ color: 'white', fontSize: '20px' }}
-                />
-              </Card>
-            ))}
-          </div>
         </div>
       ),
     },
     {
       key: '2',
-      label: 'Chuyên môn & Sở thích',
-      children: (
-        <div className="space-y-6">
-          <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Chuyên môn</h3>
-            <div className="flex flex-wrap gap-2">
-              {mentorProfile.specializations.map((skill) => (
-                <Tag key={skill} className="bg-primary/20 text-primary border-primary/30">
-                  {skill}
-                </Tag>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Sở thích</h3>
-            <div className="flex flex-wrap gap-2">
-              {mentorProfile.interests.map((interest) => (
-                <Tag key={interest} className="bg-secondary/20 text-secondary border-secondary/30">
-                  {interest}
-                </Tag>
-              ))}
-            </div>
-          </Card>
-        </div>
-      ),
-    },
-    {
-      key: '3',
-      label: 'Thành tích',
-      children: (
-        <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-          <div className="space-y-4">
-            {achievements.map((achievement) => (
-              <div
-                key={achievement.id}
-                className="flex items-center gap-4 p-4 bg-card-background/50 rounded-lg border border-card-border"
-              >
-                <div className="text-2xl">{achievement.icon}</div>
-                <div className="flex-1">
-                  <h4 className="text-text-primary font-medium m-0">{achievement.name}</h4>
-                  <p className="text-muted-foreground text-sm m-0">{achievement.description}</p>
-                  <p className="text-muted-foreground text-xs m-0">{achievement.date}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      ),
-    },
-    {
-      key: '4',
-      label: 'Hoạt động gần đây',
-      children: (
-        <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-          <div className="space-y-4">
-            {recentActivity.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-start gap-4 p-3 bg-card-background/50 rounded-lg border border-card-border"
-              >
-                <div
-                  className={`w-2 h-2 rounded-full mt-2 ${
-                    activity.status === 'success'
-                      ? 'bg-green-400'
-                      : activity.status === 'info'
-                        ? 'bg-blue-400'
-                        : 'bg-gray-400'
-                  }`}
-                />
-                <div className="flex-1">
-                  <h4 className="text-text-primary font-medium m-0">{activity.title}</h4>
-                  <p className="text-muted-foreground text-sm m-0">{activity.description}</p>
-                  <p className="text-muted-foreground text-xs m-0">{activity.date}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      ),
-    },
-    {
-      key: '5',
-      label: 'Cài đặt',
-      children: (
-        <div className="space-y-6">
-          <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Thông tin cá nhân</h3>
-            <Form
-              layout="vertical"
-              className="max-w-md"
-              onFinish={handleSaveProfile}
-              disabled={!isEditing}
-            >
-              <Form.Item label="Họ và tên" name="name" initialValue={mentorProfile.name}>
-                <Input />
-              </Form.Item>
-              <Form.Item label="Email" name="email" initialValue={mentorProfile.email}>
-                <Input />
-              </Form.Item>
-              <Form.Item label="Điện thoại" name="phone" initialValue={mentorProfile.phone}>
-                <Input />
-              </Form.Item>
-              <Form.Item label="Tổ chức" name="organization" initialValue={mentorProfile.organization}>
-                <Input />
-              </Form.Item>
-              <Form.Item label="Vị trí" name="position" initialValue={mentorProfile.position}>
-                <Input />
-              </Form.Item>
-              <Form.Item label="Địa điểm" name="location" initialValue={mentorProfile.location}>
-                <Input />
-              </Form.Item>
-              <Form.Item label="Giới thiệu" name="bio" initialValue={mentorProfile.bio}>
-                <Input.TextArea rows={3} />
-              </Form.Item>
-
-              {isEditing && (
-                <div className="flex space-x-2">
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
-                  >
-                    Lưu thay đổi
-                  </Button>
-                  <Button onClick={() => setIsEditing(false)}>Hủy</Button>
-                </div>
-              )}
-            </Form>
-          </Card>
-
-          <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Bảo mật</h3>
-            <div className="space-y-4">
-              <Button
-                icon={<LockOutlined />}
-                className="w-full justify-start border-white/20 bg-white/5 hover:bg-white/10"
-              >
-                Đổi mật khẩu
-              </Button>
-              <Button
-                icon={<BellOutlined />}
-                className="w-full justify-start border-white/20 bg-white/5 hover:bg-white/10"
-              >
-                Cài đặt thông báo
-              </Button>
-            </div>
-          </Card>
-        </div>
-      ),
-    },
-    {
-      key: '6',
       label: 'Xác minh mentor',
       children: (
         <Card className="bg-card-background border border-card-border backdrop-blur-xl">
@@ -489,6 +327,54 @@ const MentorProfile = () => {
         items={tabItems}
         className="[&_.ant-tabs-tab]:text-text-secondary [&_.ant-tabs-tab-active]:text-primary [&_.ant-tabs-ink-bar]:bg-primary [&_.ant-tabs-content]:text-white"
       />
+
+      {/* Modal cập nhật tên */}
+      <Modal
+        title="Cập nhật tên"
+        open={isUpdateNameModalVisible}
+        onCancel={() => {
+          setIsUpdateNameModalVisible(false);
+          updateNameForm.resetFields();
+        }}
+        onOk={() => {
+          updateNameForm.submit();
+        }}
+        okText="Cập nhật"
+        cancelText="Hủy"
+        confirmLoading={updateUserInfoMutation.isPending}
+        className="[&_.ant-modal-content]:bg-dark-secondary [&_.ant-modal-content]:border-white/10 [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white"
+      >
+        <Form
+          form={updateNameForm}
+          layout="vertical"
+          onFinish={(values) => {
+            const userId = userInfo?.id || userInfo?.userId;
+            if (!userId) {
+              message.error('Không tìm thấy thông tin người dùng');
+              return;
+            }
+            updateUserInfoMutation.mutate(
+              { id: userId, fullName: values.fullName },
+              {
+                onSuccess: async () => {
+                  setIsUpdateNameModalVisible(false);
+                  updateNameForm.resetFields();
+                  // Refetch user data to update UI
+                  await refetchUserData();
+                },
+              },
+            );
+          }}
+        >
+          <Form.Item
+            label="Họ và tên"
+            name="fullName"
+            rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}
+          >
+            <Input placeholder="Nhập họ và tên" className="bg-white/5 border-white/10 text-white" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
