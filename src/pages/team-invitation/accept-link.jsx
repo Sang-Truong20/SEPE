@@ -12,7 +12,7 @@ const TeamInviteAcceptPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [teamInfo, setTeamInfo] = useState(null);
-  const { userInfo } = useUserData();
+  const { userInfo, isLoading: userLoading } = useUserData();
 
   const homeByRole = useMemo(() => {
     const role = userInfo?.roleName || userInfo?.role;
@@ -28,7 +28,18 @@ const TeamInviteAcceptPage = () => {
   }, [userInfo]);
 
   useEffect(() => {
+    if (!userLoading && !userInfo) {
+      window.location.href = 'https://seal-fpt.vercel.app/';
+      return;
+    }
+  }, [userInfo, userLoading]);
+
+  useEffect(() => {
     const accept = async () => {
+      if (userLoading || !userInfo) {
+        return;
+      }
+
       if (!code) {
         setError('Thiếu mã lời mời (code) trong đường dẫn');
         setLoading(false);
@@ -56,7 +67,7 @@ const TeamInviteAcceptPage = () => {
     };
 
     accept();
-  }, [code, navigate]);
+  }, [code, navigate, userInfo, userLoading]);
 
   if (loading) {
     return (
