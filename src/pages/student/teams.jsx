@@ -26,6 +26,8 @@ import {
   useLeaveTeam,
 } from '../../hooks/student/team-member';
 import useLoadingStore from '../../store/loadingStore';
+import { useUserData } from '../../hooks/useUserData';
+import { PATH_NAME } from '../../constants';
 
 const StudentTeams = () => {
   const navigate = useNavigate();
@@ -53,6 +55,7 @@ const StudentTeams = () => {
 
   const leaveTeamMutation = useLeaveTeam();
   const createJoinRequestMutation = useCreateTeamJoinRequest();
+  const { userInfo } = useUserData();
 
   // Join requests hooks
   const { data: joinRequestsData, isLoading: joinRequestsLoading } = useGetMyTeamJoinRequests();
@@ -76,7 +79,25 @@ const StudentTeams = () => {
 
   const myTeams = myTeamsArray || [];
 
+  const handleOpenCreateModal = () => {
+    const isVerified = userInfo?.isVerified;
+    if (isVerified !== true) {
+      message.warning('Vui lòng xác minh sinh viên trước khi tạo nhóm');
+      navigate(PATH_NAME.STUDENT_PROFILE);
+      return;
+    }
+    setIsCreateModalVisible(true);
+  };
+
   const handleCreateTeam = async (values) => {
+    const isVerified = userInfo?.isVerified;
+    if (isVerified !== true) {
+      message.warning('Vui lòng xác minh sinh viên trước khi tạo nhóm');
+      setIsCreateModalVisible(false);
+      navigate(PATH_NAME.STUDENT_PROFILE);
+      return;
+    }
+
     try {
       await createTeamMutation.mutateAsync({
         teamName: values.teamName,
@@ -192,7 +213,7 @@ const StudentTeams = () => {
           <Button
             icon={<PlusOutlined />}
             className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-            onClick={() => setIsCreateModalVisible(true)}
+            onClick={handleOpenCreateModal}
           >
             Tạo đội mới
           </Button>
@@ -219,7 +240,7 @@ const StudentTeams = () => {
           isMyTeam={true}
           leaveTeamMutation={leaveTeamMutation}
           showCreateButton={true}
-          onCreateTeam={() => setIsCreateModalVisible(true)}
+          onCreateTeam={handleOpenCreateModal}
         />
       </section>
 
@@ -274,7 +295,7 @@ const StudentTeams = () => {
               )
             }
             className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all"
-            onClick={() => setIsCreateModalVisible(true)}
+            onClick={handleOpenCreateModal}
             loading={createTeamMutation.isPending}
           >
             Tạo đội mới
