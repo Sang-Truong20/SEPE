@@ -1,3 +1,5 @@
+import { CheckOutlined, CloseOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Modal, Button, Popconfirm } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import {
@@ -19,6 +21,8 @@ import {
   useGetNotifications,
   useGetUnreadCount,
   useMarkAsRead,
+  useAcceptTeamInvite,
+  useRejectTeamInvite,
 } from '../../hooks/student/notification';
 import { useUserData } from '../../hooks/useUserData';
 import { useLogout } from '../../hooks/useLogout';
@@ -66,6 +70,7 @@ const MentorLayout = () => {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
 
   const {
     data: notificationsResponse,
@@ -99,6 +104,8 @@ const MentorLayout = () => {
   }, [unreadCountResponse, notifications]);
 
   const markAsRead = useMarkAsRead();
+  const acceptInvite = useAcceptTeamInvite();
+  const rejectInvite = useRejectTeamInvite();
   const { userInfo: authUser } = useUserData();
   const mutationLogout = useLogout();
 
@@ -138,6 +145,67 @@ const MentorLayout = () => {
 
   const isActivePage = (path) => {
     return location.pathname === path;
+  };
+
+  const formatFullDateTime = (timestamp) => {
+    if (!timestamp) return '—';
+    return dayjs(timestamp).format('DD/MM/YYYY HH:mm');
+  };
+
+  const formatTime = (timestamp) => {
+    if (!timestamp) return '';
+    return dayjs(timestamp).fromNow();
+  };
+
+  const handleNotificationClick = (notification) => {
+    const notificationId = notification.notificationId || notification.id;
+    if (!notification.isRead && notificationId) {
+      markAsRead.mutate(notificationId);
+    }
+    setSelectedNotification(notification);
+  };
+
+  const handleAcceptInvite = (notification) => {
+    const teamId = notification.relatedId || notification.teamId;
+    if (teamId) {
+      acceptInvite.mutate(
+        { notificationId: notification.notificationId || notification.id, teamId },
+        {
+          onSuccess: () => {
+            const notificationId = notification.notificationId || notification.id;
+            if (notificationId) {
+              markAsRead.mutate(notificationId);
+            }
+            setSelectedNotification(null);
+          },
+        },
+      );
+    }
+  };
+
+  const handleRejectInvite = (notification) => {
+    const teamId = notification.relatedId || notification.teamId;
+    if (teamId) {
+      rejectInvite.mutate(
+        { notificationId: notification.notificationId || notification.id, teamId },
+        {
+          onSuccess: () => {
+            const notificationId = notification.notificationId || notification.id;
+            if (notificationId) {
+              markAsRead.mutate(notificationId);
+            }
+            setSelectedNotification(null);
+          },
+        },
+      );
+    }
+  };
+
+  const handleMarkAsRead = (notification) => {
+    const notificationId = notification.notificationId || notification.id;
+    if (notificationId && !notification.isRead) {
+      markAsRead.mutate(notificationId);
+    }
   };
 
   return (
@@ -241,12 +309,7 @@ const MentorLayout = () => {
                                     isUnread ? 'bg-blue-500/5' : ''
                                   }`}
                                   onClick={() => {
-                                    if (isUnread) {
-                                      markAsRead.mutate(
-                                        notification.notificationId ||
-                                          notification.id,
-                                      );
-                                    }
+                                    handleNotificationClick(notification);
                                     setIsNotificationOpen(false);
                                   }}
                                 >
@@ -427,6 +490,157 @@ const MentorLayout = () => {
       <main className="pt-6">
         <Outlet />
       </main>
+
+      <Modal
+        open={!!selectedNotification}
+        title={
+          <div className="text-white">
+            {selectedNotification?.title || selectedNotification?.message || 'Chi tiết thông báo'}
+          </div>
+        }
+        onCancel={() => setSelectedNotification(null)}
+        footer={[
+          <Button
+            key="all"
+            onClick={() => {
+              navigate(
+                PATH_NAME.MENTOR_NOTIFICATIONS || PATH_NAME.STUDENT_NOTIFICATIONS,
+              );
+              setSelectedNotification(null);
+            }}
+          >
+            Xem tất cả thông báo
+          </Button>,
+          <Button key="close" type="primary" onClick={() => setSelectedNotification(null)}>
+            Đóng
+          </Button>,
+        ]}
+        className="[&_.ant-modal-content]:bg-dark-secondary [&_.ant-modal-content]:border-white/10 [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white"
+        width={600}
+      >
+        {selectedNotification && (
+          <div className="space-y-4">
+            {/* Chi tiết thông báo */}
+            <div className="p-4 rounded-lg border border-white/10 bg-white/5 text-sm space-y-3">
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400">Loại</span>
+                <span className="text-white">{selectedNotification.type || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400">Tiêu đề</span>
+                <span className="text-white text-right">
+                  {selectedNotification.title || selectedNotification.message || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400">Nội dung</span>
+                <span className="text-white text-right">
+                  {selectedNotification.message || selectedNotification.content || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400">Thời gian</span>
+                <span className="text-white text-right flex items-center gap-1.5">
+                  <ClockCircleOutlined className="text-[10px]" />
+                  {formatFullDateTime(
+                    selectedNotification.sentAt ||
+                      selectedNotification.createdAt ||
+                      selectedNotification.createdDate ||
+                      selectedNotification.timestamp,
+                  )}
+                </span>
+              </div>
+              {(selectedNotification.teamName || selectedNotification.teamId) && (
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-400">Đội</span>
+                  <span className="text-white text-right">
+                    {selectedNotification.teamName || selectedNotification.teamId}
+                  </span>
+                </div>
+              )}
+              {selectedNotification.relatedId && (
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-400">Liên quan ID</span>
+                  <span className="text-white text-right">{selectedNotification.relatedId}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Team Invite Actions */}
+            {(selectedNotification.type === 'TEAM_INVITE' ||
+              selectedNotification.type === 'team_invite' ||
+              selectedNotification.type?.toLowerCase().includes('team')) && (
+              <div className="pt-4 border-t border-white/10 flex items-center gap-2 flex-wrap">
+                <Popconfirm
+                  title="Chấp nhận lời mời?"
+                  description="Bạn có chắc chắn muốn tham gia đội này?"
+                  onConfirm={() => handleAcceptInvite(selectedNotification)}
+                  okText="Chấp nhận"
+                  cancelText="Hủy"
+                  okButtonProps={{
+                    loading: acceptInvite.isPending,
+                  }}
+                >
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<CheckOutlined />}
+                    className="bg-green-500 hover:bg-green-600 border-0"
+                  >
+                    Chấp nhận
+                  </Button>
+                </Popconfirm>
+                <Popconfirm
+                  title="Từ chối lời mời?"
+                  description="Bạn có chắc chắn muốn từ chối lời mời này?"
+                  onConfirm={() => handleRejectInvite(selectedNotification)}
+                  okText="Từ chối"
+                  cancelText="Hủy"
+                  okButtonProps={{
+                    danger: true,
+                    loading: rejectInvite.isPending,
+                  }}
+                >
+                  <Button
+                    danger
+                    size="small"
+                    icon={<CloseOutlined />}
+                  >
+                    Từ chối
+                  </Button>
+                </Popconfirm>
+                {selectedNotification.teamId && (
+                  <Button
+                    size="small"
+                    className="border-white/20 bg-white/5 hover:bg-white/10 text-white"
+                    onClick={() => {
+                      navigate(`${PATH_NAME.STUDENT_TEAMS}/${selectedNotification.teamId}`);
+                      setSelectedNotification(null);
+                    }}
+                  >
+                    Xem đội
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Mark as Read */}
+            {!selectedNotification.isRead && (
+              <div className="pt-4 border-t border-white/10">
+                <Button
+                  type="text"
+                  size="small"
+                  className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 px-3"
+                  onClick={() => handleMarkAsRead(selectedNotification)}
+                  loading={markAsRead.isPending}
+                >
+                  Đánh dấu đã đọc
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
 
       {/* Footer */}
       <footer className="mt-16 border-t border-white/5 bg-darkv2-secondary/60 backdrop-blur-xl">
