@@ -1,4 +1,5 @@
-import { CheckCircleOutlined, TrophyOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, TrophyOutlined, CheckOutlined, CloseOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Modal, Button, Popconfirm } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import {
@@ -16,6 +17,13 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 import { useLogout } from '../../hooks/useLogout.js';
 import { useUserData } from '../../hooks/useUserData.js';
+import {
+  useGetNotifications,
+  useGetUnreadCount,
+  useMarkAsRead,
+  useAcceptTeamInvite,
+  useRejectTeamInvite,
+} from '../../hooks/student/notification';
 
 dayjs.extend(relativeTime);
 
@@ -51,6 +59,29 @@ const ChapterLayout = ({ children }) => {
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
+
+  const { data: notificationsData, isLoading: notificationsLoading } = useGetNotifications();
+  const { data: unreadCountData } = useGetUnreadCount();
+  const markAsRead = useMarkAsRead();
+  const acceptInvite = useAcceptTeamInvite();
+  const rejectInvite = useRejectTeamInvite();
+
+  const notifications = useMemo(() => {
+    if (!notificationsData) return mockNotifications;
+    if (Array.isArray(notificationsData)) return notificationsData;
+    if (Array.isArray(notificationsData.data)) return notificationsData.data;
+    return mockNotifications;
+  }, [notificationsData]);
+
+  const unreadCount = useMemo(() => {
+    if (typeof unreadCountData === 'number') return unreadCountData;
+    if (typeof unreadCountData?.count === 'number') return unreadCountData.count;
+    if (typeof unreadCountData?.data?.count === 'number') return unreadCountData.data.count;
+    return notifications.filter((n) => !n.isRead).length;
+  }, [unreadCountData, notifications]);
+
+  const recentNotifications = notifications.slice(0, 5);
 
   const navItems = [
     {
@@ -79,8 +110,66 @@ const ChapterLayout = ({ children }) => {
     },
   ];
 
-  const notifications = mockNotifications;
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const formatFullDateTime = (timestamp) => {
+    if (!timestamp) return '—';
+    return dayjs(timestamp).format('DD/MM/YYYY HH:mm');
+  };
+
+  const formatTime = (timestamp) => {
+    if (!timestamp) return '';
+    return dayjs(timestamp).fromNow();
+  };
+
+  const handleNotificationClick = (notification) => {
+    const notificationId = notification.notificationId || notification.id;
+    if (!notification.isRead && notificationId) {
+      markAsRead.mutate(notificationId);
+    }
+    setSelectedNotification(notification);
+  };
+
+  const handleAcceptInvite = (notification) => {
+    const teamId = notification.relatedId || notification.teamId;
+    if (teamId) {
+      acceptInvite.mutate(
+        { notificationId: notification.notificationId || notification.id, teamId },
+        {
+          onSuccess: () => {
+            const notificationId = notification.notificationId || notification.id;
+            if (notificationId) {
+              markAsRead.mutate(notificationId);
+            }
+            setSelectedNotification(null);
+          },
+        },
+      );
+    }
+  };
+
+  const handleRejectInvite = (notification) => {
+    const teamId = notification.relatedId || notification.teamId;
+    if (teamId) {
+      rejectInvite.mutate(
+        { notificationId: notification.notificationId || notification.id, teamId },
+        {
+          onSuccess: () => {
+            const notificationId = notification.notificationId || notification.id;
+            if (notificationId) {
+              markAsRead.mutate(notificationId);
+            }
+            setSelectedNotification(null);
+          },
+        },
+      );
+    }
+  };
+
+  const handleMarkAsRead = (notification) => {
+    const notificationId = notification.notificationId || notification.id;
+    if (notificationId && !notification.isRead) {
+      markAsRead.mutate(notificationId);
+    }
+  };
 
   const chapterUser = useMemo(
     () => ({
@@ -170,41 +259,71 @@ const ChapterLayout = ({ children }) => {
                       </div>
 
                       <div className="overflow-y-auto flex-1 divide-y divide-white/10">
-                        {notifications.map((notification) => {
-                          const isUnread = !notification.isRead;
-                          return (
-                            <div
-                              key={notification.id}
-                              className={`p-4 hover:bg-white/5 transition-colors cursor-pointer ${
-                                isUnread ? 'bg-green-500/5' : ''
-                              }`}
-                              onClick={() => {
-                                setIsNotificationOpen(false);
-                                handleNavigate(PATH_NAME.CHAPTER_NOTIFICATIONS);
-                              }}
-                            >
-                              <div className="flex items-start space-x-3">
-                                {isUnread && (
-                                  <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0" />
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <p
-                                    className={`text-sm font-medium truncate ${isUnread ? 'text-white' : 'text-muted-foreground'}`}
-                                  >
-                                    {notification.title}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                    {notification.message}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground mt-2">
-                                    {dayjs(notification.createdAt).fromNow()}
-                                  </p>
+                        {notificationsLoading ? (
+                          <div className="p-8 text-center">
+                            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                          </div>
+                        ) : recentNotifications.length > 0 ? (
+                          recentNotifications.map((notification) => {
+                            const isUnread = !notification.isRead;
+                            return (
+                              <div
+                                key={notification.notificationId || notification.id}
+                                className={`p-4 hover:bg-white/5 transition-colors cursor-pointer ${
+                                  isUnread ? 'bg-green-500/5' : ''
+                                }`}
+                                onClick={() => {
+                                  handleNotificationClick(notification);
+                                  setIsNotificationOpen(false);
+                                }}
+                              >
+                                <div className="flex items-start space-x-3">
+                                  {isUnread && (
+                                    <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0" />
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <p
+                                      className={`text-sm font-medium truncate ${isUnread ? 'text-white' : 'text-muted-foreground'}`}
+                                    >
+                                      {notification.title || notification.message}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                      {notification.message || notification.content}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                      {dayjs(
+                                        notification.createdAt ||
+                                          notification.createdDate ||
+                                          notification.timestamp,
+                                      ).fromNow()}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })
+                        ) : (
+                          <div className="p-8 text-center text-muted-foreground">
+                            <Bell className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                            <p>Không có thông báo nào</p>
+                          </div>
+                        )}
                       </div>
+
+                      {/* Footer */}
+                      {recentNotifications.length > 0 && (
+                        <div className="p-3 border-t border-white/10">
+                          <button
+                            onClick={() => {
+                              handleNavigate(PATH_NAME.CHAPTER_NOTIFICATIONS);
+                              setIsNotificationOpen(false);
+                            }}
+                            className="w-full text-center text-sm text-green-400 hover:text-green-300 transition-colors"
+                          >
+                            Xem tất cả thông báo
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -318,6 +437,155 @@ const ChapterLayout = ({ children }) => {
       </nav>
 
       <main >{children || <Outlet />}</main>
+
+      <Modal
+        open={!!selectedNotification}
+        title={
+          <div className="text-white">
+            {selectedNotification?.title || selectedNotification?.message || 'Chi tiết thông báo'}
+          </div>
+        }
+        onCancel={() => setSelectedNotification(null)}
+        footer={[
+          <Button
+            key="all"
+            onClick={() => {
+              navigate(PATH_NAME.CHAPTER_NOTIFICATIONS || PATH_NAME.STUDENT_NOTIFICATIONS);
+              setSelectedNotification(null);
+            }}
+          >
+            Xem tất cả thông báo
+          </Button>,
+          <Button key="close" type="primary" onClick={() => setSelectedNotification(null)}>
+            Đóng
+          </Button>,
+        ]}
+        className="[&_.ant-modal-content]:bg-dark-secondary [&_.ant-modal-content]:border-white/10 [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white"
+        width={600}
+      >
+        {selectedNotification && (
+          <div className="space-y-4">
+            {/* Chi tiết thông báo */}
+            <div className="p-4 rounded-lg border border-white/10 bg-white/5 text-sm space-y-3">
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400">Loại</span>
+                <span className="text-white">{selectedNotification.type || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400">Tiêu đề</span>
+                <span className="text-white text-right">
+                  {selectedNotification.title || selectedNotification.message || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400">Nội dung</span>
+                <span className="text-white text-right">
+                  {selectedNotification.message || selectedNotification.content || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400">Thời gian</span>
+                <span className="text-white text-right flex items-center gap-1.5">
+                  <ClockCircleOutlined className="text-[10px]" />
+                  {formatFullDateTime(
+                    selectedNotification.sentAt ||
+                      selectedNotification.createdAt ||
+                      selectedNotification.createdDate ||
+                      selectedNotification.timestamp,
+                  )}
+                </span>
+              </div>
+              {(selectedNotification.teamName || selectedNotification.teamId) && (
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-400">Đội</span>
+                  <span className="text-white text-right">
+                    {selectedNotification.teamName || selectedNotification.teamId}
+                  </span>
+                </div>
+              )}
+              {selectedNotification.relatedId && (
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-400">Liên quan ID</span>
+                  <span className="text-white text-right">{selectedNotification.relatedId}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Team Invite Actions */}
+            {(selectedNotification.type === 'TEAM_INVITE' ||
+              selectedNotification.type === 'team_invite' ||
+              selectedNotification.type?.toLowerCase().includes('team')) && (
+              <div className="pt-4 border-t border-white/10 flex items-center gap-2 flex-wrap">
+                <Popconfirm
+                  title="Chấp nhận lời mời?"
+                  description="Bạn có chắc chắn muốn tham gia đội này?"
+                  onConfirm={() => handleAcceptInvite(selectedNotification)}
+                  okText="Chấp nhận"
+                  cancelText="Hủy"
+                  okButtonProps={{
+                    loading: acceptInvite.isPending,
+                  }}
+                >
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<CheckOutlined />}
+                    className="bg-green-500 hover:bg-green-600 border-0"
+                  >
+                    Chấp nhận
+                  </Button>
+                </Popconfirm>
+                <Popconfirm
+                  title="Từ chối lời mời?"
+                  description="Bạn có chắc chắn muốn từ chối lời mời này?"
+                  onConfirm={() => handleRejectInvite(selectedNotification)}
+                  okText="Từ chối"
+                  cancelText="Hủy"
+                  okButtonProps={{
+                    danger: true,
+                    loading: rejectInvite.isPending,
+                  }}
+                >
+                  <Button
+                    danger
+                    size="small"
+                    icon={<CloseOutlined />}
+                  >
+                    Từ chối
+                  </Button>
+                </Popconfirm>
+                {selectedNotification.teamId && (
+                  <Button
+                    size="small"
+                    className="border-white/20 bg-white/5 hover:bg-white/10 text-white"
+                    onClick={() => {
+                      navigate(`${PATH_NAME.STUDENT_TEAMS}/${selectedNotification.teamId}`);
+                      setSelectedNotification(null);
+                    }}
+                  >
+                    Xem đội
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Mark as Read */}
+            {!selectedNotification.isRead && (
+              <div className="pt-4 border-t border-white/10">
+                <Button
+                  type="text"
+                  size="small"
+                  className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 px-3"
+                  onClick={() => handleMarkAsRead(selectedNotification)}
+                  loading={markAsRead.isPending}
+                >
+                  Đánh dấu đã đọc
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
 
       <footer className="mt-16 border-t border-white/5 bg-darkv2-secondary/60 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
