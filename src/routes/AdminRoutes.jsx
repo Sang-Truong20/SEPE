@@ -20,7 +20,7 @@ const AdminRoutes = () => {
 
   // Redirect to hackathons if navigating to /admin directly
   if (isAdmin && location.pathname === PATH_NAME.ADMIN) {
-    return <Navigate to={`${PATH_NAME.ADMIN}/hackathons`} replace />;
+    return <Navigate to={`${PATH_NAME.ADMIN_DASHBOARD}`} replace />;
   }
 
   return isAdmin ? (

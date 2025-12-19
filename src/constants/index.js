@@ -6,6 +6,7 @@ const PATH_NAME = {
   STUDENT: '/student',
   ADMIN: '/admin',
   ADMIN_USERS: '/admin/users',
+  ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_SEASON: '/admin/season',
   ADMIN_TEAMS: '/admin/team',
   ADMIN_GROUPS: '/admin/groups',
