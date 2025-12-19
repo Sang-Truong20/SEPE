@@ -818,7 +818,8 @@ const StudentHackathonDetail = () => {
           ) : filteredMentors.length > 0 ? (
             <div className="grid grid-cols-2 gap-4">
               {filteredMentors.map((mentor) => {
-                const mentorId = mentor.mentorId || mentor.id || mentor.userId;
+                // Sử dụng userId từ API response
+                const mentorUserId = mentor.userId;
                 const username =
                   mentor.username ||
                   mentor.userName ||
@@ -830,10 +831,10 @@ const StudentHackathonDetail = () => {
 
                 return (
                   <div
-                    key={mentorId}
-                    onClick={() => setSelectedMentorId(mentorId)}
+                    key={mentorUserId}
+                    onClick={() => setSelectedMentorId(mentorUserId)}
                     className={`relative p-5 rounded-xl transition-all duration-200 border-2 cursor-pointer ${
-                      selectedMentorId === mentorId
+                      selectedMentorId === mentorUserId
                         ? 'bg-green-500/10 border-green-500 shadow-lg shadow-green-500/20'
                         : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-green-500/30 hover:shadow-md'
                     }`}
