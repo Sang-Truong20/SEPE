@@ -7,6 +7,8 @@ import {
 
 const TrackCard = ({ track, isSelected, onSelect, onSubmit }) => {
   const hasChallenges = track.challenges && track.challenges.length > 0;
+  // Nếu track đã có challenges, coi như đã được chọn và ẩn nút
+  const isTrackAssigned = hasChallenges;
 
   return (
     <div
@@ -65,25 +67,27 @@ const TrackCard = ({ track, isSelected, onSelect, onSubmit }) => {
         </div>
 
         {/* Footer Actions */}
-        <div className="mt-4 pt-4 border-t border-slate-800">
-          <button
-            type="button"
-            className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-              hasChallenges
-                ? 'bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-500/20'
-                : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-            }`}
-            disabled={!hasChallenges || !onSubmit}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (hasChallenges && onSubmit) {
-                onSubmit();
-              }
-            }}
-          >
-            {hasChallenges ? 'Bắt đầu ngay' : 'Sắp ra mắt'}
-          </button>
-        </div>
+        {!isSelected && !isTrackAssigned && (
+          <div className="mt-4 pt-4 border-t border-slate-800">
+            <button
+              type="button"
+              className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                hasChallenges
+                  ? 'bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-500/20'
+                  : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+              }`}
+              disabled={!hasChallenges || !onSubmit}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (hasChallenges && onSubmit) {
+                  onSubmit();
+                }
+              }}
+            >
+              {hasChallenges ? 'Bắt đầu ngay' : 'Sắp ra mắt'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

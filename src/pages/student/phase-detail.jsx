@@ -2,12 +2,12 @@ import { ArrowLeftOutlined, CalendarOutlined, TeamOutlined, TrophyOutlined, Excl
 import { Alert, Button, Card, Form, Input, Modal, Spin, Table, Tag, Tabs, message } from 'antd';
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { 
-  PhaseInfoCard, 
-  TracksSelection, 
+import {
+  PhaseInfoCard,
+  TracksSelection,
   PhaseInfoSidebar,
   SubmissionSection,
-  getPhaseStatus 
+  getPhaseStatus
 } from '../../components/features/student/phase-detail';
 import { useGroups } from '../../hooks/admin/groups/useGroups';
 import { useGetHackathon } from '../../hooks/student/hackathon';
@@ -29,7 +29,7 @@ import { useUserData } from '../../hooks/useUserData';
 const StudentPhaseDetail = () => {
   const navigate = useNavigate();
   const { phaseId, hackathonId } = useParams();
-  
+
   const { userInfo } = useUserData();
   const { data: teamsData } = useGetTeams();
   const { data: myTeamsData, isLoading: myTeamsLoading } = useGetMyTeams();
@@ -40,16 +40,16 @@ const StudentPhaseDetail = () => {
   const isPhase1 = phaseIndex === 0; // First phase in array
   const isPhase2 = phaseIndex === 1; // Second phase in array
   const showTrackSelection = !isPhase2; // Hide track selection for phase 2
-  
+
   // Get my hackathon registrations to find teamId
   const { data: myRegistrations } = useGetMyHackathonRegistrations();
-  
+
   // Find registration for current hackathon
   const myRegistration = React.useMemo(() => {
     if (!myRegistrations || !Array.isArray(myRegistrations)) return null;
     return myRegistrations.find(reg => reg.hackathonId === parseInt(hackathonId)) || null;
   }, [myRegistrations, hackathonId]);
-  
+
   // Get teamId from my-teams API matching current hackathon
   const teamId = React.useMemo(() => {
     // First try to get from my-teams API matching hackathon
@@ -63,13 +63,13 @@ const StudentPhaseDetail = () => {
       } else if (Array.isArray(myTeamsData?.teams)) {
         myTeams = myTeamsData.teams;
       }
-      
+
       // Debug: log teams and hackathonId for troubleshooting
       if (myTeams.length > 0) {
         console.log('[PhaseDetail] My teams:', myTeams);
         console.log('[PhaseDetail] Looking for hackathonId:', hackathonId);
       }
-      
+
       // Find team that matches current hackathon
       const matchedTeam = myTeams.find(team => {
         const teamHackathonId = team.hackathonId || team.hackathon?.hackathonId || team.hackathon?.id;
@@ -79,7 +79,7 @@ const StudentPhaseDetail = () => {
         }
         return matches;
       });
-      
+
       if (matchedTeam) {
         const foundTeamId = matchedTeam.teamId || matchedTeam.id || null;
         console.log('[PhaseDetail] Using teamId from my-teams:', foundTeamId);
@@ -88,7 +88,7 @@ const StudentPhaseDetail = () => {
         console.warn('[PhaseDetail] No team found for hackathonId:', hackathonId, 'Available teams:', myTeams.map(t => ({ teamId: t.teamId || t.id, hackathonId: t.hackathonId })));
       }
     }
-    
+
     // Try to get teamId from myRegistration
     if (myRegistration?.teamId) {
       console.log('[PhaseDetail] Using teamId from registration:', myRegistration.teamId);
@@ -102,7 +102,7 @@ const StudentPhaseDetail = () => {
       console.log('[PhaseDetail] Using teamId from registration.team.id:', myRegistration.team.id);
       return myRegistration.team.id;
     }
-    
+
     // Fallback: try to find from teamsData
     if (teamsData && Array.isArray(teamsData)) {
       const userTeam = teamsData.find(t => t.leaderId === (userInfo?.id || userInfo?.userId));
@@ -111,52 +111,52 @@ const StudentPhaseDetail = () => {
         return userTeam.teamId || userTeam.id || null;
       }
     }
-    
+
     console.error('[PhaseDetail] No teamId found. myTeamsData:', myTeamsData, 'hackathonId:', hackathonId, 'myRegistration:', myRegistration);
     return null;
   }, [myTeamsData, hackathonId, myRegistration, teamsData, userInfo]);
-  
+
   // Get penalties for team in current phase
   const { data: penaltiesData = [], isLoading: penaltiesLoading } = useGetTeamPhasePenalties(
     teamId,
     phaseId,
     { enabled: !!teamId && !!phaseId }
   );
-  
+
   const penalties = Array.isArray(penaltiesData)
     ? penaltiesData
     : Array.isArray(penaltiesData?.data)
       ? penaltiesData.data
       : [];
-  
+
   // Get appeals for team
   const { data: appealsData = [], isLoading: appealsLoading } = useGetTeamAppeals(
     teamId,
     { enabled: !!teamId }
   );
-  
+
   const appeals = Array.isArray(appealsData)
     ? appealsData
     : Array.isArray(appealsData?.data)
       ? appealsData.data
       : [];
-  
+
   // Filter appeals related to penalties in current phase
   const phaseAppeals = React.useMemo(() => {
     if (!phaseId || !penalties.length) return appeals;
-    
+
     // Get penalty IDs from current phase
     const penaltyIds = penalties.map(p => p.penaltyId || p.id).filter(Boolean);
-    
+
     // Filter appeals that match penalties in this phase
     return appeals.filter(appeal => {
       const appealPenaltyId = appeal.adjustmentId || appeal.penaltyId;
       return appealPenaltyId && penaltyIds.includes(appealPenaltyId);
     });
   }, [appeals, penalties, phaseId]);
-  
+
   // Get user's team for leader check
-  const userTeam = teamsData && Array.isArray(teamsData) 
+  const userTeam = teamsData && Array.isArray(teamsData)
     ? teamsData.find(t => t.teamId === teamId || t.id === teamId)
     : null;
 
@@ -165,8 +165,8 @@ const StudentPhaseDetail = () => {
     enabled: !!teamId,
   });
 
-  const apiMembers = Array.isArray(teamMembersResponse?.data) 
-    ? teamMembersResponse.data 
+  const apiMembers = Array.isArray(teamMembersResponse?.data)
+    ? teamMembersResponse.data
     : Array.isArray(teamMembersResponse)
       ? teamMembersResponse
       : [];
@@ -176,25 +176,25 @@ const StudentPhaseDetail = () => {
   const currentUserName = userInfo?.name || userInfo?.fullName || userInfo?.userName;
   const isLeader = React.useMemo(() => {
     if (!userTeam || !currentUserId) return false;
-    
+
     // Check from team leaderId
     if (userTeam.leaderId === currentUserId) return true;
-    
+
     // Check from members list
-    return apiMembers.some(m => 
-      (m.userId === currentUserId || m.id === currentUserId) && 
+    return apiMembers.some(m =>
+      (m.userId === currentUserId || m.id === currentUserId) &&
       m.roleInTeam === 'TeamLeader'
     ) || (userTeam.leaderName && currentUserName && userTeam.leaderName === currentUserName);
   }, [userTeam, currentUserId, currentUserName, apiMembers]);
-  
+
   // Alias để giữ tương thích với code cũ
   const registration = myRegistration;
-  
+
   // Check if user has joined hackathon (has team for this hackathon)
   const hasJoinedHackathon = React.useMemo(() => {
     return !!(teamId || myRegistration);
   }, [teamId, myRegistration]);
-  
+
   const {
     data: tracksData = [],
     isLoading: tracksLoading,
@@ -208,7 +208,7 @@ const StudentPhaseDetail = () => {
         ? tracksData.tracks
         : [];
   const selectTeamTrackMutation = useSelectTeamTrack();
-  
+
   const [form] = Form.useForm();
   const [selectedTrackId, setSelectedTrackId] = React.useState(null);
   const [appealModalVisible, setAppealModalVisible] = React.useState(false);
@@ -216,7 +216,7 @@ const StudentPhaseDetail = () => {
   const [appealForm] = Form.useForm();
   const [groupModalVisible, setGroupModalVisible] = React.useState(false);
   const [selectedGroupId, setSelectedGroupId] = React.useState(null);
-  
+
   const createAppealMutation = useCreateAppeal();
 
   const phaseStatus = phase ? getPhaseStatus(phase) : null;
@@ -267,10 +267,10 @@ const StudentPhaseDetail = () => {
   const { data: criteriaData } = useGetCriteriaByPhase(phaseId);
   const criteria = React.useMemo(() => {
     if (!criteriaData) return [];
-    return Array.isArray(criteriaData) 
-      ? criteriaData 
-      : Array.isArray(criteriaData?.data) 
-        ? criteriaData.data 
+    return Array.isArray(criteriaData)
+      ? criteriaData
+      : Array.isArray(criteriaData?.data)
+        ? criteriaData.data
         : [];
   }, [criteriaData]);
 
@@ -284,11 +284,11 @@ const StudentPhaseDetail = () => {
     if (isTeamOverviewFormat) {
       return teamOverviewData;
     }
-    
+
     // Otherwise use grouped scores format
     const dataToUse = scoresData;
     if (!dataToUse) return null;
-    
+
     // Handle different response structures
     return Array.isArray(dataToUse)
       ? dataToUse
@@ -323,9 +323,9 @@ const StudentPhaseDetail = () => {
   const handleSelectTrack = async (values) => {
     try {
       if (values.trackId) {
-        await selectTeamTrackMutation.mutateAsync({ 
-          teamId, 
-          trackId: values.trackId 
+        await selectTeamTrackMutation.mutateAsync({
+          teamId,
+          trackId: values.trackId
         });
       }
     } catch (error) {
@@ -363,7 +363,7 @@ const StudentPhaseDetail = () => {
         message: values.message,
         reason: values.reason,
       });
-      
+
       message.success('Gửi kháng cáo thành công!');
       setAppealModalVisible(false);
       setSelectedPenalty(null);
@@ -427,10 +427,10 @@ const StudentPhaseDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          <PhaseInfoCard 
-            phase={phase} 
-            phaseStatus={phaseStatus} 
-            hackathon={hackathon} 
+          <PhaseInfoCard
+            phase={phase}
+            phaseStatus={phaseStatus}
+            hackathon={hackathon}
           />
 
           {/* Only show track selection for phase 1 */}
@@ -455,6 +455,7 @@ const StudentPhaseDetail = () => {
                   form={form}
                   onFinish={handleSelectTrack}
                   phaseId={phaseId}
+                  registeredTrackId={registration?.selectedTrackId} // Track đã được chọn từ API
                 />
               )}
             </>
@@ -606,14 +607,14 @@ const StudentPhaseDetail = () => {
                                     }`}>
                                       {appeal.appealType || 'Appeal'}
                                     </span>
-                                    <Tag 
+                                    <Tag
                                       color={
-                                        appeal.status === 'Approved' 
-                                          ? 'green' 
-                                          : appeal.status === 'Rejected' 
-                                            ? 'red' 
+                                        appeal.status === 'Approved'
+                                          ? 'green'
+                                          : appeal.status === 'Rejected'
+                                            ? 'red'
                                             : 'orange'
-                                      } 
+                                      }
                                       size="small"
                                     >
                                       {appeal.status === 'Approved' && 'Đã chấp nhận'}
@@ -903,7 +904,7 @@ const StudentPhaseDetail = () => {
                       </h5>
                       <div className="space-y-3">
                         {scores.criteriaScores.map((criteriaScore, idx) => {
-                          const criterion = criteria.find(c => 
+                          const criterion = criteria.find(c =>
                             (c.criterionId || c.id) === criteriaScore.criterionId
                           );
                           return (
@@ -916,8 +917,8 @@ const StudentPhaseDetail = () => {
                                   {criterion?.name || `Tiêu chí ${criteriaScore.criterionId}`}
                                 </span>
                                 <Tag color="green" className="font-semibold">
-                                  {criteriaScore.score !== undefined && criteriaScore.score !== null 
-                                    ? Number(criteriaScore.score).toFixed(2) 
+                                  {criteriaScore.score !== undefined && criteriaScore.score !== null
+                                    ? Number(criteriaScore.score).toFixed(2)
                                     : '-'}
                                 </Tag>
                               </div>
@@ -957,7 +958,7 @@ const StudentPhaseDetail = () => {
                           )}
                         </div>
                       )}
-                      
+
                       {Array.isArray(scoreGroup.scores) && scoreGroup.scores.length > 0 ? (
                         <div className="space-y-2">
                           {scoreGroup.scores.map((score, scoreIdx) => (
@@ -970,8 +971,8 @@ const StudentPhaseDetail = () => {
                                   {score.criteriaName || 'N/A'}
                                 </span>
                                 <span className="text-primary font-semibold text-sm">
-                                  {score.score !== undefined && score.score !== null 
-                                    ? Number(score.score).toFixed(2) 
+                                  {score.score !== undefined && score.score !== null
+                                    ? Number(score.score).toFixed(2)
                                     : '-'}
                                 </span>
                               </div>
@@ -1122,7 +1123,7 @@ const StudentPhaseDetail = () => {
             )}
           </div>
         )}
-        
+
         <Form
           form={appealForm}
           layout="vertical"
@@ -1140,7 +1141,7 @@ const StudentPhaseDetail = () => {
               className="bg-white/5 border-white/10 text-white"
             />
           </Form.Item>
-          
+
           <Form.Item
             name="message"
             label="Nội dung chi tiết (tùy chọn)"

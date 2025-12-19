@@ -53,10 +53,10 @@ const ChallengeItem = ({ challenge }) => {
   );
 };
 
-const TrackDetailModal = ({ 
-  track, 
-  visible, 
-  onClose, 
+const TrackDetailModal = ({
+  track,
+  visible,
+  onClose,
   onSelectTrack,
   isSelected,
   phaseId
@@ -178,23 +178,25 @@ const TrackDetailModal = ({
         </div>
 
         {/* Action Button */}
-        <div className="pt-4 border-t border-slate-800">
-          <Button
-            type="primary"
-            size="large"
-            icon={<CheckCircleOutlined />}
-            onClick={() => {
-              if (onSelectTrack) {
-                onSelectTrack();
-                onClose();
-              }
-            }}
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 text-white border-0"
-            disabled={challenges.length === 0}
-          >
-            {isSelected ? 'Đã chọn track này' : 'Chọn track này'}
-          </Button>
-        </div>
+        {!isSelected && (
+          <div className="pt-4 border-t border-slate-800">
+            <Button
+              type="primary"
+              size="large"
+              icon={<CheckCircleOutlined />}
+              onClick={() => {
+                if (onSelectTrack) {
+                  onSelectTrack();
+                  onClose();
+                }
+              }}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 text-white border-0"
+              disabled={challenges.length === 0}
+            >
+              Chọn track này
+            </Button>
+          </div>
+        )}
       </div>
     </Modal>
   );

@@ -1,7 +1,4 @@
-import {
-  LoadingOutlined,
-  PlusOutlined,
-} from '@ant-design/icons';
+import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { Alert, Button, message, Spin, Tabs } from 'antd';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +8,7 @@ import {
   JoinTeamModal,
   SearchTeamsTab,
   JoinRequestsTab,
+  TeamJoinRequestsTab,
 } from '../../components/features/student/team';
 import {
   useCreateTeam,
@@ -20,6 +18,7 @@ import {
 import {
   useGetMyTeamJoinRequests,
   useCreateTeamJoinRequest,
+  useGetTeamJoinRequestsToMyTeams,
 } from '../../hooks/student/team-join-request';
 import {
   useGetTeamMembers,
@@ -57,8 +56,8 @@ const StudentTeams = () => {
   const createJoinRequestMutation = useCreateTeamJoinRequest();
   const { userInfo } = useUserData();
 
-  // Join requests hooks
-  const { data: joinRequestsData, isLoading: joinRequestsLoading } = useGetMyTeamJoinRequests();
+  const { data: joinRequestsData, isLoading: joinRequestsLoading } =
+    useGetMyTeamJoinRequests();
 
   // Extract join requests from response
   const joinRequests = Array.isArray(joinRequestsData)
@@ -67,6 +66,14 @@ const StudentTeams = () => {
       ? joinRequestsData.data
       : [];
 
+  const { data: teamJoinRequestsData, isLoading: teamJoinRequestsLoading } =
+    useGetTeamJoinRequestsToMyTeams();
+
+  const teamJoinRequests = Array.isArray(teamJoinRequestsData)
+    ? teamJoinRequestsData
+    : teamJoinRequestsData?.data
+      ? teamJoinRequestsData.data
+      : [];
 
   // My teams from /Team/my-teams
   const myTeamsArray = Array.isArray(myTeamsData)
@@ -106,20 +113,11 @@ const StudentTeams = () => {
       message.success('Đội đã được tạo thành công!');
       setIsCreateModalVisible(false);
     } catch (error) {
-      console.error('Create team error:', error);
-      if (
-        error?.message?.includes('Network Error') ||
-        error?.code === 'NETWORK_ERROR'
-      ) {
-        message.error(
-          'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.',
-        );
-      } else if (error?.response?.status === 401) {
-        message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-      } else if (error?.response?.status >= 500) {
-        message.error('Lỗi máy chủ. Vui lòng thử lại sau.');
-      } else {
-        message.error('Có lỗi xảy ra khi tạo đội. Vui lòng thử lại.');
+      const apiMessage =
+        error?.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại';
+      if (apiMessage) {
+        message.error(apiMessage);
+        return;
       }
     }
   };
@@ -145,18 +143,10 @@ const StudentTeams = () => {
       setSelectedTeamForJoin(null);
     } catch (error) {
       console.error('Join team error:', error);
-      if (
-        error?.message?.includes('Network Error') ||
-        error?.code === 'NETWORK_ERROR'
-      ) {
-        message.error('Không thể kết nối đến máy chủ. Vui lòng thử lại.');
-      } else if (error?.response?.status === 401) {
-        message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-      } else if (error?.response?.status === 400) {
-        message.error(error?.response?.data?.message || 'Không thể gửi yêu cầu. Có thể bạn đã gửi yêu cầu trước đó.');
-      } else {
-        message.error('Có lỗi xảy ra khi gửi yêu cầu tham gia đội. Vui lòng thử lại.');
-      }
+
+      message.error(
+        error.message || 'Không thể kết nối đến máy chủ. Vui lòng thử lại.',
+      );
     }
   };
 
@@ -222,7 +212,6 @@ const StudentTeams = () => {
     );
   }
 
-
   const renderTeamsTab = () => (
     <div className="space-y-12">
       <section className="space-y-4">
@@ -243,10 +232,6 @@ const StudentTeams = () => {
           onCreateTeam={handleOpenCreateModal}
         />
       </section>
-
-
-
-
     </div>
   );
 
@@ -271,6 +256,12 @@ const StudentTeams = () => {
     />
   );
 
+  const renderTeamJoinRequestsTab = () => (
+    <TeamJoinRequestsTab
+      requests={teamJoinRequests}
+      isLoading={teamJoinRequestsLoading}
+    />
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -280,9 +271,7 @@ const StudentTeams = () => {
           <h1 className="text-3xl lg:text-4xl bg-gradient-to-r from-white via-blue-100 to-cyan-300 bg-clip-text text-transparent">
             Đội của tôi
           </h1>
-          <p className="text-gray-400 mt-2">
-            Quản lý đội và bài nộp dự án
-          </p>
+          <p className="text-gray-400 mt-2">Quản lý đội và bài nộp dự án</p>
         </div>
 
         <div className="flex items-center space-x-4">
@@ -323,6 +312,11 @@ const StudentTeams = () => {
             label: 'Lời mời',
             children: renderInvitationsTab(),
           },
+          {
+            key: 'team-join-requests',
+            label: 'Yêu cầu tham gia',
+            children: renderTeamJoinRequestsTab(),
+          },
         ]}
         className="[&_.ant-tabs-tab]:text-text-secondary [&_.ant-tabs-tab-active]:text-primary [&_.ant-tabs-ink-bar]:bg-primary [&_.ant-tabs-content]:text-white"
       />
@@ -342,7 +336,6 @@ const StudentTeams = () => {
         onSubmit={handleSubmitJoinRequest}
         loading={createJoinRequestMutation.isPending}
       />
-
     </div>
   );
 };
