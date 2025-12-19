@@ -78,6 +78,7 @@ const MyTeamPage = () => {
     data: apiTeam,
     isLoading: teamLoading,
     error: teamError,
+    refetch: refetchTeamDetail,
   } = useGetTeam(id, {
     enabled: !!id,
   });
@@ -88,8 +89,11 @@ const MyTeamPage = () => {
   const inviteMemberMutation = useInviteTeamMember();
 
   // Get team members from API
-  const { data: teamMembersResponse, isLoading: membersLoading } =
-    useGetTeamMembers(id, {
+  const {
+    data: teamMembersResponse,
+    isLoading: membersLoading,
+    refetch: refetchTeamMembers,
+  } = useGetTeamMembers(id, {
       enabled: !!id,
     });
 
@@ -100,8 +104,11 @@ const MyTeamPage = () => {
       ? teamMembersResponse
       : [];
 
-  const { data: teamJoinRequestsData, isLoading: teamJoinRequestsLoading } =
-    useGetTeamJoinRequestsByTeam(id, {
+  const {
+    data: teamJoinRequestsData,
+    isLoading: teamJoinRequestsLoading,
+    refetch: refetchTeamJoinRequests,
+  } = useGetTeamJoinRequestsByTeam(id, {
       enabled: !!id,
     });
 
@@ -604,6 +611,11 @@ const MyTeamPage = () => {
           <TeamJoinRequestsTab
             requests={teamJoinRequests}
             isLoading={teamJoinRequestsLoading}
+            onRefetchRequests={refetchTeamJoinRequests}
+            onRefetchTeamDetail={async () => {
+              await refetchTeamDetail();
+              await refetchTeamMembers();
+            }}
           />
         </TabPane>
 
