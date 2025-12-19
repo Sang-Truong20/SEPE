@@ -16,7 +16,6 @@ import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
 import { useTracks } from '../../../../hooks/admin/tracks/useTracks.js';
 import dayjs from 'dayjs';
-import EntityTable from '../../../../components/ui/EntityTable.jsx';
 import {
   penaltyQueryKeys,
   usePenalty,
@@ -264,16 +263,6 @@ const TeamDetail = () => {
         // onEdit: BỎ HOÀN TOÀN → không có nút chỉnh sửa
         showEdit={false}
       >
-        {/* Penalties Section */}
-          <Card className="mt-16 border border-white/10 bg-white/5 rounded-xl shadow-sm backdrop-blur-sm">
-            <EntityTable
-              model={penaltyTableModel}
-              data={penaltiesList}
-              loading={penaltiesLoading}
-              handlers={penaltyHandlers}
-              emptyText="Không có thưởng/phạt nào cho team này"
-            />
-          </Card>
       </EntityDetail>
       {/* Penalty Modal - Tạo/Sửa */}
       <Modal
