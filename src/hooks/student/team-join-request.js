@@ -109,7 +109,8 @@ export const useRespondToTeamJoinRequest = (options = {}) => {
       );
       return response.data;
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: async (data, variables, context) => {
+      // Invalidate queries
       queryClient.invalidateQueries({
         queryKey: teamJoinRequestQueryKeys.detail(variables.requestId),
       });
@@ -121,9 +122,14 @@ export const useRespondToTeamJoinRequest = (options = {}) => {
         queryClient.invalidateQueries({
           queryKey: teamJoinRequestQueryKeys.team(variables.teamId),
         });
+        // Also invalidate team detail query
+        queryClient.invalidateQueries({
+          queryKey: ['student', 'team', 'detail', variables.teamId],
+        });
       }
 
-      options?.onSuccess?.(data, variables, context);
+      // Call custom onSuccess if provided
+      await options?.onSuccess?.(data, variables, context);
     },
     ...options,
   });

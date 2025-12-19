@@ -13,14 +13,19 @@ import { useRespondToTeamJoinRequest } from '../../../../hooks/student/team-join
 
 const { TextArea } = Input;
 
-const TeamJoinRequestsTab = ({ requests, isLoading }) => {
+const TeamJoinRequestsTab = ({
+  requests,
+  isLoading,
+  onRefetchRequests,
+  onRefetchTeamDetail,
+}) => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('Approved'); // 'Approved' or 'Rejected'
 
   const respondMutation = useRespondToTeamJoinRequest({
-    onSuccess: () => {
+    onSuccess: async () => {
       message.success(
         selectedStatus === 'Approved'
           ? 'Đã chấp nhận yêu cầu tham gia đội!'
@@ -30,6 +35,16 @@ const TeamJoinRequestsTab = ({ requests, isLoading }) => {
       setSelectedRequest(null);
       setResponseMessage('');
       setSelectedStatus('Approved');
+
+      // Refetch join requests list
+      if (onRefetchRequests) {
+        await onRefetchRequests();
+      }
+
+      // Refetch team detail to update counts
+      if (onRefetchTeamDetail) {
+        await onRefetchTeamDetail();
+      }
     },
     onError: (error) => {
       const errorMsg =

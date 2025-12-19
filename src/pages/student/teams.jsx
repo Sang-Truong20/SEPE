@@ -66,8 +66,11 @@ const StudentTeams = () => {
       ? joinRequestsData.data
       : [];
 
-  const { data: teamJoinRequestsData, isLoading: teamJoinRequestsLoading } =
-    useGetTeamJoinRequestsToMyTeams();
+  const {
+    data: teamJoinRequestsData,
+    isLoading: teamJoinRequestsLoading,
+    refetch: refetchTeamJoinRequests,
+  } = useGetTeamJoinRequestsToMyTeams();
 
   const teamJoinRequests = Array.isArray(teamJoinRequestsData)
     ? teamJoinRequestsData
@@ -260,6 +263,7 @@ const StudentTeams = () => {
     <TeamJoinRequestsTab
       requests={teamJoinRequests}
       isLoading={teamJoinRequestsLoading}
+      onRefetchRequests={refetchTeamJoinRequests}
     />
   );
 
