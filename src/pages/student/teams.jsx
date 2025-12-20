@@ -264,6 +264,7 @@ const StudentTeams = () => {
       requests={teamJoinRequests}
       isLoading={teamJoinRequestsLoading}
       onRefetchRequests={refetchTeamJoinRequests}
+      showRespondButton={false}
     />
   );
 
