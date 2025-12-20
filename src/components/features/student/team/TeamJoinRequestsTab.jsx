@@ -18,6 +18,7 @@ const TeamJoinRequestsTab = ({
   isLoading,
   onRefetchRequests,
   onRefetchTeamDetail,
+  showRespondButton = true,
 }) => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -219,7 +220,7 @@ const TeamJoinRequestsTab = ({
                     </div>
                   </div>
 
-                  {isPending && (
+                  {isPending && showRespondButton && (
                     <div className="flex flex-col gap-2">
                       <Button
                         type="primary"
