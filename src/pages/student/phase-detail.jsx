@@ -143,7 +143,7 @@ const StudentPhaseDetail = () => {
 
   // Filter appeals related to penalties in current phase
   const phaseAppeals = React.useMemo(() => {
-    if (!phaseId || !penalties.length) return appeals;
+    if (!phaseId || !penalties.length) return [];
 
     // Get penalty IDs from current phase
     const penaltyIds = penalties.map(p => p.penaltyId || p.id).filter(Boolean);
@@ -154,6 +154,16 @@ const StudentPhaseDetail = () => {
       return appealPenaltyId && penaltyIds.includes(appealPenaltyId);
     });
   }, [appeals, penalties, phaseId]);
+
+  // Filter score appeals for current phase
+  const scoreAppeals = React.useMemo(() => {
+    return appeals.filter(appeal => appeal.appealType === 'Score');
+  }, [appeals]);
+
+  // Combine all appeals for display
+  const allPhaseAppeals = React.useMemo(() => {
+    return [...phaseAppeals, ...scoreAppeals];
+  }, [phaseAppeals, scoreAppeals]);
 
   // Get user's team for leader check
   const userTeam = teamsData && Array.isArray(teamsData)
@@ -214,6 +224,9 @@ const StudentPhaseDetail = () => {
   const [appealModalVisible, setAppealModalVisible] = React.useState(false);
   const [selectedPenalty, setSelectedPenalty] = React.useState(null);
   const [appealForm] = Form.useForm();
+  const [scoreAppealModalVisible, setScoreAppealModalVisible] = React.useState(false);
+  const [selectedCriteriaScore, setSelectedCriteriaScore] = React.useState(null);
+  const [scoreAppealForm] = Form.useForm();
   const [groupModalVisible, setGroupModalVisible] = React.useState(false);
   const [selectedGroupId, setSelectedGroupId] = React.useState(null);
 
@@ -391,6 +404,52 @@ const StudentPhaseDetail = () => {
       const appealPenaltyId = appeal.adjustmentId || appeal.penaltyId;
       return appealPenaltyId && Number(appealPenaltyId) === Number(penaltyId);
     });
+  };
+
+  // Check if criteria score already has an appeal
+  const hasScoreAppeal = (criteriaScore) => {
+    const criterionId = criteriaScore.criterionId;
+    return scoreAppeals.some(appeal => {
+      const appealCriterionId = appeal.adjustmentId || appeal.criterionId;
+      return appealCriterionId && Number(appealCriterionId) === Number(criterionId);
+    });
+  };
+
+  const handleOpenScoreAppealModal = (criteriaScore) => {
+    setSelectedCriteriaScore(criteriaScore);
+    scoreAppealForm.resetFields();
+    scoreAppealForm.setFieldsValue({
+      reason: '',
+      message: '',
+    });
+    setScoreAppealModalVisible(true);
+  };
+
+  const handleCreateScoreAppeal = async (values) => {
+    if (!selectedCriteriaScore || !teamId) {
+      message.error('Thiếu thông tin để tạo phúc khảo');
+      return;
+    }
+
+    try {
+      await createAppealMutation.mutateAsync({
+        appealType: 'Score',
+        adjustmentId: selectedCriteriaScore.criterionId,
+        teamId: teamId,
+        submissionId: scores?.submissionId || null,
+        judgeId: null,
+        message: values.message,
+        reason: values.reason,
+      });
+
+      message.success('Gửi phúc khảo điểm thành công!');
+      setScoreAppealModalVisible(false);
+      setSelectedCriteriaScore(null);
+      scoreAppealForm.resetFields();
+    } catch (error) {
+      console.error('Error creating score appeal:', error);
+      message.error(error?.response?.data?.message || 'Không thể gửi phúc khảo. Vui lòng thử lại.');
+    }
   };
 
   if (!phase) {
@@ -573,7 +632,7 @@ const StudentPhaseDetail = () => {
                   label: (
                     <span className="flex items-center gap-2">
                       <FileTextOutlined />
-                      Lịch sử Appeal
+                      Lịch sử phúc khảo
                     </span>
                   ),
                   children: (
@@ -582,9 +641,15 @@ const StudentPhaseDetail = () => {
                         <div className="flex items-center justify-center py-8">
                           <Spin size="large" />
                         </div>
-                      ) : phaseAppeals.length > 0 ? (
+                      ) : allPhaseAppeals.length > 0 ? (
                         <div className="space-y-3">
-                          {phaseAppeals.map((appeal) => (
+                          {allPhaseAppeals.map((appeal) => {
+                            // Find criterion name for score appeals
+                            const criterionName = appeal.appealType === 'Score' && appeal.adjustmentId
+                              ? criteria.find(c => (c.criterionId || c.id) === appeal.adjustmentId)?.name
+                              : null;
+                            
+                            return (
                             <div
                               key={appeal.appealId || appeal.id}
                               className={`p-3 rounded-lg border ${
@@ -605,7 +670,11 @@ const StudentPhaseDetail = () => {
                                           ? 'text-red-400'
                                           : 'text-yellow-400'
                                     }`}>
-                                      {appeal.appealType || 'Appeal'}
+                                      {appeal.appealType === 'Score' && criterionName
+                                        ? `Phúc khảo điểm: ${criterionName}`
+                                        : appeal.appealType === 'Penalty'
+                                          ? 'Kháng cáo Penalty'
+                                          : appeal.appealType || 'Appeal'}
                                     </span>
                                     <Tag
                                       color={
@@ -665,7 +734,8 @@ const StudentPhaseDetail = () => {
                                 </div>
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className="text-center py-8 text-muted-foreground">
@@ -907,6 +977,7 @@ const StudentPhaseDetail = () => {
                           const criterion = criteria.find(c =>
                             (c.criterionId || c.id) === criteriaScore.criterionId
                           );
+                          const scoreHasAppeal = hasScoreAppeal(criteriaScore);
                           return (
                             <div
                               key={criteriaScore.criterionId || `criterion-${idx}`}
@@ -916,16 +987,36 @@ const StudentPhaseDetail = () => {
                                 <span className="text-text-primary font-medium text-sm">
                                   {criterion?.name || `Tiêu chí ${criteriaScore.criterionId}`}
                                 </span>
-                                <Tag color="green" className="font-semibold">
-                                  {criteriaScore.score !== undefined && criteriaScore.score !== null
-                                    ? Number(criteriaScore.score).toFixed(2)
-                                    : '-'}
-                                </Tag>
+                                <div className="flex items-center gap-2">
+                                  <Tag color="green" className="font-semibold">
+                                    {criteriaScore.score !== undefined && criteriaScore.score !== null
+                                      ? Number(criteriaScore.score).toFixed(2)
+                                      : '-'}
+                                  </Tag>
+                                  {scoreHasAppeal && (
+                                    <Tag color="blue" size="small">
+                                      Đã phúc khảo
+                                    </Tag>
+                                  )}
+                                </div>
                               </div>
                               {criteriaScore.comment && (
                                 <p className="text-text-secondary text-xs mt-2">
                                   {criteriaScore.comment}
                                 </p>
+                              )}
+                              {isLeader && !scoreHasAppeal && (
+                                <div className="mt-3">
+                                  <Button
+                                    type="primary"
+                                    size="small"
+                                    icon={<SendOutlined />}
+                                    onClick={() => handleOpenScoreAppealModal(criteriaScore)}
+                                    className="bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 border-0"
+                                  >
+                                    Phúc khảo điểm
+                                  </Button>
+                                </div>
                               )}
                             </div>
                           );
@@ -1149,6 +1240,76 @@ const StudentPhaseDetail = () => {
             <Input.TextArea
               rows={4}
               placeholder="Nhập nội dung chi tiết về kháng cáo..."
+              className="bg-white/5 border-white/10 text-white"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Score Appeal Modal */}
+      <Modal
+        title="Phúc khảo điểm"
+        open={scoreAppealModalVisible}
+        onOk={() => scoreAppealForm.submit()}
+        onCancel={() => {
+          setScoreAppealModalVisible(false);
+          setSelectedCriteriaScore(null);
+          scoreAppealForm.resetFields();
+        }}
+        okText="Gửi phúc khảo"
+        cancelText="Hủy"
+        okButtonProps={{
+          loading: createAppealMutation.isPending,
+          className: 'bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0',
+        }}
+        width={600}
+        className="[&_.ant-modal-content]:bg-gray-900/95 [&_.ant-modal-content]:backdrop-blur-xl [&_.ant-modal-header]:border-white/10 [&_.ant-modal-body]:text-white [&_.ant-modal-close]:text-white [&_.ant-modal-mask]:bg-black/50"
+      >
+        {selectedCriteriaScore && (
+          <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-blue-400 font-semibold">
+                {criteria.find(c => (c.criterionId || c.id) === selectedCriteriaScore.criterionId)?.name || `Tiêu chí ${selectedCriteriaScore.criterionId}`}
+              </span>
+              <Tag color="green" size="small">
+                Điểm: {selectedCriteriaScore.score !== undefined && selectedCriteriaScore.score !== null
+                  ? Number(selectedCriteriaScore.score).toFixed(2)
+                  : '-'}
+              </Tag>
+            </div>
+            {selectedCriteriaScore.comment && (
+              <p className="text-text-secondary text-sm">
+                <span className="font-medium">Nhận xét hiện tại:</span> {selectedCriteriaScore.comment}
+              </p>
+            )}
+          </div>
+        )}
+
+        <Form
+          form={scoreAppealForm}
+          layout="vertical"
+          onFinish={handleCreateScoreAppeal}
+          className="[&_.ant-form-item-label>label]:text-text-primary [&_.ant-input]:bg-white/5 [&_.ant-input]:border-white/10 [&_.ant-input]:text-white [&_.ant-input]:placeholder:text-gray-500 [&_.ant-textarea]:bg-white/5 [&_.ant-textarea]:border-white/10 [&_.ant-textarea]:text-white"
+        >
+          <Form.Item
+            name="reason"
+            label="Lý do phúc khảo"
+            rules={[{ required: true, message: 'Vui lòng nhập lý do phúc khảo' }]}
+          >
+            <Input.TextArea
+              rows={3}
+              placeholder="Nhập lý do phúc khảo điểm..."
+              className="bg-white/5 border-white/10 text-white"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="message"
+            label="Nội dung chi tiết (tùy chọn)"
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="Nhập nội dung chi tiết về phúc khảo điểm..."
               className="bg-white/5 border-white/10 text-white"
             />
           </Form.Item>
