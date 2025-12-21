@@ -1,61 +1,169 @@
 import {
   BarChartOutlined,
-  BellOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
   FileTextOutlined,
+  PlayCircleOutlined,
   SettingOutlined,
   TeamOutlined,
-  TrophyOutlined,
+  TrophyOutlined
 } from '@ant-design/icons';
-import { Badge, Button, Card, Tag } from 'antd';
+import { Button, Card, Spin, Tag } from 'antd';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
+import { useGetHackathons } from '../../hooks/student/hackathon';
+import { useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
+import { useGetNotifications } from '../../hooks/student/notification';
+import { useGetAllSubmissions } from '../../hooks/student/submission';
+import { useGetMyTeams } from '../../hooks/student/team';
+
+dayjs.extend(relativeTime);
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
 
+  // Fetch data from hooks
+  const { data: hackathonRegistrations = [], isLoading: registrationsLoading } = useGetMyHackathonRegistrations();
+  const { data: myTeamsData, isLoading: teamsLoading } = useGetMyTeams();
+  const { data: allSubmissions = [], isLoading: submissionsLoading } = useGetAllSubmissions();
+  const { data: notifications = [] } = useGetNotifications();
+
+  // Normalize teams data
+  const myTeams = useMemo(() => {
+    if (!myTeamsData) return [];
+    if (Array.isArray(myTeamsData)) return myTeamsData;
+    if (Array.isArray(myTeamsData.data)) return myTeamsData.data;
+    return [];
+  }, [myTeamsData]);
+
+  // Normalize submissions data
+  const submissions = useMemo(() => {
+    if (!allSubmissions) return [];
+    if (Array.isArray(allSubmissions)) return allSubmissions;
+    if (Array.isArray(allSubmissions.data)) return allSubmissions.data;
+    return [];
+  }, [allSubmissions]);
+
+  // Normalize notifications data
+  const notificationsList = useMemo(() => {
+    if (!notifications) return [];
+    if (Array.isArray(notifications)) return notifications;
+    if (Array.isArray(notifications.data)) return notifications.data;
+    return [];
+  }, [notifications]);
+
+  // Get all hackathons to match with registrations
+  const { data: allHackathons = [] } = useGetHackathons();
+
+  // Normalize hackathons data
+  const hackathons = useMemo(() => {
+    if (!allHackathons) return [];
+    if (Array.isArray(allHackathons)) return allHackathons;
+    if (Array.isArray(allHackathons.data)) return allHackathons.data;
+    return [];
+  }, [allHackathons]);
+
+  // Calculate statistics
+  const hackathonsCount = hackathonRegistrations.length;
+  const teamsCount = myTeams.length;
+  const submissionsCount = submissions.filter(s => s.isFinal).length;
+  
+  // Calculate approved hackathons count
+  const approvedHackathonsCount = useMemo(() => {
+    return hackathonRegistrations.filter(reg => {
+      const status = reg.status || reg.registrationStatus;
+      return status === 'Approved' || status === 'approved';
+    }).length;
+  }, [hackathonRegistrations]);
+
+  // Get recent hackathons from registrations
+  const recentHackathons = useMemo(() => {
+    if (!hackathonRegistrations || hackathonRegistrations.length === 0) return [];
+    
+    return hackathonRegistrations
+      .map(reg => {
+        const hackathon = hackathons.find(h => h.hackathonId === reg.hackathonId || h.id === reg.hackathonId);
+        return {
+          id: reg.hackathonId || hackathon?.hackathonId || hackathon?.id,
+          name: hackathon?.name || reg.hackathonName || 'N/A',
+          description: hackathon?.description || '',
+          startDate: hackathon?.startDate || reg.startDate,
+          endDate: hackathon?.endDate || reg.endDate,
+          status: hackathon?.status || reg.status,
+          registeredAt: reg.createdAt || reg.registeredAt,
+        };
+      })
+      .sort((a, b) => {
+        const dateA = dayjs(a.registeredAt || a.startDate);
+        const dateB = dayjs(b.registeredAt || b.startDate);
+        return dateB.valueOf() - dateA.valueOf();
+      })
+      .slice(0, 3); // Get 3 most recent
+  }, [hackathonRegistrations, hackathons]);
+
+  // Format recent activity from notifications and submissions
+  const recentActivity = useMemo(() => {
+    const activities = [];
+    
+    // Add recent notifications
+    const recentNotifications = notificationsList
+      .slice(0, 2)
+      .map(notif => ({
+        action: notif.title || notif.message || 'Thông báo mới',
+        time: notif.createdAt ? dayjs(notif.createdAt).fromNow() : 'Vừa xong',
+        type: notif.isRead ? 'neutral' : 'info',
+      }));
+    
+    // Add recent submissions
+    const recentSubmissions = submissions
+      .filter(s => s.isFinal)
+      .sort((a, b) => {
+        const dateA = dayjs(a.submittedAt || a.createdAt);
+        const dateB = dayjs(b.submittedAt || b.createdAt);
+        return dateB.valueOf() - dateA.valueOf();
+      })
+      .slice(0, 2)
+      .map(sub => ({
+        action: `Nộp ${sub.title || 'bài nộp'}`,
+        time: sub.submittedAt || sub.createdAt 
+          ? dayjs(sub.submittedAt || sub.createdAt).fromNow()
+          : 'Vừa xong',
+        type: 'success',
+      }));
+    
+    activities.push(...recentSubmissions, ...recentNotifications);
+    
+    // Sort by time and take first 4
+    return activities.slice(0, 4);
+  }, [notificationsList, submissions]);
+
   const stats = [
     {
       label: 'Hackathons tham gia',
-      value: '5',
+      value: hackathonsCount.toString(),
       icon: TrophyOutlined,
-      change: '+1',
     },
     {
       label: 'Đội đang tham gia',
-      value: '2',
+      value: teamsCount.toString(),
       icon: TeamOutlined,
-      change: '+0',
     },
-    { label: 'Bài nộp', value: '8', icon: FileTextOutlined, change: '+2' },
     {
-      label: 'Điểm trung bình',
-      value: '87.5/100',
-      icon: BarChartOutlined,
-      change: '+5.2',
+      label: 'Bài nộp',
+      value: submissionsCount.toString(),
+      icon: FileTextOutlined,
+    },
+    {
+      label: 'Hackathons đã duyệt',
+      value: approvedHackathonsCount.toString(),
+      icon: PlayCircleOutlined,
     },
   ];
 
-  const currentTeam = {
-    name: 'Code Crusaders',
-    project: 'Smart City Traffic Management',
-    members: 4,
-    progress: 75,
-    deadline: '5 ngày',
-    status: 'Đang phát triển',
-  };
-
-  const recentActivity = [
-    { action: 'Nộp milestone 3', time: '2 giờ trước', type: 'success' },
-    {
-      action: 'Tham gia meeting với mentor',
-      time: '1 ngày trước',
-      type: 'info',
-    },
-    { action: 'Cập nhật README.md', time: '2 ngày trước', type: 'neutral' },
-    { action: 'Tạo branch feature/ui', time: '3 ngày trước', type: 'neutral' },
-  ];
+  const isLoading = registrationsLoading || teamsLoading || submissionsLoading;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -70,111 +178,133 @@ const StudentDashboard = () => {
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
-          <Button className="border-white/20 bg-white/5 hover:bg-white/10 hover:border-green-400/30 text-white hover:text-orange-300 transition-all duration-200 hover:scale-105 shadow-lg">
-            <CalendarOutlined className="w-4 h-4 mr-2" />
-            Lịch
-          </Button>
-          <div className="relative">
-            <Button
-              className="border-white/20 bg-white/5 hover:bg-white/10 hover:border-blue-400/30 text-white hover:text-blue-300 transition-all duration-200 hover:scale-105 shadow-lg"
-              onClick={() => navigate(PATH_NAME.STUDENT_NOTIFICATIONS)}
-            >
-              <BellOutlined className="w-4 h-4" />
-              <Badge count={3} className="ml-1" />
-            </Button>
-          </div>
-        </div>
+
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <Card
-            key={index}
-            className="hover:shadow-lg transition-all duration-200 hover:scale-105 border-0"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">{stat.label}</p>
-                  <p className="text-2xl text-white font-semibold">
-                    {stat.value}
-                  </p>
-                  <div className="flex items-center text-sm text-green-400">
-                    <span className="mr-1">{stat.change}</span>
+      {isLoading ? (
+        <div className="flex justify-center items-center py-12">
+          <Spin size="large" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat, index) => (
+            <Card
+              key={index}
+              className="hover:shadow-lg transition-all duration-200 hover:scale-105 border-0"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-400">{stat.label}</p>
+                    <p className="text-2xl text-white font-semibold">
+                      {stat.value}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-lg flex items-center justify-center border border-white/10">
+                    <stat.icon className="w-6 h-6 text-green-400" />
                   </div>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-lg flex items-center justify-center border border-white/10">
-                  <stat.icon className="w-6 h-6 text-green-400" />
-                </div>
               </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        {/* Current Team Project */}
+        {/* Recent Hackathons */}
         <div className="lg:col-span-2">
           <Card className="border-0 hover:shadow-lg transition-all duration-200">
             <div className="p-6">
-              <div className="flex items-center mb-6">
-                <TeamOutlined className="w-5 h-5 mr-2 text-blue-400" />
-                <span className="text-xl font-semibold text-white">
-                  Dự Án Hiện Tại
-                </span>
-              </div>
-
               <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-xl text-white">{currentTeam.name}</h3>
-                  <p className="text-gray-400">{currentTeam.project}</p>
-                </div>
-                <Tag
-                  color="green"
-                  className="border-green-500/30 text-green-300"
-                >
-                  {currentTeam.status}
-                </Tag>
-              </div>
-
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Tiến độ dự án</span>
-                  <span className="text-white">{currentTeam.progress}%</span>
-                </div>
-                <div className="w-full bg-gray-700/50 rounded-full h-2.5 overflow-hidden">
-                  <div
-                    className="bg-gradient-to-r from-green-400 to-emerald-400 h-2.5 rounded-full transition-all duration-500 ease-out"
-                    style={{ width: `${currentTeam.progress}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="flex items-center">
-                  <TeamOutlined className="w-4 h-4 text-blue-400 mr-2" />
-                  <span className="text-gray-400">
-                    {currentTeam.members} thành viên
+                  <TrophyOutlined className="w-5 h-5 mr-2 text-yellow-400" />
+                  <span className="text-xl font-semibold text-white">
+                    Hackathon Tham Gia Gần Đây
                   </span>
                 </div>
-                <div className="flex items-center">
-                  <ClockCircleOutlined className="w-4 h-4 text-orange-400 mr-2" />
-                  <span className="text-gray-400">
-                    Còn {currentTeam.deadline}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
                 <Button
-                  onClick={() => navigate(PATH_NAME.STUDENT_TEAMS)}
-                  className="bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                  type="link"
+                  onClick={() => navigate(PATH_NAME.STUDENT_HACKATHONS)}
+                  className="text-green-400 hover:text-green-300"
                 >
-                  Xem Dự Án
+                  Xem tất cả
                 </Button>
               </div>
+
+              {recentHackathons.length > 0 ? (
+                <div className="space-y-4">
+                  {recentHackathons.map((hackathon) => {
+                    const now = dayjs();
+                    const startDate = hackathon.startDate ? dayjs(hackathon.startDate) : null;
+                    const endDate = hackathon.endDate ? dayjs(hackathon.endDate) : null;
+                    const isUpcoming = startDate && startDate.isAfter(now);
+                    const isOngoing = startDate && endDate && now.isAfter(startDate) && now.isBefore(endDate);
+                    const isCompleted = endDate && endDate.isBefore(now);
+                    
+                    let statusText = 'Chưa bắt đầu';
+                    let statusColor = 'default';
+                    if (isOngoing) {
+                      statusText = 'Đang diễn ra';
+                      statusColor = 'green';
+                    } else if (isCompleted) {
+                      statusText = 'Đã kết thúc';
+                      statusColor = 'blue';
+                    } else if (isUpcoming) {
+                      statusText = 'Sắp diễn ra';
+                      statusColor = 'orange';
+                    }
+
+                    return (
+                      <div
+                        key={hackathon.id}
+                        className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:border-green-400/30 transition-all cursor-pointer"
+                        onClick={() => navigate(`${PATH_NAME.STUDENT_HACKATHONS}/${hackathon.id}`)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-lg text-white font-semibold mb-1">
+                              {hackathon.name}
+                            </h3>
+                            {hackathon.description && (
+                              <p className="text-sm text-gray-400 mb-3 line-clamp-2">
+                                {hackathon.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-4 text-sm text-gray-400">
+                              {startDate && (
+                                <div className="flex items-center">
+                                  <CalendarOutlined className="w-4 h-4 mr-1" />
+                                  <span>Bắt đầu: {startDate.format('DD/MM/YYYY')}</span>
+                                </div>
+                              )}
+                              {endDate && (
+                                <div className="flex items-center">
+                                  <ClockCircleOutlined className="w-4 h-4 mr-1" />
+                                  <span>Kết thúc: {endDate.format('DD/MM/YYYY')}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <Tag color={statusColor} className="ml-4">
+                            {statusText}
+                          </Tag>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-400 mb-4">Bạn chưa tham gia hackathon nào</p>
+                  <Button
+                    onClick={() => navigate(PATH_NAME.STUDENT_HACKATHONS)}
+                    className="bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                  >
+                    Tham Gia Hackathon
+                  </Button>
+                </div>
+              )}
             </div>
           </Card>
         </div>
@@ -190,23 +320,27 @@ const StudentDashboard = () => {
             </div>
 
             <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-start space-x-3">
-                  <div
-                    className={`w-2 h-2 rounded-full mt-2 ${
-                      activity.type === 'success'
-                        ? 'bg-green-400'
-                        : activity.type === 'info'
-                          ? 'bg-blue-400'
-                          : 'bg-gray-400'
-                    }`}
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm text-white">{activity.action}</p>
-                    <p className="text-xs text-gray-400">{activity.time}</p>
+              {recentActivity.length > 0 ? (
+                recentActivity.map((activity, index) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    <div
+                      className={`w-2 h-2 rounded-full mt-2 ${
+                        activity.type === 'success'
+                          ? 'bg-green-400'
+                          : activity.type === 'info'
+                            ? 'bg-blue-400'
+                            : 'bg-gray-400'
+                      }`}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm text-white">{activity.action}</p>
+                      <p className="text-xs text-gray-400">{activity.time}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-gray-400 text-sm">Chưa có hoạt động nào</p>
+              )}
             </div>
           </div>
         </Card>

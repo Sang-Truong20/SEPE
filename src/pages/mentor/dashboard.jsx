@@ -1,128 +1,224 @@
 import {
-  BookOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
-  ClockCircleOutlined,
+  CloseCircleOutlined,
   FileTextOutlined,
-  RiseOutlined,
   TeamOutlined,
   TrophyOutlined,
+  UserOutlined
 } from '@ant-design/icons';
-import { Avatar, Badge, Button, Card, Progress, Tag } from 'antd';
+import { Button, Card, Spin, Tag, message } from 'antd';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
+import { useApproveMentorAssignment, useGetMentorAssignments, useRejectMentorAssignment } from '../../hooks/mentor/assignments';
+import { useGetMentorTeams } from '../../hooks/mentor/mentor-assignment';
+import { useGetHackathons } from '../../hooks/student/hackathon';
+import { useGetNotifications } from '../../hooks/student/notification';
+import { useUserData } from '../../hooks/useUserData';
+
+dayjs.extend(relativeTime);
 
 const MentorDashboard = () => {
   const navigate = useNavigate();
+  const { userInfo, isLoading: userLoading } = useUserData();
 
-  // Mock data
-  const mentorInfo = {
-    name: 'Nguyễn Văn Mentor',
-    email: 'mentor@fpt.edu.vn',
-    expertise: ['AI/ML', 'Full-stack Development', 'Cloud Computing'],
-    yearsOfExperience: 8,
-    company: 'FPT Software',
-  };
+  // Get mentor ID from userInfo
+  const mentorId = userInfo?.mentorId || userInfo?.id || userInfo?.userId;
 
-  const myTeams = [
-    {
-      id: '1',
-      name: 'Tech Innovators',
-      hackathon: 'SEAL Hackathon 2024 - HCM',
-      members: 5,
-      progress: 75,
-      nextMeeting: '2024-10-10 14:00',
-      status: 'on-track',
-      lastUpdate: '2 giờ trước',
-    },
-    {
-      id: '2',
-      name: 'AI Warriors',
-      hackathon: 'SEAL Hackathon 2024 - HCM',
-      members: 4,
-      progress: 45,
-      nextMeeting: '2024-10-11 10:00',
-      status: 'needs-attention',
-      lastUpdate: '1 ngày trước',
-    },
-    {
-      id: '3',
-      name: 'Blockchain Pioneers',
-      hackathon: 'Tech Challenge 2024',
-      members: 5,
-      progress: 90,
-      status: 'excellent',
-      lastUpdate: '5 giờ trước',
-    },
-  ];
+  // Fetch data from hooks
+  const { data: mentorTeamsData, isLoading: teamsLoading } = useGetMentorTeams(mentorId);
+  const { data: mentorAssignmentsData, isLoading: assignmentsLoading, refetch: refetchAssignments } = useGetMentorAssignments(mentorId);
+  const { data: notifications = [] } = useGetNotifications();
+  const { data: allHackathons = [] } = useGetHackathons();
+  const approveMutation = useApproveMentorAssignment();
+  const rejectMutation = useRejectMentorAssignment();
 
+  // Normalize teams data
+  const mentorTeams = useMemo(() => {
+    if (!mentorTeamsData) return [];
+    if (Array.isArray(mentorTeamsData)) return mentorTeamsData;
+    if (Array.isArray(mentorTeamsData.data)) return mentorTeamsData.data;
+    return [];
+  }, [mentorTeamsData]);
+
+  // Normalize assignments data
+  const mentorAssignments = useMemo(() => {
+    if (!mentorAssignmentsData) return [];
+    if (Array.isArray(mentorAssignmentsData)) return mentorAssignmentsData;
+    if (Array.isArray(mentorAssignmentsData.data)) return mentorAssignmentsData.data;
+    return [];
+  }, [mentorAssignmentsData]);
+
+  // Get pending requests (status: pending or waitingmentor) - latest 3
+  const pendingRequests = useMemo(() => {
+    return mentorAssignments
+      .filter(assignment => {
+        const status = (assignment.status || '').toLowerCase().trim();
+        return status === 'pending' || status === 'waitingmentor';
+      })
+      .sort((a, b) => {
+        const dateA = dayjs(a.assignedAt || a.createdAt || 0);
+        const dateB = dayjs(b.assignedAt || b.createdAt || 0);
+        return dateB.valueOf() - dateA.valueOf();
+      })
+      .slice(0, 3); // Get 3 latest requests
+  }, [mentorAssignments]);
+
+  // Normalize hackathons data
+  const hackathons = useMemo(() => {
+    if (!allHackathons) return [];
+    if (Array.isArray(allHackathons)) return allHackathons;
+    if (Array.isArray(allHackathons.data)) return allHackathons.data;
+    return [];
+  }, [allHackathons]);
+
+  // Normalize notifications data
+  const notificationsList = useMemo(() => {
+    if (!notifications) return [];
+    if (Array.isArray(notifications)) return notifications;
+    if (Array.isArray(notifications.data)) return notifications.data;
+    return [];
+  }, [notifications]);
+
+  // Get mentor info from userInfo
+  const mentorInfo = useMemo(() => {
+    if (!userInfo) return null;
+    return {
+      name: userInfo.fullName || userInfo.name || userInfo.userName || 'Mentor',
+      email: userInfo.email || '',
+      company: userInfo.organization || userInfo.company || '',
+      position: userInfo.position || '',
+    };
+  }, [userInfo]);
+
+  // Process teams with real data - use available data from API
+  const processedTeams = useMemo(() => {
+    return mentorTeams.map(team => {
+      const teamId = team.teamId || team.id;
+      const hackathonId = team.hackathonId;
+      
+      // Get hackathon name
+      const hackathon = hackathons.find(h => 
+        h.hackathonId === hackathonId || h.id === hackathonId
+      );
+      
+      // Get members count from team data if available
+      const membersCount = team.members?.length || 
+                          team.teamMembers?.length || 
+                          (Array.isArray(team.members) ? team.members.length : 0);
+      
+      // Use progress from team data if available, otherwise default to 0
+      const progress = team.progress || team.progressPercentage || 0;
+      
+      // Determine status based on progress
+      let status = 'on-track';
+      if (progress >= 90) status = 'excellent';
+      else if (progress < 50) status = 'needs-attention';
+      
+      // Get last update from team data
+      const lastUpdate = team.lastUpdate || 
+                        team.updatedAt 
+                          ? dayjs(team.updatedAt).fromNow()
+                          : 'Chưa có cập nhật';
+      
+      return {
+        id: teamId,
+        name: team.teamName || team.name || 'N/A',
+        hackathon: hackathon?.name || team.hackathonName || 'N/A',
+        members: membersCount,
+        progress,
+        status,
+        lastUpdate,
+        teamId,
+        hackathonId,
+      };
+    });
+  }, [mentorTeams, hackathons]);
+
+  // Calculate pending requests count
+  const pendingRequestsCount = useMemo(() => {
+    return mentorAssignments.filter(assignment => {
+      const status = (assignment.status || '').toLowerCase().trim();
+      return status === 'pending' || status === 'waitingmentor';
+    }).length;
+  }, [mentorAssignments]);
+
+  // Calculate approved assignments count
+  const approvedAssignmentsCount = useMemo(() => {
+    return mentorAssignments.filter(assignment => {
+      const status = (assignment.status || '').toLowerCase().trim();
+      return status === 'approved' || status === 'accepted';
+    }).length;
+  }, [mentorAssignments]);
+
+
+  // Calculate stats from real data
   const stats = [
     {
       label: 'Teams Hướng Dẫn',
-      value: myTeams.length,
+      value: processedTeams.length,
       icon: TeamOutlined,
       color: 'from-green-500/20 to-emerald-500/20',
       iconColor: 'text-green-400',
     },
     {
-      label: 'Cuộc Họp Tuần Này',
-      value: 5,
-      icon: CalendarOutlined,
+      label: 'Hackathons Tham Gia',
+      value: new Set(processedTeams.map(t => t.hackathonId).filter(Boolean)).size,
+      icon: TrophyOutlined,
       color: 'from-purple-500/20 to-pink-500/20',
       iconColor: 'text-purple-400',
     },
     {
-      label: 'Tài Nguyên Chia Sẻ',
-      value: 24,
-      icon: BookOutlined,
+      label: 'Yêu cầu cần duyệt',
+      value: pendingRequestsCount,
+      icon: CheckCircleOutlined,
+      color: 'from-orange-500/20 to-red-500/20',
+      iconColor: 'text-orange-400',
+    },
+    {
+      label: 'Yêu cầu đã duyệt',
+      value: approvedAssignmentsCount,
+      icon: CheckCircleOutlined,
       color: 'from-green-500/20 to-emerald-500/20',
       iconColor: 'text-green-400',
     },
-    {
-      label: 'Tiến Độ Trung Bình',
-      value: '70%',
-      icon: RiseOutlined,
-      color: 'from-yellow-500/20 to-orange-500/20',
-      iconColor: 'text-yellow-400',
-    },
   ];
 
-  const recentActivities = [
-    {
-      id: '1',
-      type: 'feedback',
-      team: 'Tech Innovators',
-      message: 'Đã đánh giá bài nộp Sprint 2',
-      time: '2 giờ trước',
-    },
-    {
-      id: '2',
-      type: 'meeting',
-      team: 'AI Warriors',
-      message: 'Cuộc họp technical review hoàn thành',
-      time: '1 ngày trước',
-    },
-    {
-      id: '3',
-      type: 'resource',
-      team: 'Tất cả teams',
-      message: "Đã chia sẻ tài liệu 'Best Practices for API Design'",
-      time: '2 ngày trước',
-    },
-  ];
+  // Format recent activities from notifications
+  const recentActivities = useMemo(() => {
+    return notificationsList
+      .sort((a, b) => {
+        const dateA = dayjs(a.createdAt);
+        const dateB = dayjs(b.createdAt);
+        return dateB.valueOf() - dateA.valueOf();
+      })
+      .slice(0, 5)
+      .map(notif => {
+        let type = 'info';
+        if (notif.title?.toLowerCase().includes('đánh giá') || 
+            notif.message?.toLowerCase().includes('đánh giá')) {
+          type = 'feedback';
+        } else if (notif.title?.toLowerCase().includes('họp') || 
+                   notif.message?.toLowerCase().includes('họp')) {
+          type = 'meeting';
+        } else if (notif.title?.toLowerCase().includes('tài liệu') || 
+                   notif.message?.toLowerCase().includes('tài liệu')) {
+          type = 'resource';
+        }
+        
+        return {
+          id: notif.notificationId || notif.id,
+          type,
+          team: notif.teamName || 'Tất cả teams',
+          message: notif.title || notif.message || 'Thông báo mới',
+          time: notif.createdAt ? dayjs(notif.createdAt).fromNow() : 'Vừa xong',
+        };
+      });
+  }, [notificationsList]);
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'excellent':
-        return <Tag color="success">Xuất sắc</Tag>;
-      case 'on-track':
-        return <Tag color="processing">Đúng tiến độ</Tag>;
-      case 'needs-attention':
-        return <Tag color="warning">Cần chú ý</Tag>;
-      default:
-        return null;
-    }
-  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -133,33 +229,32 @@ const MentorDashboard = () => {
             Mentor Dashboard
           </h1>
           <p className="text-gray-400 mt-2">
-            Chào mừng trở lại, {mentorInfo.name}
+            {mentorInfo ? `Chào mừng trở lại, ${mentorInfo.name}` : 'Mentor Dashboard'}
           </p>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <div className="text-right">
-            <p className="text-sm text-white">{mentorInfo.company}</p>
-            <p className="text-xs text-gray-400">
-              {mentorInfo.yearsOfExperience} năm kinh nghiệm
-            </p>
+        {mentorInfo && (
+          <div className="flex items-center space-x-4">
+            <div className="text-right">
+              {mentorInfo.company && (
+                <p className="text-sm text-white">{mentorInfo.company}</p>
+              )}
+              {mentorInfo.position && (
+                <p className="text-xs text-gray-400">{mentorInfo.position}</p>
+              )}
+            </div>
+            
           </div>
-          <Avatar
-            size={48}
-            className="bg-gradient-to-r from-green-500 to-emerald-500"
-          >
-            {mentorInfo.name
-              .split(' ')
-              .map((n) => n[0])
-              .join('')
-              .slice(0, 2)
-              .toUpperCase()}
-          </Avatar>
-        </div>
+        )}
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {(userLoading || teamsLoading) ? (
+        <div className="flex justify-center items-center py-12">
+          <Spin size="large" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat, index) => (
           <Card
             key={index}
@@ -180,18 +275,19 @@ const MentorDashboard = () => {
             </div>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 gap-6 mb-6">
-        {/* My Teams */}
+        {/* Pending Mentor Requests */}
         <div>
           <Card
-            title="Teams Đang Hướng Dẫn"
+            title="Yêu cầu duyệt mentor"
             extra={
               <Button
                 type="link"
-                onClick={() => navigate(PATH_NAME.MENTOR_GROUP_CHAT)}
+                onClick={() => navigate(PATH_NAME.MENTOR_ASSIGNMENTS)}
                 className="text-green-400"
               >
                 Xem tất cả
@@ -199,69 +295,97 @@ const MentorDashboard = () => {
             }
             className="border-0 bg-white/5 backdrop-blur-xl"
           >
-            <div className="space-y-4">
-              {myTeams.map((team) => (
-                <div
-                  key={team.id}
-                  className="p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all cursor-pointer"
-                  onClick={() => navigate(PATH_NAME.MENTOR_GROUP_CHAT)}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="text-white">{team.name}</h4>
-                        {getStatusBadge(team.status)}
-                      </div>
-                      <p className="text-sm text-gray-400">{team.hackathon}</p>
-                    </div>
-                    <Badge
-                      count={team.members}
-                      showZero
-                      className="bg-white/10 text-white"
+            {assignmentsLoading ? (
+              <div className="flex justify-center py-8">
+                <Spin />
+              </div>
+            ) : pendingRequests.length > 0 ? (
+              <div className="space-y-4">
+                {pendingRequests.map((request) => {
+                  const status = (request.status || '').toLowerCase().trim();
+                  const isPending = status === 'pending' || status === 'waitingmentor';
+                  
+                  return (
+                    <div
+                      key={request.assignmentId || request.id}
+                      className="p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
                     >
-                      <TeamOutlined className="text-gray-400" />
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">Tiến độ</span>
-                      <span className="text-white">{team.progress}%</span>
-                    </div>
-                    <Progress
-                      percent={team.progress}
-                      strokeColor={{
-                        '0%': '#06b6d4',
-                        '100%': '#3b82f6',
-                      }}
-                      showInfo={false}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between mt-3 text-sm">
-                    {team.nextMeeting ? (
-                      <div className="flex items-center gap-1 text-green-400">
-                        <ClockCircleOutlined />
-                        <span>
-                          Họp:{' '}
-                          {new Date(team.nextMeeting).toLocaleString('vi-VN', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </span>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <TeamOutlined className="text-green-400" />
+                            <h4 className="text-white">{request.teamName || 'N/A'}</h4>
+                            <Tag color="orange">Chờ duyệt</Tag>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-gray-400 mt-2">
+                            {request.leaderName && (
+                              <div className="flex items-center gap-1">
+                                <UserOutlined />
+                                <span>{request.leaderName}</span>
+                              </div>
+                            )}
+                            {request.hackathonName && (
+                              <div className="flex items-center gap-1">
+                                <TrophyOutlined />
+                                <span>{request.hackathonName}</span>
+                              </div>
+                            )}
+                          </div>
+                          {request.assignedAt && (
+                            <p className="text-xs text-gray-500 mt-2">
+                              {dayjs(request.assignedAt).fromNow()}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <span className="text-gray-400">Chưa có lịch họp</span>
-                    )}
-                    <span className="text-gray-400">
-                      Cập nhật: {team.lastUpdate}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+
+                      {isPending && (
+                        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/10">
+                          <Button
+                            size="small"
+                            type="primary"
+                            icon={<CheckCircleOutlined />}
+                            loading={approveMutation.isPending && approveMutation.variables === request.assignmentId}
+                            onClick={() => {
+                              approveMutation.mutate(request.assignmentId, {
+                                onSuccess: () => {
+                                  message.success('Đã duyệt yêu cầu');
+                                  refetchAssignments();
+                                },
+                              });
+                            }}
+                            className="bg-emerald-600 text-white border-0 hover:bg-emerald-700"
+                          >
+                            Duyệt
+                          </Button>
+                          <Button
+                            size="small"
+                            danger
+                            icon={<CloseCircleOutlined />}
+                            loading={rejectMutation.isPending && rejectMutation.variables === request.assignmentId}
+                            onClick={() => {
+                              rejectMutation.mutate(request.assignmentId, {
+                                onSuccess: () => {
+                                  message.success('Đã từ chối yêu cầu');
+                                  refetchAssignments();
+                                },
+                              });
+                            }}
+                            className="bg-red-600 text-white border-0 hover:bg-red-700"
+                          >
+                            Từ chối
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-400">Không có yêu cầu nào cần duyệt</p>
+              </div>
+            )}
           </Card>
         </div>
       </div>
@@ -272,7 +396,8 @@ const MentorDashboard = () => {
         className="border-0 bg-white/5 backdrop-blur-xl"
       >
         <div className="space-y-4">
-          {recentActivities.map((activity) => (
+          {recentActivities.length > 0 ? (
+            recentActivities.map((activity) => (
             <div
               key={activity.id}
               className="flex items-start gap-3 p-3 rounded-lg bg-white/5"
@@ -296,31 +421,14 @@ const MentorDashboard = () => {
                 <p className="text-xs text-gray-400 mt-1">{activity.team}</p>
               </div>
             </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-gray-400 text-sm text-center py-4">Chưa có hoạt động nào</p>
+          )}
         </div>
       </Card>
 
-      {/* Quick Actions */}
-      <Card className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/20 backdrop-blur-xl mt-6">
-        <h3 className="text-xl mb-4 text-white">Thao Tác Nhanh</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Button
-            onClick={() => navigate(PATH_NAME.MENTOR_GROUP_CHAT)}
-            className="h-auto py-4 flex flex-col items-center border-white/20 bg-white/5 hover:bg-white/10"
-          >
-            <TrophyOutlined className="w-6 h-6 mb-2 text-green-400" />
-            <span>Hackathon</span>
-          </Button>
-
-          <Button
-            onClick={() => navigate(PATH_NAME.MENTOR_RESOURCES)}
-            className="h-auto py-4 flex flex-col items-center border-white/20 bg-white/5 hover:bg-white/10"
-          >
-            <BookOutlined className="w-6 h-6 mb-2 text-purple-400" />
-            <span>Chia Sẻ Tài Nguyên</span>
-          </Button>
-        </div>
-      </Card>
+   
     </div>
   );
 };
