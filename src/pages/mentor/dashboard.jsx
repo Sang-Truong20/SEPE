@@ -7,7 +7,7 @@ import {
   TrophyOutlined,
   UserOutlined
 } from '@ant-design/icons';
-import { Avatar, Button, Card, Spin, Tag, message } from 'antd';
+import { Button, Card, Spin, Tag, message } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useMemo } from 'react';
