@@ -1,6 +1,5 @@
 import {
   ArrowLeftOutlined,
-  CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
   ExclamationCircleOutlined,
@@ -87,7 +86,6 @@ const ChapterVerifyStudents = () => {
   });
 
   const pendingCount = verificationRequests.filter((r) => r.statusNormalized === 'pending').length;
-  const approvedCount = verificationRequests.filter((r) => r.statusNormalized === 'approved').length;
   const rejectedCount = verificationRequests.filter((r) => r.statusNormalized === 'rejected').length;
 
   const handleApprove = async (id) => {
@@ -161,7 +159,7 @@ const ChapterVerifyStudents = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
@@ -170,18 +168,6 @@ const ChapterVerifyStudents = () => {
               <div>
                 <p className="text-sm text-gray-400">Chờ duyệt</p>
                 <p className="text-2xl text-white">{pendingCount}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                <CheckCircleOutlined className="w-6 h-6 text-green-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-400">Đã duyệt</p>
-                <p className="text-2xl text-white">{approvedCount}</p>
               </div>
             </div>
           </Card>
@@ -230,9 +216,8 @@ const ChapterVerifyStudents = () => {
                 className="w-full"
                 style={{ width: '100%' }}
                 options={[
-                  { value: 'all', label: 'Tất cả trạng thái' },
+                  { value: 'all', label: 'Tất cả ' },
                   { value: 'pending', label: 'Chờ duyệt' },
-                  { value: 'approved', label: 'Đã duyệt' },
                   { value: 'rejected', label: 'Từ chối' },
                 ]}
               />
