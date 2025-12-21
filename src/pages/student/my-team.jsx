@@ -29,7 +29,7 @@ import {
   Users,
   XCircle,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 import {
@@ -74,6 +74,7 @@ const MyTeamPage = () => {
   const [selectedMemberForTransfer, setSelectedMemberForTransfer] =
     useState(null);
   const [activeTab, setActiveTab] = useState('members');
+  const messagesEndRef = useRef(null);
   const {
     data: apiTeam,
     isLoading: teamLoading,
@@ -162,7 +163,8 @@ const MyTeamPage = () => {
 
   // Chat hooks
   const { data: chatGroupsData = [], isLoading: chatGroupsLoading } =
-    useGetTeamChatGroups(id);
+    useGetTeamChatGroups(id)
+    ;
   const [selectedChatGroup, setSelectedChatGroup] = useState(null);
   const [messageContent, setMessageContent] = useState('');
   const sendMessageMutation = useSendChatMessage();
@@ -173,8 +175,11 @@ const MyTeamPage = () => {
       ? chatGroupsData.data
       : [];
 
-  const { data: messagesData = [], isLoading: messagesLoading } =
-    useGetChatGroupMessages(selectedChatGroup?.chatGroupId);
+  const { 
+    data: messagesData = [], 
+    isLoading: messagesLoading,
+    refetch: refetchMessages 
+  } = useGetChatGroupMessages(selectedChatGroup?.chatGroupId);
 
   const messages = Array.isArray(messagesData)
     ? messagesData
@@ -182,17 +187,44 @@ const MyTeamPage = () => {
       ? messagesData.data
       : [];
 
+  // Poll messages every 1 second when a chat group is selected
+  useEffect(() => {
+    if (!selectedChatGroup?.chatGroupId) return;
+
+    const intervalId = setInterval(() => {
+      refetchMessages();
+    }, 1000); // Poll every 1 second
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [selectedChatGroup?.chatGroupId, refetchMessages]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   const handleSendMessage = async () => {
     if (!messageContent.trim() || !selectedChatGroup?.chatGroupId) return;
 
+    const content = messageContent.trim();
+    const chatGroupId = selectedChatGroup.chatGroupId;
+    setMessageContent(''); // Clear input immediately for better UX
+
     try {
       await sendMessageMutation.mutateAsync({
-        chatGroupId: selectedChatGroup.chatGroupId,
-        content: messageContent.trim(),
+        chatGroupId,
+        content,
       });
-      setMessageContent('');
+      // Refetch messages immediately after sending
+      setTimeout(() => {
+        refetchMessages();
+      }, 100);
     } catch (error) {
       console.error('Send message error:', error);
+      // Restore message content on error
+      setMessageContent(content);
     }
   };
 
@@ -679,16 +711,30 @@ const MyTeamPage = () => {
                     >
                       {/* Chat Header - Fixed at top */}
                       <div className="border-b border-white/10 p-4 flex-shrink-0">
-                        <h4 className="text-white font-medium">
-                          {selectedChatGroup.groupName ||
-                            selectedChatGroup.teamName ||
-                            'Group Chat'}
-                        </h4>
-                        {selectedChatGroup.mentorName && (
-                          <p className="text-sm text-gray-400">
-                            Mentor: {selectedChatGroup.mentorName}
-                          </p>
-                        )}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="text-white font-medium">
+                              {selectedChatGroup.groupName ||
+                                selectedChatGroup.teamName ||
+                                'Group Chat'}
+                            </h4>
+                            {selectedChatGroup.mentorName && (
+                              <p className="text-sm text-gray-400">
+                                Mentor: {selectedChatGroup.mentorName}
+                              </p>
+                            )}
+                          </div>
+                          {/* Connection status indicator */}
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-2 h-2 rounded-full bg-green-400"
+                              title="Đang cập nhật tin nhắn..."
+                            />
+                            <span className="text-xs text-gray-400">
+                              Đang cập nhật
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Messages Area - Scrollable */}
@@ -728,6 +774,8 @@ const MyTeamPage = () => {
                             <p>Chưa có tin nhắn nào</p>
                           </div>
                         )}
+                        {/* Scroll anchor */}
+                        <div ref={messagesEndRef} />
                       </div>
 
                       {/* Message Input - Fixed at bottom */}

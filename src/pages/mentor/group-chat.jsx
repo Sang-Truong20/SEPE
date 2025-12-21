@@ -3,7 +3,7 @@ import {
   SearchOutlined,
 } from '@ant-design/icons';
 import { Card, Input, Spin, Empty } from 'antd';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useUserData } from '../../hooks/useUserData';
 import { useMentorChatGroups } from '../../hooks/mentor/chat';
 import { useGetChatGroupMessages, useSendChatMessage } from '../../hooks/student/chat';
@@ -14,6 +14,7 @@ const MentorGroupChat = () => {
   const [chatGroupSearchQuery, setChatGroupSearchQuery] = useState('');
   const [selectedChatGroup, setSelectedChatGroup] = useState(null);
   const [messageContent, setMessageContent] = useState('');
+  const messagesEndRef = useRef(null);
 
   // Try multiple possible fields for mentorId
   const currentMentorId = userInfo?.mentorId || userInfo?.id || userInfo?.userId || null;
@@ -27,15 +28,35 @@ const MentorGroupChat = () => {
   const sendMessageMutation = useSendChatMessage();
 
   // Get messages for selected chat group
-  const { data: messagesData = [], isLoading: messagesLoading } = useGetChatGroupMessages(
-    selectedChatGroup?.chatGroupId
-  );
+  const { 
+    data: messagesData = [], 
+    isLoading: messagesLoading,
+    refetch: refetchMessages 
+  } = useGetChatGroupMessages(selectedChatGroup?.chatGroupId);
 
   const messages = Array.isArray(messagesData) 
     ? messagesData 
     : Array.isArray(messagesData?.data) 
       ? messagesData.data 
       : [];
+
+  // Poll messages every 1 second when a chat group is selected
+  useEffect(() => {
+    if (!selectedChatGroup?.chatGroupId) return;
+
+    const intervalId = setInterval(() => {
+      refetchMessages();
+    }, 1000); // Poll every 1 second
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [selectedChatGroup?.chatGroupId, refetchMessages]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // Extract chat groups from API response
   const chatGroups = useMemo(() => {
@@ -63,14 +84,23 @@ const MentorGroupChat = () => {
   const handleSendMessage = async () => {
     if (!messageContent.trim() || !selectedChatGroup?.chatGroupId) return;
     
+    const content = messageContent.trim();
+    const chatGroupId = selectedChatGroup.chatGroupId;
+    setMessageContent(''); // Clear input immediately for better UX
+    
     try {
       await sendMessageMutation.mutateAsync({
-        chatGroupId: selectedChatGroup.chatGroupId,
-        content: messageContent.trim(),
+        chatGroupId,
+        content,
       });
-      setMessageContent('');
+      // Refetch messages immediately after sending
+      setTimeout(() => {
+        refetchMessages();
+      }, 100);
     } catch (error) {
       console.error('Send message error:', error);
+      // Restore message content on error
+      setMessageContent(content);
     }
   };
 
@@ -168,19 +198,33 @@ const MentorGroupChat = () => {
               >
                 {/* Chat Header - Fixed at top */}
                 <div className="border-b border-white/10 p-4 flex-shrink-0">
-                  <h4 className="text-white font-medium">
-                    {selectedChatGroup.groupName || selectedChatGroup.teamName || 'Group Chat'}
-                  </h4>
-                  {selectedChatGroup.hackathonName && (
-                    <p className="text-sm text-gray-400">
-                      Hackathon: {selectedChatGroup.hackathonName}
-                    </p>
-                  )}
-                  {selectedChatGroup.teamName && (
-                    <p className="text-sm text-gray-400">
-                      Team: {selectedChatGroup.teamName}
-                    </p>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-white font-medium">
+                        {selectedChatGroup.groupName || selectedChatGroup.teamName || 'Group Chat'}
+                      </h4>
+                      {selectedChatGroup.hackathonName && (
+                        <p className="text-sm text-gray-400">
+                          Hackathon: {selectedChatGroup.hackathonName}
+                        </p>
+                      )}
+                      {selectedChatGroup.teamName && (
+                        <p className="text-sm text-gray-400">
+                          Team: {selectedChatGroup.teamName}
+                        </p>
+                      )}
+                    </div>
+                    {/* Connection status indicator */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-2 h-2 rounded-full bg-green-400"
+                        title="Đang cập nhật tin nhắn..."
+                      />
+                      <span className="text-xs text-gray-400">
+                        Đang cập nhật
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Messages Area - Scrollable */}
@@ -220,6 +264,8 @@ const MentorGroupChat = () => {
                       <p>Chưa có tin nhắn nào</p>
                     </div>
                   )}
+                  {/* Scroll anchor */}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Message Input - Fixed at bottom */}
