@@ -25,7 +25,7 @@ import {
   Upload,
   message,
 } from 'antd';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import StudentVerification from '../../components/features/student/profile/StudentVerification';
 import { useCreateMentorVerification } from '../../hooks/mentor/verification';
 import { useGetChapters } from '../../hooks/student/chapter';
@@ -44,8 +44,21 @@ const StudentProfile = () => {
   const { userInfo, refetch: refetchUserData } = useUserData();
   const updateUserInfoMutation = useUpdateUserInfo();
 
-  // Mock verification status - in real app, this would come from API
-  const [verificationStatus, setVerificationStatus] = useState('unverified'); // 'unverified', 'pending', 'verified'
+  // Determine verification status from userInfo.isVerified
+  const [verificationStatus, setVerificationStatus] = useState(() => {
+    // Initial state based on userInfo if available
+    return 'unverified';
+  });
+  
+  // Update verification status when userInfo changes
+  useEffect(() => {
+    if (userInfo?.isVerified === true) {
+      setVerificationStatus('verified');
+    } else if (userInfo?.isVerified === false) {
+      // You can add logic here to check for 'pending' status from API if needed
+      setVerificationStatus('unverified');
+    }
+  }, [userInfo?.isVerified]);
   const verifyMentorMutation = useCreateMentorVerification();
   const { data: chapters = [], isLoading: chaptersLoading } = useGetChapters();
   const { data: hackathons = [], isLoading: hackathonsLoading } = useGetHackathons();
