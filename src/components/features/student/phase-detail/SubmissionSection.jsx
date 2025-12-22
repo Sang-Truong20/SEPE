@@ -355,13 +355,7 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader: propIsLea
                   ? 'Bạn là team leader. Bạn có thể tạo bản nháp và nộp bài final.'
                   : 'Bạn là team member. Bạn chỉ có thể tạo bản nháp. Chỉ team leader mới có thể nộp bài final.'}
               </p>
-              {/* Debug info - remove in production */}
-              {import.meta.env.DEV && (
-                <p className="text-xs text-gray-500">
-                  Debug: isLeader={String(isLeader)}, teamId={teamId}, propIsLeader={String(propIsLeader)}, 
-                  API={isLeaderData !== undefined ? String(isLeaderData) : 'loading'}
-                </p>
-              )}
+              
             </div>
           )}
         </div>

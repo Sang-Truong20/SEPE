@@ -17,15 +17,32 @@ export const useCreateAppeal = () => {
     return useMutation({
         mutationKey: appealQueryKeys.create(),
         mutationFn: async (appealData) => {
-            const response = await axiosClient.post('/Appeal', {
-                appealType: appealData.appealType || 'Penalty',
-                adjustmentId: appealData.adjustmentId,
-                submissionId: appealData.submissionId,
-                judgeId: appealData.judgeId,
+            const appealType = appealData.appealType || 'Penalty';
+            
+            // Build payload based on appeal type
+            const payload = {
+                appealType: appealType,
                 teamId: appealData.teamId,
+                judgeId: appealData.judgeId,
                 message: appealData.message,
                 reason: appealData.reason,
-            });
+            };
+
+            // Penalty Appeal: include adjustmentId, exclude submissionId
+            if (appealType === 'Penalty') {
+                if (appealData.adjustmentId !== undefined && appealData.adjustmentId !== null) {
+                    payload.adjustmentId = appealData.adjustmentId;
+                }
+                // Do NOT include submissionId for Penalty appeals
+            }
+            
+            // Score Appeal: include submissionId, exclude adjustmentId
+            if (appealType === 'Score') {
+                payload.submissionId = appealData.submissionId;
+                // Do NOT include adjustmentId for Score appeals
+            }
+
+            const response = await axiosClient.post('/Appeal', payload);
 
             return response.data;
         },
