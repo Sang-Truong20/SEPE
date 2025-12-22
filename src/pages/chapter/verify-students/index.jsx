@@ -56,6 +56,7 @@ const ChapterVerifyStudents = () => {
       const statusNormalized = statusRaw.toLowerCase();
       return {
         id: item.verificationId || item.id || item.userId,
+        userId: item.userId,
         studentName: item.fullName || item.studentName || '—',
         studentId: item.studentCode || item.studentId || '—',
         email: item.email || undefined,
@@ -88,9 +89,9 @@ const ChapterVerifyStudents = () => {
   const pendingCount = verificationRequests.filter((r) => r.statusNormalized === 'pending').length;
   const rejectedCount = verificationRequests.filter((r) => r.statusNormalized === 'rejected').length;
 
-  const handleApprove = async (id) => {
+  const handleApprove = async (userId) => {
     try {
-      await approveMutation.mutateAsync(id);
+      await approveMutation.mutateAsync(userId);
       setIsModalVisible(false);
       setSelectedVerification(null);
     } catch (error) {
@@ -98,9 +99,9 @@ const ChapterVerifyStudents = () => {
     }
   };
 
-  const handleReject = async (id) => {
+  const handleReject = async (userId) => {
     try {
-      await rejectMutation.mutateAsync({ verificationId: id, reason: '' });
+      await rejectMutation.mutateAsync({ userId, reason: '' });
       setIsModalVisible(false);
       setSelectedVerification(null);
     } catch (error) {
@@ -311,14 +312,14 @@ const ChapterVerifyStudents = () => {
                     <>
                       <Button
                         size="small"
-                        onClick={() => handleApprove(request.id)}
+                        onClick={() => handleApprove(request.userId)}
                         className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
                       >
                         Duyệt
                       </Button>
                       <Button
                         size="small"
-                        onClick={() => handleReject(request.id)}
+                        onClick={() => handleReject(request.userId)}
                         className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white border-0"
                       >
                         Từ chối
@@ -450,7 +451,7 @@ const ChapterVerifyStudents = () => {
                   {selectedVerification.statusNormalized === 'pending' && (
                 <div className="flex space-x-3">
                   <Button
-                    onClick={() => handleApprove(selectedVerification.id)}
+                    onClick={() => handleApprove(selectedVerification.userId)}
                     className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
                     loading={approveMutation.isPending}
                     disabled={approveMutation.isPending || rejectMutation.isPending}
@@ -458,7 +459,7 @@ const ChapterVerifyStudents = () => {
                     Phê Duyệt
                   </Button>
                   <Button
-                    onClick={() => handleReject(selectedVerification.id)}
+                    onClick={() => handleReject(selectedVerification.userId)}
                     className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white border-0"
                     loading={rejectMutation.isPending}
                     disabled={approveMutation.isPending || rejectMutation.isPending}

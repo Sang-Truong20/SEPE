@@ -33,8 +33,8 @@ export const useApproveStudentVerification = () => {
 
   return useMutation({
     mutationKey: chapterStudentVerificationQueryKeys.approve(),
-    mutationFn: async (verificationId) => {
-      const response = await axiosClient.put(`/StudentVerification/approve/${verificationId}`);
+    mutationFn: async (userId) => {
+      const response = await axiosClient.put(`/StudentVerification/approve/${userId}`);
       return response.data;
     },
     onSuccess: () => {
@@ -58,14 +58,14 @@ export const useRejectStudentVerification = () => {
   return useMutation({
     mutationKey: chapterStudentVerificationQueryKeys.reject(),
     mutationFn: async (payload) => {
-      const verificationId =
+      const userId =
         typeof payload === 'object' && payload !== null
-          ? payload.verificationId
+          ? payload.userId
           : payload;
       const reason =
         typeof payload === 'object' && payload !== null ? payload.reason || '' : '';
 
-      const response = await axiosClient.put(`/StudentVerification/reject/${verificationId}`, {
+      const response = await axiosClient.put(`/StudentVerification/reject/${userId}`, {
         reason,
       });
       return response.data;
