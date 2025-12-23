@@ -8,6 +8,7 @@ import {
 import { Button, Modal, Spin, Tag } from 'antd';
 import { useGetChallengesByTrack } from '../../../../hooks/student/challenge';
 import { useGetCriteriaByPhase } from '../../../../hooks/student/criterion';
+import { useGetTeamTrackByPhase } from '../../../../hooks/student/team-track';
 
 const ChallengeItem = ({ challenge }) => {
   if (!challenge) {
@@ -59,9 +60,20 @@ const TrackDetailModal = ({
   onClose,
   onSelectTrack,
   isSelected,
-  phaseId
+  phaseId,
+  teamId,
 }) => {
   const trackId = track?.trackId ?? track?.id;
+  
+  // Check if team has selected this track
+  const { data: selectedTrack, isLoading: isLoadingTrack } = useGetTeamTrackByPhase(
+    teamId,
+    phaseId,
+    { enabled: !!teamId && !!phaseId && visible }
+  );
+  
+  const isTrackSelected = selectedTrack && selectedTrack.trackId === trackId;
+  
   // Get criteria for this phase
   const { data: criteria = [], isLoading: criteriaLoading } = useGetCriteriaByPhase(
     phaseId ? parseInt(phaseId) : null
@@ -86,6 +98,12 @@ const TrackDetailModal = ({
         <div className="flex items-center gap-2">
           <TrophyOutlined className="text-green-400" />
           <span className="text-white font-semibold">{track?.name}</span>
+          {isTrackSelected && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/50 text-green-300 text-xs font-medium">
+              <CheckCircleOutlined />
+              Đã chọn
+            </span>
+          )}
         </div>
       }
       open={visible}
@@ -178,7 +196,7 @@ const TrackDetailModal = ({
         </div>
 
         {/* Action Button */}
-        {!isSelected && (
+        {!isSelected && !isTrackSelected && (
           <div className="pt-4 border-t border-slate-800">
             <Button
               type="primary"
@@ -195,6 +213,18 @@ const TrackDetailModal = ({
             >
               Chọn track này
             </Button>
+          </div>
+        )}
+        
+        {/* Show message if track is already selected */}
+        {isTrackSelected && (
+          <div className="pt-4 border-t border-slate-800">
+            <div className="flex items-center justify-center gap-2 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+              <CheckCircleOutlined className="text-green-400" />
+              <span className="text-green-300 font-medium">
+                Track này đã được team của bạn chọn
+              </span>
+            </div>
           </div>
         )}
       </div>

@@ -96,6 +96,7 @@ const TracksSelection = ({
         }}
         isSelected={selectedTrackForModal?.trackId === selectedTrackId}
         phaseId={phaseId}
+        teamId={teamId}
       />
     </Card>
   );
