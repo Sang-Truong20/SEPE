@@ -56,13 +56,31 @@ export const useApproveMentorVerification = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: chapterMentorVerificationQueryKeys.list(),
+        refetchType: 'active',
       });
 
+      // Invalidate all approvedByHackathon queries if hackathonId is provided
       if (variables?.hackathonId) {
         queryClient.invalidateQueries({
           queryKey: chapterMentorVerificationQueryKeys.approvedByHackathon(
             variables.hackathonId,
           ),
+          refetchType: 'active',
+        });
+      } else {
+        // If hackathonId not provided, invalidate all approvedByHackathon queries
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return (
+              Array.isArray(key) &&
+              key[0] === 'chapter' &&
+              key[1] === 'mentorVerification' &&
+              key[2] === 'hackathon' &&
+              key[4] === 'approved'
+            );
+          },
+          refetchType: 'active',
         });
       }
 
@@ -92,13 +110,31 @@ export const useRejectMentorVerification = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: chapterMentorVerificationQueryKeys.list(),
+        refetchType: 'active',
       });
 
+      // Invalidate all approvedByHackathon queries if hackathonId is provided
       if (variables?.hackathonId) {
         queryClient.invalidateQueries({
           queryKey: chapterMentorVerificationQueryKeys.approvedByHackathon(
             variables.hackathonId,
           ),
+          refetchType: 'active',
+        });
+      } else {
+        // If hackathonId not provided, invalidate all approvedByHackathon queries
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return (
+              Array.isArray(key) &&
+              key[0] === 'chapter' &&
+              key[1] === 'mentorVerification' &&
+              key[2] === 'hackathon' &&
+              key[4] === 'approved'
+            );
+          },
+          refetchType: 'active',
         });
       }
 
