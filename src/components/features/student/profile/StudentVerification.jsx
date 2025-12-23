@@ -17,15 +17,26 @@ import {
 } from 'antd';
 import { useState } from 'react';
 import { useSubmitVerification } from '../../../../hooks/student/verify';
+import { useUserData } from '../../../../hooks/useUserData';
 
 const StudentVerification = ({ verificationStatus, setVerificationStatus }) => {
   const [verificationForm] = Form.useForm();
   const [frontCardImage, setFrontCardImage] = useState(null);
   const [backCardImage, setBackCardImage] = useState(null);
 
+  const { userInfo } = useUserData();
   const submitVerificationMutation = useSubmitVerification();
 
+  // Check if user is already verified
+  const isVerified = userInfo?.isVerified === true || verificationStatus === 'verified';
+
   const handleVerificationSubmit = async (values) => {
+    // Prevent submission if user is already verified
+    if (isVerified) {
+      message.warning('Bạn đã được xác minh rồi, không thể gửi đơn xác minh mới.');
+      return;
+    }
+
     try {
       const verificationData = {
         universityName: values.universityName,
@@ -35,6 +46,7 @@ const StudentVerification = ({ verificationStatus, setVerificationStatus }) => {
         yearOfAdmission: values.yearOfAdmission,
         frontCardImage: frontCardImage,
         backCardImage: backCardImage,
+        isVerified: userInfo?.isVerified, // Pass isVerified to prevent submission in hook
       };
 
       await submitVerificationMutation.mutateAsync(verificationData);
@@ -104,7 +116,7 @@ const StudentVerification = ({ verificationStatus, setVerificationStatus }) => {
     <div className="space-y-6">
       {getVerificationStatusDisplay()}
 
-      {verificationStatus !== 'verified' && (
+      {!isVerified && verificationStatus !== 'verified' && (
         <Card className="bg-card-background border border-card-border backdrop-blur-xl">
           <h3 className="text-lg font-semibold text-text-primary mb-4">
             Xác minh thông tin sinh viên
@@ -254,6 +266,7 @@ const StudentVerification = ({ verificationStatus, setVerificationStatus }) => {
               type="primary"
               htmlType="submit"
               loading={submitVerificationMutation.isPending}
+              disabled={isVerified}
               className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white border-0"
               icon={<IdcardOutlined />}
             >

@@ -16,6 +16,11 @@ export const useSubmitVerification = () => {
     return useMutation({
         mutationKey: verifyStudentQueryKeys.submit(),
         mutationFn: async (verificationData) => {
+            // Check if user is already verified - prevent submission
+            if (verificationData.isVerified === true) {
+                throw new Error('Bạn đã được xác minh rồi, không thể gửi đơn xác minh mới.');
+            }
+
             const formData = new FormData();
 
             // Add all fields to FormData
