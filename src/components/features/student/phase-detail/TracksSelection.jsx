@@ -11,6 +11,7 @@ const TracksSelection = ({
   form,
   onFinish,
   phaseId,
+  teamId,
   registeredTrackId,
 }) => {
   const [selectedTrackForModal, setSelectedTrackForModal] = useState(null);
@@ -56,6 +57,8 @@ const TracksSelection = ({
                       key={track.trackId}
                       track={track}
                       isSelected={isSelected}
+                      teamId={teamId}
+                      phaseId={phaseId}
                       onSelect={() => {
                         onTrackSelect(track.trackId);
                         form.setFieldsValue({ trackId: track.trackId });

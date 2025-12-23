@@ -4,15 +4,29 @@ import {
   FileTextOutlined,
   TrophyOutlined
 } from '@ant-design/icons';
+import { useGetTeamTrackByPhase } from '../../../../hooks/student/team-track';
 
-const TrackCard = ({ track, isSelected, onSelect, onSubmit }) => {
+const TrackCard = ({ track, isSelected, onSelect, onSubmit, teamId, phaseId }) => {
   const hasChallenges = track.challenges && track.challenges.length > 0;
-  // Nếu track đã có challenges, coi như đã được chọn và ẩn nút
-  const isTrackAssigned = hasChallenges;
+  
+  // Check if team has selected any track for this phase
+  const { data: selectedTrack, isLoading: isLoadingTrack } = useGetTeamTrackByPhase(
+    teamId,
+    phaseId,
+    { enabled: !!teamId && !!phaseId }
+  );
+  
+  // Only show button if team hasn't selected any track yet (API returned 204/null)
+  // If team has already selected a track, don't show button
+  const canShowButton = selectedTrack === null;
 
   return (
     <div
-      className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl shadow-green-500/20 transition-all duration-300 cursor-pointer"
+      className={`flex flex-col h-full bg-slate-900 border rounded-xl overflow-hidden shadow-xl transition-all duration-300 cursor-pointer ${
+        isSelected
+          ? 'border-green-500 shadow-green-500/40'
+          : 'border-slate-800 shadow-green-500/20'
+      }`}
       onClick={onSelect}
     >
       {/* Card Header */}
@@ -67,7 +81,7 @@ const TrackCard = ({ track, isSelected, onSelect, onSubmit }) => {
         </div>
 
         {/* Footer Actions */}
-        {!isSelected && !isTrackAssigned && (
+        {!isLoadingTrack && canShowButton && (
           <div className="mt-4 pt-4 border-t border-slate-800">
             <button
               type="button"
@@ -84,7 +98,7 @@ const TrackCard = ({ track, isSelected, onSelect, onSubmit }) => {
                 }
               }}
             >
-              {hasChallenges ? 'Bắt đầu ngay' : 'Sắp ra mắt'}
+              {hasChallenges ? 'Chọn track này' : 'Sắp ra mắt'}
             </button>
           </div>
         )}
