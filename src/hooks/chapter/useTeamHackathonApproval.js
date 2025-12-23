@@ -38,9 +38,46 @@ export const useApproveTeamHackathon = (hackathonId) => {
       });
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: teamHackathonApprovalQueryKeys.pending(hackathonId) });
-      queryClient.invalidateQueries({ queryKey: teamHackathonApprovalQueryKeys.approved() });
+    onSuccess: (_, variables) => {
+      const approvedTeamId = variables?.teamId ?? variables?.teamid;
+
+      // Optimistic update: remove approved team from pending list in cache
+      if (approvedTeamId) {
+        queryClient.setQueryData(
+          teamHackathonApprovalQueryKeys.pending(hackathonId),
+          (old) => {
+            if (!old) return old;
+
+            const list = Array.isArray(old)
+              ? old
+              : Array.isArray(old.data)
+              ? old.data
+              : [];
+
+            const nextList = list.filter(
+              (item) =>
+                item.teamId !== approvedTeamId &&
+                item.teamid !== approvedTeamId,
+            );
+
+            if (Array.isArray(old)) {
+              return nextList;
+            }
+
+            return {
+              ...old,
+              data: nextList,
+            };
+          },
+        );
+      }
+
+      queryClient.invalidateQueries({
+        queryKey: teamHackathonApprovalQueryKeys.pending(hackathonId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: teamHackathonApprovalQueryKeys.approved(),
+      });
       message.success('Đã duyệt team tham gia hackathon');
     },
     onError: () => {
@@ -69,9 +106,46 @@ export const useRejectTeamHackathon = (hackathonId) => {
       });
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: teamHackathonApprovalQueryKeys.pending(hackathonId) });
-      queryClient.invalidateQueries({ queryKey: teamHackathonApprovalQueryKeys.rejected() });
+    onSuccess: (_, variables) => {
+      const rejectedTeamId = variables?.teamId ?? variables?.teamid;
+
+      // Optimistic update: remove rejected team from pending list in cache
+      if (rejectedTeamId) {
+        queryClient.setQueryData(
+          teamHackathonApprovalQueryKeys.pending(hackathonId),
+          (old) => {
+            if (!old) return old;
+
+            const list = Array.isArray(old)
+              ? old
+              : Array.isArray(old.data)
+              ? old.data
+              : [];
+
+            const nextList = list.filter(
+              (item) =>
+                item.teamId !== rejectedTeamId &&
+                item.teamid !== rejectedTeamId,
+            );
+
+            if (Array.isArray(old)) {
+              return nextList;
+            }
+
+            return {
+              ...old,
+              data: nextList,
+            };
+          },
+        );
+      }
+
+      queryClient.invalidateQueries({
+        queryKey: teamHackathonApprovalQueryKeys.pending(hackathonId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: teamHackathonApprovalQueryKeys.rejected(),
+      });
       message.success('Đã từ chối team tham gia hackathon');
     },
     onError: () => {

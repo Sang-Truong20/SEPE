@@ -46,19 +46,30 @@ const ChapterTeamHackathonApproval = () => {
   const { fetchHackathons } = useHackathons();
   const { data: hackathons = [], isLoading: hackathonsLoading } = fetchHackathons;
 
-  const { data: approvalsData, isLoading } = useGetPendingTeamHackathonApprovals(hackathonId);
+  const { data: approvalsData, isLoading } =
+    useGetPendingTeamHackathonApprovals(hackathonId);
   const approveMutation = useApproveTeamHackathon(hackathonId);
   const rejectMutation = useRejectTeamHackathon(hackathonId);
 
-  const approvals = approvalsData || [];
+  // Chuẩn hóa data từ API: có thể trả về mảng trực tiếp hoặc bọc trong field data
+  const approvals = Array.isArray(approvalsData)
+    ? approvalsData
+    : Array.isArray(approvalsData?.data)
+    ? approvalsData.data
+    : [];
 
   const filteredApprovals = approvals.filter((approval) => {
     const query = searchQuery.toLowerCase();
+    const teamName = approval.teamName || '';
+    const hackathonName = approval.hackathonName || '';
+    const leaderName = approval.leader?.name || '';
+    const leaderEmail = approval.leader?.email || '';
+
     return (
-      approval.teamName.toLowerCase().includes(query) ||
-      approval.hackathonName.toLowerCase().includes(query) ||
-      approval.leader.name.toLowerCase().includes(query) ||
-      approval.leader.email.toLowerCase().includes(query)
+      teamName.toLowerCase().includes(query) ||
+      hackathonName.toLowerCase().includes(query) ||
+      leaderName.toLowerCase().includes(query) ||
+      leaderEmail.toLowerCase().includes(query)
     );
   });
 
