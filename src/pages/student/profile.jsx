@@ -1,13 +1,7 @@
 import {
-  UserOutlined,
   EditOutlined,
-  TrophyOutlined,
-  TeamOutlined,
-  FileTextOutlined,
-  BarChartOutlined,
-  LockOutlined,
-  BellOutlined,
   LogoutOutlined,
+  UserOutlined
 } from '@ant-design/icons';
 import {
   Alert,
@@ -19,13 +13,11 @@ import {
   Modal,
   Select,
   Space,
-  Statistic,
   Tabs,
-  Tag,
   Upload,
-  message,
+  message
 } from 'antd';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import StudentVerification from '../../components/features/student/profile/StudentVerification';
 import { useCreateMentorVerification } from '../../hooks/mentor/verification';
 import { useGetChapters } from '../../hooks/student/chapter';
@@ -35,7 +27,6 @@ import { useUpdateUserInfo } from '../../hooks/useUpdateUserInfo';
 import { useUserData } from '../../hooks/useUserData';
 
 const StudentProfile = () => {
-  const [isEditing, setIsEditing] = useState(false);
   const [isUpdateNameModalVisible, setIsUpdateNameModalVisible] = useState(false);
   const [updateNameForm] = Form.useForm();
   const [mentorVerificationStatus, setMentorVerificationStatus] = useState('unverified'); // 'unverified', 'pending', 'verified'
@@ -80,87 +71,9 @@ const StudentProfile = () => {
     interests: ['Artificial Intelligence', 'Web Development', 'Mobile Apps'],
   };
 
-  const stats = [
-    {
-      title: 'Hackathons tham gia',
-      value: 5,
-      icon: <TrophyOutlined className="text-primary text-xl" />,
-    },
-    {
-      title: 'Đội đã tham gia',
-      value: 3,
-      icon: <TeamOutlined className="text-secondary text-xl" />,
-    },
-    {
-      title: 'Bài nộp',
-      value: 8,
-      icon: <FileTextOutlined className="text-tertiary text-xl" />,
-    },
-    {
-      title: 'Điểm trung bình',
-      value: 87.5,
-      suffix: '/100',
-      icon: <BarChartOutlined className="text-primary text-xl" />,
-    },
-  ];
+  
 
-  const achievements = [
-    {
-      id: '1',
-      name: 'First Hackathon',
-      description: 'Hoàn thành hackathon đầu tiên',
-      date: '2024-01-15',
-      icon: '🏆',
-    },
-    {
-      id: '2',
-      name: 'Team Leader',
-      description: 'Làm trưởng nhóm trong dự án',
-      date: '2024-02-20',
-      icon: '👑',
-    },
-    {
-      id: '3',
-      name: 'Top 10%',
-      description: 'Lọt top 10% trong AI Revolution 2024',
-      date: '2024-03-17',
-      icon: '⭐',
-    },
-  ];
 
-  const recentActivity = [
-    {
-      id: '1',
-      type: 'submission',
-      title: 'Đã nộp dự án "AI Code Assistant"',
-      description: 'Hackathon: AI Revolution 2024',
-      date: '2024-03-16',
-      status: 'success',
-    },
-    {
-      id: '2',
-      type: 'team',
-      title: 'Tham gia đội "Code Crusaders"',
-      description: 'Hackathon: AI Revolution 2024',
-      date: '2024-03-10',
-      status: 'success',
-    },
-    {
-      id: '3',
-      type: 'hackathon',
-      title: 'Đăng ký tham gia "Web3 Future Hackathon"',
-      description: 'Sắp diễn ra vào tháng 4',
-      date: '2024-03-05',
-      status: 'info',
-    },
-  ];
-
-  const handleSaveProfile = (values) => {
-    console.log('Saving profile:', values);
-    setIsEditing(false);
-    message.success('Thông tin cá nhân đã được cập nhật thành công!');
-    // Handle profile update
-  };
 
   // Filter tabs - chỉ hiển thị tab Tổng quan, Xác minh sinh viên (nếu là student), và Cài đặt
   const tabItems = [
@@ -360,11 +273,15 @@ const StudentProfile = () => {
                       }
                     >
                       {Array.isArray(chapters) &&
-                        chapters.map((ch) => (
-                          <Select.Option key={ch.chapterId} value={ch.chapterId}>
-                            {ch.name || `Chapter ${ch.chapterId}`}
-                          </Select.Option>
-                        ))}
+                        chapters.map((ch) => {
+                          const id = ch.chapterId ?? ch.id;
+                          const label = ch.chapterName || ch.name || `Chapter ${id}`;
+                          return (
+                            <Select.Option key={id} value={id}>
+                              {label}
+                            </Select.Option>
+                          );
+                        })}
                     </Select>
                   </Form.Item>
                   <Form.Item
