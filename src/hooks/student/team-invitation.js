@@ -28,7 +28,11 @@ export const useInviteTeamMember = () => {
         },
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: teamInvitationQueryKeys.status() });
-            queryClient.invalidateQueries({ queryKey: teamInvitationQueryKeys.invite(variables.teamId) });
+            if (variables?.teamId) {
+                queryClient.invalidateQueries({
+                    queryKey: teamInvitationQueryKeys.teamInvitations(variables.teamId),
+                });
+            }
         },
         onError: (error) => {
             const msg =
