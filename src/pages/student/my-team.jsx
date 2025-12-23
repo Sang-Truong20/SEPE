@@ -29,8 +29,9 @@ import {
   Users,
   XCircle,
 } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { TeamJoinRequestsTab } from '../../components/features/student/team';
 import { PATH_NAME } from '../../constants';
 import {
   useGetChatGroupMessages,
@@ -38,14 +39,16 @@ import {
   useSendChatMessage,
 } from '../../hooks/student/chat';
 import { useGetTeam } from '../../hooks/student/team';
-import { useInviteTeamMember } from '../../hooks/student/team-invitation';
+import {
+  useGetTeamInvitationsByTeam,
+  useInviteTeamMember,
+} from '../../hooks/student/team-invitation';
+import { useGetTeamJoinRequestsByTeam } from '../../hooks/student/team-join-request';
 import {
   useGetTeamMembers,
   useKickTeamMember,
   useTransferTeamLeader,
 } from '../../hooks/student/team-member';
-import { useGetTeamJoinRequestsByTeam } from '../../hooks/student/team-join-request';
-import { TeamJoinRequestsTab } from '../../components/features/student/team';
 import { useUserData } from '../../hooks/useUserData';
 const { TabPane } = Tabs;
 
@@ -95,8 +98,8 @@ const MyTeamPage = () => {
     isLoading: membersLoading,
     refetch: refetchTeamMembers,
   } = useGetTeamMembers(id, {
-      enabled: !!id,
-    });
+    enabled: !!id,
+  });
 
   // Extract members array from API response
   const apiMembers = Array.isArray(teamMembersResponse?.data)
@@ -110,13 +113,24 @@ const MyTeamPage = () => {
     isLoading: teamJoinRequestsLoading,
     refetch: refetchTeamJoinRequests,
   } = useGetTeamJoinRequestsByTeam(id, {
-      enabled: !!id,
-    });
+    enabled: !!id,
+  });
 
   const teamJoinRequests = Array.isArray(teamJoinRequestsData)
     ? teamJoinRequestsData
     : teamJoinRequestsData?.data
       ? teamJoinRequestsData.data
+      : [];
+
+  // Team invitations (đang chờ xác nhận tham gia đội)
+  const { data: teamInvitationsData } = useGetTeamInvitationsByTeam(id, {
+    enabled: !!id,
+  });
+
+  const teamInvitations = Array.isArray(teamInvitationsData)
+    ? teamInvitationsData
+    : teamInvitationsData?.data
+      ? teamInvitationsData.data
       : [];
 
   // Map API members to component format
@@ -419,7 +433,11 @@ const MyTeamPage = () => {
             </div>
             <div>
               <p className="text-2xl text-white">
-                {members.filter((m) => m.status === 'pending').length}
+                {teamInvitations.filter((inv) => {
+                  const status =
+                    (inv.status || inv.invitationStatus || '').toLowerCase();
+                  return status === 'pending';
+                }).length}
               </p>
               <p className="text-sm text-gray-400">Chờ xác nhận</p>
             </div>
@@ -473,8 +491,6 @@ const MyTeamPage = () => {
                       member.userId === teamData.leaderId;
                     const memberName =
                       member.name || member.user?.name || 'N/A';
-                    const memberEmail =
-                      member.email || member.user?.email || '';
                     const memberSkills = member.skills || [];
                     const avatarInitials =
                       member.avatar ||
@@ -550,17 +566,7 @@ const MyTeamPage = () => {
 
                             <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
                               <div className="flex items-center space-x-2">
-                                {memberEmail && (
-                                  <Tooltip title="Gửi email">
-                                    <Button
-                                      type="text"
-                                      size="small"
-                                      icon={<Mail className="w-4 h-4" />}
-                                      className="text-gray-400 hover:text-white"
-                                      href={`mailto:${memberEmail}`}
-                                    />
-                                  </Tooltip>
-                                )}
+                               
                                 {member.github && (
                                   <Tooltip title="Xem GitHub">
                                     <Button

@@ -91,7 +91,7 @@ const StudentVerification = ({ verificationStatus, setVerificationStatus }) => {
         return (
           <Alert
             message="Đang chờ xác minh"
-            description="Đơn xác minh của bạn đang được xem xét. Vui lòng đợi phản hồi từ admin."
+            description="Đơn xác minh của bạn đang được xem xét. Vui lòng đợi phản hồi từ chapter."
             type="warning"
             showIcon
             icon={<ExclamationCircleOutlined />}

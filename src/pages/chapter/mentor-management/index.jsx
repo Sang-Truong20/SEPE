@@ -137,18 +137,18 @@ const ChapterMentorManagement = () => {
   const pendingCount = mentorApplications.filter((app) => app.status === 'pending').length;
   const activeMentorsCount = approvedMentors.length;
 
-  const handleApprove = (id) => {
-    approveMutation.mutate({ verificationId: id });
+  const handleApprove = (id, hackathonId) => {
+    approveMutation.mutate({ verificationId: id, hackathonId });
   };
 
-  const handleReject = (id) => {
+  const handleReject = (id, hackathonId) => {
     if (!rejectionReason.trim()) {
       message.warning('Vui lòng nhập lý do từ chối!');
       return;
     }
 
     rejectMutation.mutate(
-      { verificationId: id, reason: rejectionReason },
+      { verificationId: id, reason: rejectionReason, hackathonId },
       {
         onSuccess: () => {
           setIsModalVisible(false);
@@ -353,7 +353,7 @@ const ChapterMentorManagement = () => {
                                     <Button
                                       size="small"
                                       icon={<CheckCircleOutlined />}
-                                      onClick={() => handleApprove(record.id)}
+                                      onClick={() => handleApprove(record.id, record.hackathonId)}
                                       className="bg-emerald-600 text-white border-0"
                                       loading={approveMutation.isPending}
                                     />
@@ -627,14 +627,14 @@ const ChapterMentorManagement = () => {
 
                   <div className="flex space-x-3">
                     <Button
-                      onClick={() => handleApprove(selectedApplication.id)}
+                      onClick={() => handleApprove(selectedApplication.id, selectedApplication.hackathonId)}
                       icon={<CheckCircleOutlined />}
                       className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
                     >
                       Phê Duyệt
                     </Button>
                     <Button
-                      onClick={() => handleReject(selectedApplication.id)}
+                      onClick={() => handleReject(selectedApplication.id, selectedApplication.hackathonId)}
                       icon={<CloseCircleOutlined />}
                       className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white border-0"
                     >

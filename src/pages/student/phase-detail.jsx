@@ -412,6 +412,7 @@ const StudentPhaseDetail = () => {
                   form={form}
                   onFinish={handleSelectTrack}
                   phaseId={phaseId}
+                  teamId={teamId}
                   registeredTrackId={registration?.selectedTrackId} // Track đã được chọn từ API
                 />
               )}

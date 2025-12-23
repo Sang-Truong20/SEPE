@@ -36,8 +36,16 @@ export const useRegisterHackathon = () => {
             });
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: hackathonRegistrationQueryKeys.origin });
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ 
+                queryKey: hackathonRegistrationQueryKeys.origin,
+                refetchType: 'active'
+            });
+            // Also invalidate team queries since they may show hackathon registration status
+            queryClient.invalidateQueries({ 
+                queryKey: ['student', 'team'],
+                refetchType: 'active'
+            });
             message.success('Đăng ký hackathon thành công!');
         },
         onError: (error) => {

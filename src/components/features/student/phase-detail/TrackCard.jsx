@@ -1,32 +1,66 @@
 import {
+  CheckCircleOutlined,
   EnvironmentOutlined,
   ExclamationCircleOutlined,
   FileTextOutlined,
   TrophyOutlined
 } from '@ant-design/icons';
+import { useGetTeamTrackByPhase } from '../../../../hooks/student/team-track';
 
-const TrackCard = ({ track, isSelected, onSelect, onSubmit }) => {
+const TrackCard = ({ track, isSelected, onSelect, onSubmit, teamId, phaseId }) => {
   const hasChallenges = track.challenges && track.challenges.length > 0;
-  // Nếu track đã có challenges, coi như đã được chọn và ẩn nút
-  const isTrackAssigned = hasChallenges;
+  
+  // Check if team has selected any track for this phase
+  const { data: selectedTrack, isLoading: isLoadingTrack } = useGetTeamTrackByPhase(
+    teamId,
+    phaseId,
+    { enabled: !!teamId && !!phaseId }
+  );
+  
+  // Check if this specific track is the one selected by the team
+  const isTrackSelected = selectedTrack && selectedTrack.trackId === track.trackId;
+  
+  // Only show button if team hasn't selected any track yet (API returned 204/null)
+  // If team has already selected a track, don't show button
+  const canShowButton = selectedTrack === null;
 
   return (
     <div
-      className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl shadow-green-500/20 transition-all duration-300 cursor-pointer"
+      className={`flex flex-col h-full border rounded-xl overflow-hidden shadow-xl transition-all duration-300 cursor-pointer ${
+        isTrackSelected
+          ? 'bg-slate-800/80 border-green-500 shadow-green-500/50 ring-2 ring-green-500/30'
+          : isSelected
+            ? 'bg-slate-900 border-green-500 shadow-green-500/40'
+            : 'bg-slate-900 border-slate-800 shadow-green-500/20'
+      }`}
       onClick={onSelect}
     >
       {/* Card Header */}
-      <div className="p-5 border-b border-slate-800 relative overflow-hidden">
+      <div className={`p-5 border-b relative overflow-hidden ${
+        isTrackSelected ? 'border-green-500/30' : 'border-slate-800'
+      }`}>
         <div className="absolute top-0 right-0 p-3 opacity-10">
           <EnvironmentOutlined style={{ fontSize: '80px' }} />
         </div>
         <div className="flex justify-between items-start relative z-10">
           <div className="flex-1">
-            <h3 className="text-lg font-bold mb-1 text-green-400 transition-colors">
-              {track.name}
-            </h3>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className={`text-lg font-bold transition-colors ${
+                isTrackSelected ? 'text-green-300' : 'text-green-400'
+              }`}>
+                {track.name}
+              </h3>
+              {isTrackSelected && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/50 text-green-300 text-xs font-medium">
+                  <CheckCircleOutlined />
+                  Đã chọn
+                </span>
+              )}
+            </div>
             {track.description && (
-              <p className="text-sm text-slate-400 line-clamp-2 min-h-[40px]">
+              <p className={`text-sm line-clamp-2 min-h-[40px] ${
+                isTrackSelected ? 'text-slate-300' : 'text-slate-400'
+              }`}>
                 {track.description}
               </p>
             )}
@@ -67,7 +101,7 @@ const TrackCard = ({ track, isSelected, onSelect, onSubmit }) => {
         </div>
 
         {/* Footer Actions */}
-        {!isSelected && !isTrackAssigned && (
+        {!isLoadingTrack && canShowButton && (
           <div className="mt-4 pt-4 border-t border-slate-800">
             <button
               type="button"
@@ -84,7 +118,7 @@ const TrackCard = ({ track, isSelected, onSelect, onSubmit }) => {
                 }
               }}
             >
-              {hasChallenges ? 'Bắt đầu ngay' : 'Sắp ra mắt'}
+              {hasChallenges ? 'Chọn track này' : 'Sắp ra mắt'}
             </button>
           </div>
         )}
