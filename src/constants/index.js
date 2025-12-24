@@ -50,6 +50,7 @@ const PATH_NAME = {
   CHAPTER_TEAMS: '/chapter/teams',
   CHAPTER_RESULTS: '/chapter/results',
   CHAPTER_TEAM_HACKATHON_APPROVAL: '/chapter/team-hackathon-approval',
+  CHAPTER_MANAGEMENT: '/chapter/management',
   CHAPTER_NOTIFICATIONS: '/chapter/notifications',
   CHAPTER_PROFILE: '/chapter/profile',
   MENTOR: '/mentor',

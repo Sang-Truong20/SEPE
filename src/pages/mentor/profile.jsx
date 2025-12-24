@@ -258,11 +258,15 @@ const MentorProfile = () => {
                       }
                     >
                       {Array.isArray(chapters) &&
-                        chapters.map((ch) => (
-                          <Select.Option key={ch.chapterId} value={ch.chapterId}>
-                            {ch.name || `Chapter ${ch.chapterId}`}
-                          </Select.Option>
-                        ))}
+                        chapters.map((ch) => {
+                          const id = ch.chapterId ?? ch.id;
+                          const chapterName = ch.chapterName || ch.name || `Chapter ${id}`;
+                          return (
+                            <Select.Option key={id} value={id}>
+                              {chapterName}
+                            </Select.Option>
+                          );
+                        })}
                     </Select>
                   </Form.Item>
                   <Form.Item

@@ -83,6 +83,7 @@ const ChapterDashboardPage = lazy(() => import('../pages/chapter/dashboard'));
 const ChapterVerifyStudentsPage = lazy(() => import('../pages/chapter/verify-students'));
 const ChapterMentorManagementPage = lazy(() => import('../pages/chapter/mentor-management'));
 const ChapterTeamHackathonApprovalPage = lazy(() => import('../pages/chapter/team-hackathon-approval'));
+const ChapterManagementPage = lazy(() => import('../pages/chapter/chapter-management'));
 const ChapterNotificationsPage = lazy(() => import('../pages/chapter/notifications'));
 const ChapterProfilePage = lazy(() => import('../pages/chapter/profile'));
 
@@ -449,6 +450,7 @@ const router = createBrowserRouter([
           { path: 'verify-students', element: withSuspense(ChapterVerifyStudentsPage) },
           { path: 'mentor-management', element: withSuspense(ChapterMentorManagementPage) },
           { path: 'team-hackathon-approval', element: withSuspense(ChapterTeamHackathonApprovalPage) },
+          { path: 'management', element: withSuspense(ChapterManagementPage) },
           { path: 'notifications', element: withSuspense(ChapterNotificationsPage) },
           { path: 'profile', element: withSuspense(ChapterProfilePage) },
         ],
