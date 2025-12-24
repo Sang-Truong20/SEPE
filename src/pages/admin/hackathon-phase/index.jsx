@@ -46,7 +46,7 @@ const HackathonPhases = () => {
       createButton:
         hackathonId && phasesData.length < 2
           ? {
-              label: 'Tạo mới hạng mục',
+              label: 'Tạo mới giai đoạn',
               action: () =>
                 navigate(
                   `/admin/hackathons/hackathon-phases/create?hackathonId=${hackathonId}&existingPhaseId=${phasesData[0]?.phaseId}`,
