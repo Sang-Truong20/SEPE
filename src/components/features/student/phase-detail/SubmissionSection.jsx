@@ -72,14 +72,14 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader: propIsLea
     return propIsLeader || false;
   }, [isLeaderData, propIsLeader, isLeaderLoading, isLeaderError, teamId]);
 
-  // Get submissions for this phase - API: /api/Submission/phase/{phaseId}
+  // Get submissions for this team and phase - API: /api/Submission/team/{teamId}/phase/{phaseId}
   const {
     data: submissionsData,
     isLoading: submissionsLoading,
     isError: submissionsError,
     refetch: refetchSubmissions,
-  } = useGetSubmissionsByPhase(phaseId, {
-    enabled: !!phaseId && typeof phaseId === 'number',
+  } = useGetSubmissionsByPhase(teamId, phaseId, {
+    enabled: !!teamId && !!phaseId && typeof phaseId === 'number',
   });
 
   // Process submissions data
@@ -185,6 +185,13 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader: propIsLea
       message.error(error?.response?.data?.message || 'Không thể nộp bài final. Vui lòng thử lại.');
     }
   };
+
+  // Auto-refetch when teamId or phaseId changes
+  React.useEffect(() => {
+    if (teamId && phaseId) {
+      refetchSubmissions();
+    }
+  }, [teamId, phaseId, refetchSubmissions]);
 
   const handleViewDetail = (submission) => {
     setSelectedSubmission(submission);

@@ -1,8 +1,7 @@
-import { Form, Input, Modal, Tag } from 'antd';
+import { Form, Input, Modal } from 'antd';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetMyScoresGrouped, useGetTeamOverview } from '../../../../hooks/student/score';
-import { useGetCriteriaByPhase } from '../../../../hooks/student/criterion';
 
 const ScoreAppealModal = ({
   visible,
@@ -29,15 +28,7 @@ const ScoreAppealModal = ({
   );
 
   // Get criteria for mapping criterionId to name
-  const { data: criteriaData } = useGetCriteriaByPhase(phaseId);
-  const criteria = React.useMemo(() => {
-    if (!criteriaData) return [];
-    return Array.isArray(criteriaData)
-      ? criteriaData
-      : Array.isArray(criteriaData?.data)
-        ? criteriaData.data
-        : [];
-  }, [criteriaData]);
+  
 
   const handleSubmit = (values) => {
     // If judgeId and submissionId are provided in selectedCriteriaScore (from judges structure), use them
@@ -72,29 +63,14 @@ const ScoreAppealModal = ({
     >
       {selectedCriteriaScore && (
         <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-blue-400 font-semibold">
-              {criteria.find(c => (c.criterionId || c.id) === selectedCriteriaScore.criterionId)?.name || `Tiêu chí ${selectedCriteriaScore.criterionId}`}
-            </span>
-            <Tag color="green" size="small">
-              Điểm: {selectedCriteriaScore.score !== undefined && selectedCriteriaScore.score !== null
-                ? Number(selectedCriteriaScore.score).toFixed(2)
-                : '-'}
-            </Tag>
-          </div>
           {selectedCriteriaScore.judgeName && (
             <p className="text-text-secondary text-sm mb-1">
               <span className="font-medium">Giám khảo:</span> {selectedCriteriaScore.judgeName}
             </p>
           )}
           {selectedCriteriaScore.submissionTitle && (
-            <p className="text-text-secondary text-sm mb-1">
-              <span className="font-medium">Submission:</span> {selectedCriteriaScore.submissionTitle}
-            </p>
-          )}
-          {selectedCriteriaScore.comment && (
             <p className="text-text-secondary text-sm">
-              <span className="font-medium">Nhận xét hiện tại:</span> {selectedCriteriaScore.comment}
+              <span className="font-medium">Submission:</span> {selectedCriteriaScore.submissionTitle}
             </p>
           )}
         </div>

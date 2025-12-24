@@ -33,7 +33,7 @@ export const useIsTeamLeader = (teamId, options = {}) => {
         queryKey: teamMemberQueryKeys.isLeader(teamId),
         queryFn: async () => {
             const response = await axiosClient.get(`/TeamMember/${teamId}/is-leader`);
-            return response.data;
+            return response.data?.data?.isLeader || false;
         },
         enabled: !!teamId && (options.enabled !== false),
         staleTime: 2 * 60 * 1000, // 2 minutes
