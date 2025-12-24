@@ -8,7 +8,6 @@ import {
   ChevronDown,
   Home,
   LogOut,
-  Settings,
   Trophy,
   User,
   Users,
@@ -376,16 +375,6 @@ const StudentLayout = () => {
                         >
                           <User className="w-5 h-5 text-muted-foreground" />
                           <span className="text-white">Hồ sơ cá nhân</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setIsDropdownOpen(false);
-                          }}
-                          className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
-                        >
-                          <Settings className="w-5 h-5 text-muted-foreground" />
-                          <span className="text-white">Cài đặt</span>
                         </button>
 
                         <div className="border-t border-white/10 my-2"></div>
