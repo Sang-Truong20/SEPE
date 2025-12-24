@@ -9,6 +9,7 @@ import {
   GraduationCap,
   Home,
   LogOut,
+  Settings,
   UserCheck,
   Users,
 } from 'lucide-react';
@@ -107,6 +108,12 @@ const ChapterLayout = ({ children }) => {
       label: 'Duyệt Hackathon',
       icon: CheckCircleOutlined,
       path: PATH_NAME.CHAPTER_TEAM_HACKATHON_APPROVAL,
+    },
+    {
+      id: 'management',
+      label: 'Quản lý Chapter',
+      icon: Settings,
+      path: PATH_NAME.CHAPTER_MANAGEMENT,
     },
   ];
 
