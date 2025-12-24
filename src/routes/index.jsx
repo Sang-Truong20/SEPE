@@ -87,6 +87,7 @@ const ChapterNotificationsPage = lazy(() => import('../pages/chapter/notificatio
 const ChapterProfilePage = lazy(() => import('../pages/chapter/profile'));
 
 const MentorDashboardPage = lazy(() => import('../pages/mentor/dashboard'));
+const MentorHackathonsPage = lazy(() => import('../pages/mentor/hackathons'));
 const MentorNotificationsPage = lazy(() => import('../pages/mentor/notifications'));
 const MentorProfilePage = lazy(() => import('../pages/mentor/profile'));
 const MentorAssignmentsPage = lazy(() => import('../pages/mentor/assignments'));
@@ -462,6 +463,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="dashboard" replace /> },
           { path: 'dashboard', element: withSuspense(MentorDashboardPage) },
+          { path: 'hackathons', element: withSuspense(MentorHackathonsPage) },
           { path: 'notifications', element: withSuspense(MentorNotificationsPage) },
           { path: 'profile', element: withSuspense(MentorProfilePage) },
           { path: 'assignments', element: withSuspense(MentorAssignmentsPage) },

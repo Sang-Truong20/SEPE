@@ -1,10 +1,13 @@
+import { CheckOutlined, ClockCircleOutlined, CloseOutlined } from '@ant-design/icons';
+import { Button, Modal, Popconfirm } from 'antd';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import {
   BarChart3,
   Bell,
   ChevronDown,
   Home,
   LogOut,
-  Settings,
   Trophy,
   User,
   Users,
@@ -12,17 +15,10 @@ import {
 import React, { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
-import { useGetNotifications, useGetUnreadCount, useMarkAsRead } from '../../hooks/student/notification';
-import { useUserData } from '../../hooks/useUserData';
+import { useAcceptTeamInvite, useGetNotifications, useGetUnreadCount, useMarkAsRead, useRejectTeamInvite } from '../../hooks/student/notification';
+import { useGetMyVerification } from '../../hooks/student/verify';
 import { useLogout } from '../../hooks/useLogout';
-import { Modal, Button, Popconfirm } from 'antd';
-import { CheckOutlined, CloseOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import {
-  useAcceptTeamInvite,
-  useRejectTeamInvite,
-} from '../../hooks/student/notification';
+import { useUserData } from '../../hooks/useUserData';
 
 dayjs.extend(relativeTime);
 
@@ -48,16 +44,29 @@ const StudentLayout = () => {
   const acceptInvite = useAcceptTeamInvite();
   const rejectInvite = useRejectTeamInvite();
   const { userInfo: authUser } = useUserData();
+  const { data: verificationData } = useGetMyVerification();
   const mutationLogout = useLogout();
 
   const recentNotifications = Array.isArray(notifications) ? notifications.slice(0, 5) : [];
+
+  // Get verification status from verificationData
+  const getVerificationStatus = () => {
+    if (!verificationData) return undefined;
+    
+    // Handle both response structures
+    const status = verificationData?.hasSubmitted 
+      ? verificationData?.data?.status 
+      : verificationData?.status;
+    
+    return status === 'Approved';
+  };
 
   const userData = {
     name: authUser?.fullName || authUser?.name || '',
     email: authUser?.email || '',
     avatar: authUser?.avatarUrl || authUser?.avatar || null,
     role: authUser?.roleName || authUser?.role || '',
-    isVerified: authUser?.isVerified,
+    isVerified: getVerificationStatus(),
   };
 
   const navItems = [
@@ -95,10 +104,7 @@ const StudentLayout = () => {
     return dayjs(timestamp).format('DD/MM/YYYY HH:mm');
   };
 
-  const formatTime = (timestamp) => {
-    if (!timestamp) return '';
-    return dayjs(timestamp).fromNow();
-  };
+
 
   const handleNotificationClick = (notification) => {
     const notificationId = notification.notificationId || notification.id;
@@ -369,16 +375,6 @@ const StudentLayout = () => {
                         >
                           <User className="w-5 h-5 text-muted-foreground" />
                           <span className="text-white">Hồ sơ cá nhân</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setIsDropdownOpen(false);
-                          }}
-                          className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
-                        >
-                          <Settings className="w-5 h-5 text-muted-foreground" />
-                          <span className="text-white">Cài đặt</span>
                         </button>
 
                         <div className="border-t border-white/10 my-2"></div>

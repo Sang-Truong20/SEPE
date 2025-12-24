@@ -1,238 +1,266 @@
 import {
   SearchOutlined,
-  TrophyOutlined,
-  CalendarOutlined,
-  UserOutlined,
-  FilterOutlined,
+  TrophyOutlined
 } from '@ant-design/icons';
-import { Button, Card, Input, Tag, Select, Spin, Row, Col } from 'antd';
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { PATH_NAME } from '../../constants';
+import { Alert, Input, Select, Spin } from 'antd';
+import dayjs from 'dayjs';
+import { Archive, CheckCircle, Hourglass, Layers, Terminal, Zap } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useGetHackathons } from '../../hooks/student/hackathon';
-import { useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
 import { getStatusDisplay } from '../../configs/statusConfig';
 
+const { Search } = Input;
 const { Option } = Select;
 
+// Helper format date
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  return dayjs(dateString).format('DD/MM/YYYY');
+};
+
+// Helper lấy màu và icon theo trạng thái
+const getStatusConfig = (status) => {
+  const statusDisplay = getStatusDisplay(status, 'hackathon');
+
+  // Map color từ statusConfig sang styles
+  const styleMap = {
+    warning: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    processing: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]',
+    success: 'bg-zinc-800 text-zinc-400 border-zinc-700',
+    default: 'bg-zinc-800 text-zinc-400 border-zinc-700',
+  };
+
+  const iconMap = {
+    warning: Hourglass,
+    processing: Zap,
+    success: Archive,
+    default: Archive,
+  };
+
+  return {
+    label: statusDisplay.text,
+    styles: styleMap[statusDisplay.color] || styleMap.default,
+    icon: iconMap[statusDisplay.color] || iconMap.default
+  };
+};
+
+const HackathonCard = ({ item }) => {
+  const statusConfig = getStatusConfig(item.status);
+  const StatusIcon = statusConfig.icon;
+
+  return (
+    <div className="group relative bg-card-background border border-card-border backdrop-blur-xl hover:border-emerald-500/50 rounded-xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10 flex flex-col h-full">
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 p-6 opacity-[0.02] group-hover:opacity-10 transition-opacity text-emerald-500">
+        <Terminal size={140} />
+      </div>
+
+      {/* Top: Season Badge */}
+      <div className="flex justify-between items-start mb-4 z-10">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-white/5 text-text-secondary border border-card-border">
+          <Layers size={12} className="mr-1.5 text-muted-foreground" />
+          {item.seasonName || 'Hackathon'}
+        </span>
+
+        {/* Status Badge */}
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusConfig.styles}`}>
+          <StatusIcon size={12} className="mr-1.5" />
+          {statusConfig.label}
+        </span>
+      </div>
+
+      {/* Main Content */}
+      <div className="mb-6 z-10 flex-1">
+        <h3 className="text-xl font-bold text-text-primary mb-2 group-hover:text-emerald-400 transition-colors">
+          {item.name}
+        </h3>
+        <p className="text-sm text-text-secondary line-clamp-2">
+          {item.description || item.theme || "Chưa có mô tả chi tiết cho cuộc thi này."}
+        </p>
+      </div>
+
+      {/* Footer Info */}
+      <div className="space-y-4 z-10">
+        {/* Timeline Bar */}
+        <div className="bg-card-background/50 p-3 rounded-lg border border-card-border flex items-center justify-between group-hover:border-emerald-500/30 transition-colors">
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase text-muted-foreground font-semibold mb-0.5">Bắt đầu</span>
+            <span className="text-sm font-medium text-text-primary">{formatDate(item.startDate)}</span>
+          </div>
+
+          <div className="flex-1 px-4 flex items-center justify-center">
+            <div className="w-full relative flex items-center">
+              {/* Start Dot */}
+              <div className="w-2 h-2 rounded-full bg-emerald-500/40 ring-2 ring-emerald-500/20 ring-offset-2 ring-offset-card-background z-10 group-hover:bg-emerald-500/60 group-hover:ring-emerald-500/40 transition-all"></div>
+
+              {/* Line */}
+              <div className="flex-1 h-[2px] bg-gradient-to-r from-card-border via-emerald-500/20 to-card-border group-hover:from-emerald-500/40 group-hover:via-emerald-500/50 group-hover:to-emerald-500/40 transition-all"></div>
+
+              {/* End Dot */}
+              <div className="w-2 h-2 rounded-full bg-emerald-500/40 ring-2 ring-emerald-500/20 ring-offset-2 ring-offset-card-background z-10 group-hover:bg-emerald-500/60 group-hover:ring-emerald-500/40 transition-all"></div>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] uppercase text-muted-foreground font-semibold mb-0.5">Kết thúc</span>
+            <span className="text-sm font-medium text-text-primary">{formatDate(item.endDate)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const MentorHackathons = () => {
-  const navigate = useNavigate();
-  const [hackathonSearchQuery, setHackathonSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const { data: hackathons, isLoading, error } = useGetHackathons();
 
-  // Get hackathons from API
-  const { data: hackathonsData, isLoading: hackathonsLoading } = useGetHackathons();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState(null);
+  const [seasonFilter, setSeasonFilter] = useState(null);
 
-  // Get mentor's hackathon registrations
-  const { data: myRegistrationsData, isLoading: registrationsLoading } = useGetMyHackathonRegistrations();
+  // Get unique seasons from hackathons
+  const uniqueSeasons = useMemo(() => {
+    if (!hackathons || !Array.isArray(hackathons)) return [];
+    const seasons = new Set();
+    hackathons.forEach(h => {
+      if (h.seasonName) {
+        seasons.add(h.seasonName);
+      }
+    });
+    return Array.from(seasons).sort();
+  }, [hackathons]);
 
-  // Extract hackathon IDs from registrations
-  const registeredHackathonIds = useMemo(() => {
-    if (!myRegistrationsData) return [];
-    const registrations = Array.isArray(myRegistrationsData)
-      ? myRegistrationsData
-      : Array.isArray(myRegistrationsData?.data)
-        ? myRegistrationsData.data
-        : [];
-
-    return registrations
-      .map(reg => reg.hackathonId || reg.hackathon?.hackathonId || reg.hackathon?.id)
-      .filter(id => id !== undefined && id !== null);
-  }, [myRegistrationsData]);
-
-  // Filter hackathons: only show hackathons that mentor is registered in
+  // Filter hackathons based on search, status, and season
   const filteredHackathons = useMemo(() => {
-    if (!hackathonsData || registeredHackathonIds.length === 0) return [];
-    const hackathons = Array.isArray(hackathonsData) ? hackathonsData : hackathonsData?.data || [];
+    if (!hackathons || !Array.isArray(hackathons)) return [];
 
-    return hackathons.filter((hack) => {
-      const hackathonId = hack.hackathonId ?? hack.id;
+    return hackathons.filter(h => {
+      // Filter out completed hackathons
+      if (h.status?.toLowerCase() === 'completed') return false;
 
-      // Only show hackathons that mentor is registered in
-      if (!registeredHackathonIds.includes(hackathonId)) return false;
-
-      // Exclude completed
-      if (hack.status?.toLowerCase() === 'completed') return false;
-
-      // Filter by status
-      if (statusFilter !== 'all') {
-        const hackStatus = hack.status?.toLowerCase();
-        if (statusFilter === 'active' && hackStatus !== 'active') return false;
-        if (statusFilter === 'pending' && hackStatus !== 'pending' && hackStatus !== 'upcoming') return false;
+      // Search by name
+      if (searchTerm) {
+        const nameMatch = h.name?.toLowerCase().includes(searchTerm.toLowerCase());
+        if (!nameMatch) return false;
       }
 
-      // Filter by search query
-      if (hackathonSearchQuery) {
-        const query = hackathonSearchQuery.toLowerCase();
-        const name = (hack.name || hack.title || '').toLowerCase();
-        const description = (hack.description || '').toLowerCase();
-        if (!name.includes(query) && !description.includes(query)) return false;
+      // Filter by status
+      if (statusFilter) {
+        const hackathonStatus = h.status?.toLowerCase();
+        if (statusFilter === 'active' && hackathonStatus !== 'active' && hackathonStatus !== 'inprogress') {
+          return false;
+        }
+        if (statusFilter === 'upcoming' && hackathonStatus !== 'pending' && hackathonStatus !== 'upcoming') {
+          return false;
+        }
+      }
+
+      // Filter by season
+      if (seasonFilter) {
+        if (h.seasonName !== seasonFilter) {
+          return false;
+        }
       }
 
       return true;
     });
-  }, [hackathonsData, registeredHackathonIds, statusFilter, hackathonSearchQuery]);
+  }, [hackathons, searchTerm, statusFilter, seasonFilter]);
 
-  const isLoading = hackathonsLoading || registrationsLoading;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
-  const handleHackathonClick = (hackathonId) => {
-    if (!hackathonId) return;
-    navigate(PATH_NAME.MENTOR_DASHBOARD);
-  };
-
-  const getStatusBadge = (status) => {
-    const statusDisplay = getStatusDisplay(status, 'hackathon');
-    const colorMap = {
-      warning: 'orange',
-      processing: 'blue',
-      success: 'green',
-      default: 'default',
-    };
-    return <Tag color={colorMap[statusDisplay.color] || 'default'}>{statusDisplay.text.toUpperCase()}</Tag>;
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  };
-
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Alert
+          message="Lỗi tải dữ liệu"
+          description="Không thể tải danh sách hackathon. Vui lòng thử lại sau."
+          type="error"
+          showIcon
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <Button onClick={() => navigate(PATH_NAME.MENTOR_DASHBOARD)}>
-        Quay lại Dashboard
-      </Button>
-
-      <div>
-        <h1 className="text-4xl bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-          Hackathon
-        </h1>
-        <p className="text-gray-400 text-lg mt-2">
-          Chọn hackathon để xem các teams bạn đang quản lý
-        </p>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl lg:text-4xl bg-gradient-to-r from-white via-blue-100 to-cyan-300 bg-clip-text text-transparent">
+            Hackathons
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Xem các hackathon đang diễn ra
+          </p>
+        </div>
       </div>
 
-      {/* Search and Filter - Improved UI */}
-      <Card className="border-0 bg-gradient-to-r from-white/5 to-white/5 backdrop-blur-xl shadow-lg">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <SearchOutlined className="text-green-400 text-lg" />
-            <h3 className="text-white font-semibold">Tìm kiếm & Lọc</h3>
+      {/* Search and Filter */}
+      <div className="flex gap-4 mb-8">
+        <Search
+          placeholder="Tìm kiếm hackathon..."
+          allowClear
+          className="flex-1"
+          prefix={<SearchOutlined />}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onSearch={setSearchTerm}
+        />
+        <Select
+          placeholder="Lọc theo trạng thái"
+          style={{ width: 180 }}
+          allowClear
+          value={statusFilter}
+          onChange={setStatusFilter}
+        >
+          <Option value="active">Đang diễn ra</Option>
+          <Option value="upcoming">Sắp diễn ra</Option>
+        </Select>
+        <Select
+          placeholder="Lọc theo mùa"
+          style={{ width: 180 }}
+          allowClear
+          value={seasonFilter}
+          onChange={setSeasonFilter}
+        >
+          {uniqueSeasons.map((season) => (
+            <Option key={season} value={season}>
+              {season}
+            </Option>
+          ))}
+        </Select>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {filteredHackathons.map((hackathon) => (
+          <HackathonCard
+            key={hackathon.hackathonId}
+            item={hackathon}
+          />
+        ))}
+      </div>
+
+      {filteredHackathons.length === 0 && (
+        <div className="text-center py-12">
+          <div className="bg-card-background/50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
+            <TrophyOutlined className="text-4xl text-muted-foreground" />
           </div>
-          <Row gutter={[16, 16]}>
-            <Col xs={24} sm={24} md={14}>
-              <Input
-                placeholder="Tìm kiếm hackathon theo tên hoặc mô tả..."
-                prefix={<SearchOutlined className="text-green-400" />}
-                value={hackathonSearchQuery}
-                onChange={(e) => setHackathonSearchQuery(e.target.value)}
-                className="bg-white/10 border-white/20 hover:border-green-400/50 focus:border-green-400 transition-all"
-                size="large"
-                allowClear
-              />
-            </Col>
-            <Col xs={24} sm={24} md={10}>
-              <Select
-                placeholder="Lọc theo trạng thái"
-                size="large"
-                value={statusFilter}
-                onChange={setStatusFilter}
-                suffixIcon={<FilterOutlined className="text-green-400" />}
-                className="w-full [&_.ant-select-selector]:bg-white/10 [&_.ant-select-selector]:border-white/20 [&_.ant-select-selector:hover]:border-green-400/50"
-              >
-                <Option value="all">
-                  <span className="text-white">Tất cả</span>
-                </Option>
-                <Option value="active">
-                  <span className="text-white">Đang diễn ra</span>
-                </Option>
-                <Option value="pending">
-                  <span className="text-white">Sắp diễn ra</span>
-                </Option>
-              </Select>
-            </Col>
-          </Row>
+          <h3 className="text-xl font-semibold text-text-primary mb-2">
+            Không tìm thấy hackathon nào
+          </h3>
+          <p className="text-muted-foreground">
+            Hãy thử thay đổi bộ lọc hoặc kiểm tra lại sau
+          </p>
         </div>
-      </Card>
-
-      {/* Hackathons Grid */}
-      {isLoading ? (
-        <Card className="border-0 bg-white/5 backdrop-blur-xl">
-          <div className="flex justify-center py-8">
-            <Spin size="large" />
-          </div>
-        </Card>
-      ) : filteredHackathons.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredHackathons.map((hackathon) => {
-            const hackathonId = hackathon.hackathonId ?? hackathon.id;
-            return (
-              <Card
-                key={hackathonId || hackathon.name}
-                className="border-0 bg-gradient-to-br from-white/5 to-white/5 backdrop-blur-xl hover:from-white/10 hover:to-green-500/10 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:shadow-xl"
-                onClick={() => handleHackathonClick(hackathonId)}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-xl text-white mb-2">
-                      {hackathon.name || hackathon.title}
-                    </h3>
-                    {getStatusBadge(hackathon.status)}
-                  </div>
-                  <TrophyOutlined className="text-2xl text-green-400/50" />
-                </div>
-
-                {hackathon.description && (
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                    {hackathon.description}
-                  </p>
-                )}
-
-                <div className="space-y-2 text-sm">
-                  {hackathon.startDate && (
-                    <div className="flex items-center gap-2 text-gray-400">
-                      <CalendarOutlined />
-                      <span>Bắt đầu: {formatDate(hackathon.startDate)}</span>
-                    </div>
-                  )}
-                  {hackathon.endDate && (
-                    <div className="flex items-center gap-2 text-gray-400">
-                      <CalendarOutlined />
-                      <span>Kết thúc: {formatDate(hackathon.endDate)}</span>
-                    </div>
-                  )}
-                  {hackathon.participantCount !== undefined && (
-                    <div className="flex items-center gap-2 text-gray-400">
-                      <UserOutlined />
-                      <span>{hackathon.participantCount} người tham gia</span>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
-        <Card className="border-0 bg-white/5 backdrop-blur-xl">
-          <div className="p-12 text-center">
-            <TrophyOutlined className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-400">
-              {hackathonSearchQuery || statusFilter !== 'all'
-                ? 'Không tìm thấy hackathon nào phù hợp'
-                : 'Không có hackathon nào đang diễn ra'}
-            </p>
-          </div>
-        </Card>
       )}
-
     </div>
   );
 };
 
 export default MentorHackathons;
-

@@ -22,6 +22,7 @@ import StudentVerification from '../../components/features/student/profile/Stude
 import { useCreateMentorVerification } from '../../hooks/mentor/verification';
 import { useGetChapters } from '../../hooks/student/chapter';
 import { useGetHackathons } from '../../hooks/student/hackathon';
+import { useGetMyVerification } from '../../hooks/student/verify';
 import { useLogout } from '../../hooks/useLogout';
 import { useUpdateUserInfo } from '../../hooks/useUpdateUserInfo';
 import { useUserData } from '../../hooks/useUserData';
@@ -34,22 +35,28 @@ const StudentProfile = () => {
   const logout = useLogout();
   const { userInfo, refetch: refetchUserData } = useUserData();
   const updateUserInfoMutation = useUpdateUserInfo();
+  const { data: verificationData, refetch: refetchVerification } = useGetMyVerification();
 
-  // Determine verification status from userInfo.isVerified
-  const [verificationStatus, setVerificationStatus] = useState(() => {
-    // Initial state based on userInfo if available
-    return 'unverified';
-  });
+  // Map API status to verificationStatus state
+  const [verificationStatus, setVerificationStatus] = useState('unverified');
   
-  // Update verification status when userInfo changes
+  // Update verification status when verificationData changes
+  // Handle both response structures:
+  // - hasSubmitted: false -> status is at root level
+  // - hasSubmitted: true -> status is in data.status
   useEffect(() => {
-    if (userInfo?.isVerified === true) {
+    const status = verificationData?.hasSubmitted 
+      ? verificationData?.data?.status 
+      : verificationData?.status;
+    
+    if (status === 'Approved') {
       setVerificationStatus('verified');
-    } else if (userInfo?.isVerified === false) {
-      // You can add logic here to check for 'pending' status from API if needed
+    } else if (status === 'Pending') {
+      setVerificationStatus('pending');
+    } else {
       setVerificationStatus('unverified');
     }
-  }, [userInfo?.isVerified]);
+  }, [verificationData]);
   const verifyMentorMutation = useCreateMentorVerification();
   const { data: chapters = [], isLoading: chaptersLoading } = useGetChapters();
   const { data: hackathons = [], isLoading: hackathonsLoading } = useGetHackathons();
@@ -100,9 +107,18 @@ const StudentProfile = () => {
                         Vai trò: {userInfo.roleName}
                       </p>
                     )}
-                    {userInfo?.isVerified !== undefined && (
+                    {verificationData && (
                       <p className="text-muted-foreground">
-                        Trạng thái: {userInfo.isVerified ? 'Đã xác minh' : 'Chưa xác minh'}
+                        Trạng thái xác minh: {
+                          (() => {
+                            const status = verificationData?.hasSubmitted 
+                              ? verificationData?.data?.status 
+                              : verificationData?.status;
+                            return status === 'Approved' ? 'Đã xác minh' :
+                              status === 'Pending' ? 'Đang chờ xác minh' :
+                              'Chưa xác minh';
+                          })()
+                        }
                       </p>
                     )}
                   </div>
@@ -153,6 +169,8 @@ const StudentProfile = () => {
         <StudentVerification
           verificationStatus={verificationStatus}
           setVerificationStatus={setVerificationStatus}
+          refetchVerification={refetchVerification}
+          verificationData={verificationData}
         />
       ),
     },
