@@ -3,11 +3,33 @@ import { Card, Spin, Tag } from 'antd';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useGroups } from '../../../../hooks/admin/groups/useGroups';
+import { useGetTracksByPhase } from '../../../../hooks/student/track-phase';
 
 const GroupsSection = ({ onGroupClick }) => {
-  const { hackathonId } = useParams();
+  const { hackathonId, phaseId } = useParams();
   const { fetchGroupsByHackathon } = useGroups();
   const { data: groupsData = [], isLoading: groupsLoading } = fetchGroupsByHackathon(hackathonId);
+  
+  // Fetch tracks to get track names
+  const { data: tracksData = [] } = useGetTracksByPhase(phaseId, { enabled: !!phaseId });
+  const tracks = Array.isArray(tracksData)
+    ? tracksData
+    : tracksData?.data
+      ? tracksData.data
+      : tracksData?.tracks
+        ? tracksData.tracks
+        : [];
+  
+  // Create a map from trackId to track name
+  const trackMap = React.useMemo(() => {
+    const map = {};
+    tracks.forEach(track => {
+      if (track.trackId) {
+        map[track.trackId] = track.name || `Track ${track.trackId}`;
+      }
+    });
+    return map;
+  }, [tracks]);
   if (groupsLoading) {
     return (
       <Card className="bg-card-background border border-card-border backdrop-blur-xl">
@@ -52,7 +74,7 @@ const GroupsSection = ({ onGroupClick }) => {
                 Bảng {group.groupName}
               </h4>
               <Tag color="blue" size="small">
-                Track {group.trackId}
+                {trackMap[group.trackId] || `Track ${group.trackId}`}
               </Tag>
             </div>
             <div className="space-y-2">

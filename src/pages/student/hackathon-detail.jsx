@@ -45,6 +45,7 @@ import { useGroups } from '../../hooks/admin/groups/useGroups';
 import { useGetHackathonPhases } from '../../hooks/student/hackathon-phase';
 import { getStatusDisplay } from '../../configs/statusConfig';
 import { useGetApprovedMentorsByHackathon } from '../../hooks/chapter/mentor-verification';
+import { useGetTracksByPhase } from '../../hooks/student/track-phase';
 
 const StudentHackathonDetail = () => {
   const navigate = useNavigate();
@@ -59,6 +60,26 @@ const StudentHackathonDetail = () => {
   const { fetchGroupsByHackathon } = useGroups();
   const { data: groupsData = [], isLoading: groupsLoading } =
     fetchGroupsByHackathon(id);
+
+  // Fetch tracks to get track names
+  const { data: tracksData = [] } = useGetTracksByPhase(phase1?.phaseId, { enabled: !!phase1?.phaseId });
+  const tracks = useMemo(() => {
+    if (Array.isArray(tracksData)) return tracksData;
+    if (Array.isArray(tracksData?.data)) return tracksData.data;
+    if (Array.isArray(tracksData?.tracks)) return tracksData.tracks;
+    return [];
+  }, [tracksData]);
+  
+  // Create a map from trackId to track name
+  const trackMap = useMemo(() => {
+    const map = {};
+    tracks.forEach(track => {
+      if (track.trackId) {
+        map[track.trackId] = track.name || `Track ${track.trackId}`;
+      }
+    });
+    return map;
+  }, [tracks]);
 
   const { data: myRegistrations } = useGetMyHackathonRegistrations();
 
@@ -440,7 +461,7 @@ const StudentHackathonDetail = () => {
                           Bảng {group.groupName}
                         </h4>
                         <Tag color="blue" size="small">
-                          Track {group.trackId}
+                          {trackMap[group.trackId] || `Track ${group.trackId}`}
                         </Tag>
                       </div>
                       <div className="space-y-2">

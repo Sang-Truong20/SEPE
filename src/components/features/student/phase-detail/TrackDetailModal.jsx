@@ -66,7 +66,7 @@ const TrackDetailModal = ({
   const trackId = track?.trackId ?? track?.id;
   
   // Check if team has selected this track
-  const { data: selectedTrack, isLoading: isLoadingTrack } = useGetTeamTrackByPhase(
+  const { data: selectedTrack,  } = useGetTeamTrackByPhase(
     teamId,
     phaseId,
     { enabled: !!teamId && !!phaseId && visible }
@@ -156,7 +156,7 @@ const TrackDetailModal = ({
                         )}
                         {criterion.weight && (
                           <p className="text-slate-400 text-xs mt-2">
-                            Trọng số: {criterion.weight}%
+                            Trọng số: {criterion.weight} điểm
                           </p>
                         )}
                       </div>
