@@ -14,21 +14,20 @@ import {
   Upload,
   message,
   Alert,
+  Image,
 } from 'antd';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSubmitVerification } from '../../../../hooks/student/verify';
-import { useUserData } from '../../../../hooks/useUserData';
 
-const StudentVerification = ({ verificationStatus, setVerificationStatus }) => {
+const StudentVerification = ({ verificationStatus, setVerificationStatus, refetchVerification, verificationData }) => {
   const [verificationForm] = Form.useForm();
   const [frontCardImage, setFrontCardImage] = useState(null);
   const [backCardImage, setBackCardImage] = useState(null);
 
-  const { userInfo } = useUserData();
   const submitVerificationMutation = useSubmitVerification();
 
   // Check if user is already verified
-  const isVerified = userInfo?.isVerified === true || verificationStatus === 'verified';
+  const isVerified = verificationStatus === 'verified';
 
   const handleVerificationSubmit = async (values) => {
     // Prevent submission if user is already verified
@@ -46,7 +45,7 @@ const StudentVerification = ({ verificationStatus, setVerificationStatus }) => {
         yearOfAdmission: values.yearOfAdmission,
         frontCardImage: frontCardImage,
         backCardImage: backCardImage,
-        isVerified: userInfo?.isVerified, // Pass isVerified to prevent submission in hook
+        isVerified: isVerified, // Pass isVerified to prevent submission in hook
       };
 
       await submitVerificationMutation.mutateAsync(verificationData);
@@ -55,6 +54,10 @@ const StudentVerification = ({ verificationStatus, setVerificationStatus }) => {
       verificationForm.resetFields();
       setFrontCardImage(null);
       setBackCardImage(null);
+      // Refetch verification data to update status
+      if (refetchVerification) {
+        refetchVerification();
+      }
     } catch (error) {
       message.error('Có lỗi xảy ra khi gửi đơn xác minh. Vui lòng thử lại.');
       console.error('Verification submission error:', error);
@@ -278,20 +281,122 @@ const StudentVerification = ({ verificationStatus, setVerificationStatus }) => {
         </Card>
       )}
 
-      {verificationStatus === 'verified' && (
+      {(verificationStatus === 'verified' || verificationStatus === 'pending') && verificationData?.hasSubmitted && verificationData?.data && (
         <Card className="bg-card-background border border-card-border backdrop-blur-xl">
-          <div className="text-center space-y-4">
-            <CheckCircleOutlined className="text-green-400 text-4xl" />
-            <div>
-              <h3 className="text-lg font-semibold text-green-400">
-                Xác minh thành công!
-              </h3>
-              <p className="text-muted-foreground">
-                Tài khoản của bạn đã được xác minh và có thể tham gia đầy đủ các
-                hoạt động.
-              </p>
+          <h3 className="text-lg font-semibold text-text-primary mb-4">
+            Thông tin đã nộp để xác minh
+          </h3>
+          <Form
+            layout="vertical"
+            className="space-y-4"
+          >
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Tên trường đại học"
+                >
+                  <Input 
+                    value={verificationData.data.universityName} 
+                    readOnly 
+                    className="bg-slate-800/50 border-slate-700 text-white"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Mã số sinh viên"
+                >
+                  <Input 
+                    value={verificationData.data.studentCode} 
+                    readOnly 
+                    className="bg-slate-800/50 border-slate-700 text-white"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Họ và tên đầy đủ"
+                >
+                  <Input 
+                    value={verificationData.data.fullName} 
+                    readOnly 
+                    className="bg-slate-800/50 border-slate-700 text-white"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Chuyên ngành"
+                >
+                  <Input 
+                    value={verificationData.data.major} 
+                    readOnly 
+                    className="bg-slate-800/50 border-slate-700 text-white"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item
+              label="Năm nhập học"
+            >
+              <Input 
+                type="number"
+                value={verificationData.data.yearOfAdmission} 
+                readOnly 
+                className="bg-slate-800/50 border-slate-700 text-white"
+              />
+            </Form.Item>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-text-secondary mb-2">
+                  Ảnh thẻ sinh viên (mặt trước)
+                </label>
+                {verificationData.data.frontCardImage ? (
+                  <div className="border border-card-border rounded-lg p-2 bg-slate-800/30">
+                    <Image
+                      src={verificationData.data.frontCardImage}
+                      alt="Mặt trước thẻ sinh viên"
+                      className="w-full rounded"
+                      preview={{
+                        mask: 'Xem ảnh',
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-card-border rounded-lg p-6 text-center bg-slate-800/30">
+                    <p className="text-muted-foreground">Chưa có ảnh</p>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-text-secondary mb-2">
+                  Ảnh thẻ sinh viên (mặt sau)
+                </label>
+                {verificationData.data.backCardImage ? (
+                  <div className="border border-card-border rounded-lg p-2 bg-slate-800/30">
+                    <Image
+                      src={verificationData.data.backCardImage}
+                      alt="Mặt sau thẻ sinh viên"
+                      className="w-full rounded"
+                      preview={{
+                        mask: 'Xem ảnh',
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-card-border rounded-lg p-6 text-center bg-slate-800/30">
+                    <p className="text-muted-foreground">Chưa có ảnh</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          </Form>
         </Card>
       )}
     </div>

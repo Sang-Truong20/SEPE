@@ -1,12 +1,24 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axiosClient from '../../configs/axiosClient';
 
 export const verifyStudentQueryKeys = {
     origin: ['student', 'verification'],
+    me: () => [...verifyStudentQueryKeys.origin, 'me'],
     submit: () => [...verifyStudentQueryKeys.origin, 'submit'],
     approve: (id) => [...verifyStudentQueryKeys.origin, 'approve', id],
     reject: (id) => [...verifyStudentQueryKeys.origin, 'reject', id],
     
+};
+
+
+export const useGetMyVerification = () => {
+    return useQuery({
+        queryKey: verifyStudentQueryKeys.me(),
+        queryFn: async () => {
+            const response = await axiosClient.get('/StudentVerification/me');
+            return response.data;
+        },
+    });
 };
 
 // Submit student verification
@@ -48,7 +60,7 @@ export const useSubmitVerification = () => {
         },
         onSuccess: () => {
             // Invalidate and refetch verification related queries
-            queryClient.invalidateQueries({ queryKey: verifyStudentQueryKeys.all });
+            queryClient.invalidateQueries({ queryKey: verifyStudentQueryKeys.origin });
         },
     });
 };
@@ -65,7 +77,7 @@ export const useApproveVerification = () => {
         },
         onSuccess: () => {
             // Invalidate and refetch verification related queries
-            queryClient.invalidateQueries({ queryKey: verifyStudentQueryKeys.all });
+            queryClient.invalidateQueries({ queryKey: verifyStudentQueryKeys.origin });
         },
     });
 };
@@ -82,7 +94,7 @@ export const useRejectVerification = () => {
         },
         onSuccess: () => {
             // Invalidate and refetch verification related queries
-            queryClient.invalidateQueries({ queryKey: verifyStudentQueryKeys.all });
+            queryClient.invalidateQueries({ queryKey: verifyStudentQueryKeys.origin });
         },
     });
 };
