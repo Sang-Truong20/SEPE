@@ -4,6 +4,7 @@ import {
   TrophyOutlined,
   TeamOutlined,
   RocketOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { Avatar, Dropdown, Layout, Menu } from 'antd';
 import React, { useState } from 'react';
@@ -18,7 +19,6 @@ function getItem(label, key, icon, children) {
   return { key, icon, children, label };
 }
 
-// === MENU CHỈ CÓ 3 CHỨC NĂNG ===
 const items = [
   getItem(
     <Link to={PATH_NAME.PARTNER_HACKATHONS}>Danh sách Hackathon</Link>,
@@ -34,6 +34,11 @@ const items = [
     <Link to={`${PATH_NAME.PARTNER_TEAM_SCORES}/hackathon`}>Điểm nhóm</Link>,
     PATH_NAME.PARTNER_TEAM_SCORES,
     <TeamOutlined />,
+  ),
+  getItem(
+    <Link to={PATH_NAME.PARTNER_PROFILE}>Hồ sơ</Link>,
+    PATH_NAME.PARTNER_PROFILE,
+    <UserOutlined />,
   ),
 ];
 
