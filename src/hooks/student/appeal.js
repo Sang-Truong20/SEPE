@@ -5,6 +5,7 @@ export const appealQueryKeys = {
     origin: ['student', 'appeal'],
     appeals: () => [...appealQueryKeys.origin, 'list'],
     teamAppeals: (teamId) => [...appealQueryKeys.origin, 'team', teamId],
+    teamPhaseAppeals: (teamId, phaseId) => [...appealQueryKeys.origin, 'team', teamId, 'phase', phaseId],
     appeal: (appealId) => [...appealQueryKeys.origin, 'detail', appealId],
     create: () => [...appealQueryKeys.origin, 'create'],
     review: () => [...appealQueryKeys.origin, 'review'],
@@ -71,15 +72,15 @@ export const useGetAllAppeals = (options = {}) => {
     });
 };
 
-// Get appeals by team
-export const useGetTeamAppeals = (teamId, options = {}) => {
+// Get appeals by team and phase
+export const useGetTeamPhaseAppeals = (teamId, phaseId, options = {}) => {
     return useQuery({
-        queryKey: appealQueryKeys.teamAppeals(teamId),
+        queryKey: appealQueryKeys.teamPhaseAppeals(teamId, phaseId),
         queryFn: async () => {
-            const response = await axiosClient.get(`/Appeal/team/${teamId}`);
+            const response = await axiosClient.get(`/Appeal/team/${teamId}/phase/${phaseId}`);
             return response.data;
         },
-        enabled: !!teamId && (options.enabled !== false),
+        enabled: !!teamId && !!phaseId && (options.enabled !== false),
         staleTime: 5 * 60 * 1000, // 5 minutes
         ...options,
     });

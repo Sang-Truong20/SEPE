@@ -2,17 +2,17 @@ import { FileTextOutlined } from '@ant-design/icons';
 import { Spin, Tag } from 'antd';
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { useGetTeamAppeals } from '../../../../hooks/student/appeal';
-import { useGetTeamPhasePenalties } from '../../../../hooks/student/penalty';
+import { useGetTeamPhaseAppeals } from '../../../../hooks/student/appeal';
 import { useGetCriteriaByPhase } from '../../../../hooks/student/criterion';
 
 const AppealsTab = ({ teamId }) => {
   const { phaseId } = useParams();
 
-  // Get appeals for team
-  const { data: appealsData = [], isLoading: appealsLoading } = useGetTeamAppeals(
+  // Get appeals for team in current phase
+  const { data: appealsData = [], isLoading: appealsLoading } = useGetTeamPhaseAppeals(
     teamId,
-    { enabled: !!teamId }
+    phaseId,
+    { enabled: !!teamId && !!phaseId }
   );
 
   const appeals = Array.isArray(appealsData)
@@ -20,43 +20,6 @@ const AppealsTab = ({ teamId }) => {
     : Array.isArray(appealsData?.data)
       ? appealsData.data
       : [];
-
-  // Get penalties for filtering phase appeals
-  const { data: penaltiesData = [] } = useGetTeamPhasePenalties(
-    teamId,
-    phaseId,
-    { enabled: !!teamId && !!phaseId }
-  );
-
-  const penalties = Array.isArray(penaltiesData)
-    ? penaltiesData
-    : Array.isArray(penaltiesData?.data)
-      ? penaltiesData.data
-      : [];
-
-  // Filter appeals related to penalties in current phase
-  const phaseAppeals = React.useMemo(() => {
-    if (!phaseId || !penalties.length) return [];
-
-    // Get penalty IDs from current phase
-    const penaltyIds = penalties.map(p => p.penaltyId || p.id).filter(Boolean);
-
-    // Filter appeals that match penalties in this phase
-    return appeals.filter(appeal => {
-      const appealPenaltyId = appeal.adjustmentId || appeal.penaltyId;
-      return appealPenaltyId && penaltyIds.includes(appealPenaltyId);
-    });
-  }, [appeals, penalties, phaseId]);
-
-  // Filter score appeals for current phase
-  const scoreAppeals = React.useMemo(() => {
-    return appeals.filter(appeal => appeal.appealType === 'Score');
-  }, [appeals]);
-
-  // Combine all appeals for display
-  const allPhaseAppeals = React.useMemo(() => {
-    return [...phaseAppeals, ...scoreAppeals];
-  }, [phaseAppeals, scoreAppeals]);
 
   // Get criteria for mapping criterionId to name
   const { data: criteriaData } = useGetCriteriaByPhase(phaseId);
@@ -76,7 +39,7 @@ const AppealsTab = ({ teamId }) => {
     );
   }
 
-  if (allPhaseAppeals.length === 0) {
+  if (appeals.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         <FileTextOutlined className="text-4xl mb-2 opacity-50" />
@@ -87,7 +50,7 @@ const AppealsTab = ({ teamId }) => {
 
   return (
     <div className="space-y-3">
-      {allPhaseAppeals.map((appeal) => {
+      {appeals.map((appeal) => {
         // Find criterion name for score appeals
         const criterionName = appeal.appealType === 'Score' && appeal.adjustmentId
           ? criteria.find(c => (c.criterionId || c.id) === appeal.adjustmentId)?.name

@@ -3,10 +3,25 @@ import { Button, Spin, Tag } from 'antd';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetTeamPhasePenalties } from '../../../../hooks/student/penalty';
-import { useGetTeamAppeals } from '../../../../hooks/student/appeal';
+import { useGetTeamPhaseAppeals } from '../../../../hooks/student/appeal';
+import { useIsTeamLeader } from '../../../../hooks/student/team-member';
 
-const PenaltiesTab = ({ teamId, isLeader, onOpenAppealModal }) => {
+const PenaltiesTab = ({ teamId, isLeader: propIsLeader, onOpenAppealModal }) => {
   const { phaseId } = useParams();
+
+  // Get isLeader from API if not provided as prop
+  const { data: apiIsLeaderData } = useIsTeamLeader(teamId, {
+    enabled: !!teamId,
+  });
+
+  const isLeader = React.useMemo(() => {
+    // Use API result if available
+    if (apiIsLeaderData !== undefined && apiIsLeaderData !== null) {
+      return apiIsLeaderData === true || apiIsLeaderData?.isLeader === true;
+    }
+    // Fallback to prop
+    return propIsLeader || false;
+  }, [apiIsLeaderData, propIsLeader]);
 
   // Get penalties for team in current phase
   const { data: penaltiesData = [], isLoading: penaltiesLoading } = useGetTeamPhasePenalties(
@@ -21,10 +36,11 @@ const PenaltiesTab = ({ teamId, isLeader, onOpenAppealModal }) => {
       ? penaltiesData.data
       : [];
 
-  // Get appeals for team
-  const { data: appealsData = [] } = useGetTeamAppeals(
+  // Get appeals for team in current phase
+  const { data: appealsData = [] } = useGetTeamPhaseAppeals(
     teamId,
-    { enabled: !!teamId }
+    phaseId,
+    { enabled: !!teamId && !!phaseId }
   );
 
   const appeals = Array.isArray(appealsData)
@@ -33,23 +49,9 @@ const PenaltiesTab = ({ teamId, isLeader, onOpenAppealModal }) => {
       ? appealsData.data
       : [];
 
-  // Filter appeals related to penalties in current phase
-  const phaseAppeals = React.useMemo(() => {
-    if (!phaseId || !penalties.length) return [];
-
-    // Get penalty IDs from current phase
-    const penaltyIds = penalties.map(p => p.penaltyId || p.id).filter(Boolean);
-
-    // Filter appeals that match penalties in this phase
-    return appeals.filter(appeal => {
-      const appealPenaltyId = appeal.adjustmentId || appeal.penaltyId;
-      return appealPenaltyId && penaltyIds.includes(appealPenaltyId);
-    });
-  }, [appeals, penalties, phaseId]);
-
   const hasAppeal = (penalty) => {
-    const penaltyId = penalty.penaltyId || penalty.id;
-    return phaseAppeals.some(appeal => {
+    const penaltyId = penalty.penaltyId || penalty.id || penalty.adjustmentId;
+    return appeals.some(appeal => {
       const appealPenaltyId = appeal.adjustmentId || appeal.penaltyId;
       return appealPenaltyId && Number(appealPenaltyId) === Number(penaltyId);
     });

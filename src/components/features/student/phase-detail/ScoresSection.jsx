@@ -1,10 +1,10 @@
 import { BarChartOutlined, SendOutlined } from '@ant-design/icons';
-import { Button, Card, Spin, Tag } from 'antd';
+import { Button, Card, Collapse, Spin, Tag } from 'antd';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetMyScoresGrouped, useGetTeamOverview } from '../../../../hooks/student/score';
 import { useGetCriteriaByPhase } from '../../../../hooks/student/criterion';
-import { useGetTeamAppeals } from '../../../../hooks/student/appeal';
+import { useGetTeamPhaseAppeals } from '../../../../hooks/student/appeal';
 
 const ScoresSection = ({
   teamId,
@@ -13,6 +13,7 @@ const ScoresSection = ({
   onOpenScoreAppealModal,
 }) => {
   const { phaseId } = useParams();
+  const [appealingJudgeIds, setAppealingJudgeIds] = React.useState(new Set());
 
   // Get my scores grouped by phase
   const { data: scoresData, isLoading: scoresLoading } = useGetMyScoresGrouped(
@@ -126,10 +127,11 @@ const ScoresSection = ({
 
   const scoresLoadingState = scoresLoading || teamOverviewLoading;
 
-  // Get appeals for checking score appeals
-  const { data: appealsData = [] } = useGetTeamAppeals(
+  // Get appeals for checking score appeals in current phase
+  const { data: appealsData = [] } = useGetTeamPhaseAppeals(
     teamId,
-    { enabled: !!teamId }
+    phaseId,
+    { enabled: !!teamId && !!phaseId }
   );
 
   const appeals = Array.isArray(appealsData)
@@ -203,8 +205,146 @@ const ScoresSection = ({
             )}
           </div>
 
-          {/* Criteria Scores */}
-          {Array.isArray(scores.criteriaScores) && scores.criteriaScores.length > 0 ? (
+          {/* Judges Structure - Group by Judge */}
+          {isJudgesStructure && teamOverviewData?.judges && teamOverviewData.judges.length > 0 ? (
+            <div className="mt-4">
+              <h5 className="text-md font-semibold text-text-primary mb-3">
+                Chi tiết điểm theo giám khảo
+              </h5>
+              <Collapse
+                items={teamOverviewData.judges.map((judge, judgeIdx) => {
+                  // Get all criteria scores for this judge
+                  const judgeAllScores = [];
+                  judge.submissions?.forEach(submission => {
+                    submission.criteriaScores?.forEach(cs => {
+                      const criterion = criteria.find(c =>
+                        (c.criterionId || c.id) === cs.criterionId
+                      );
+                      judgeAllScores.push({
+                        criterionId: cs.criterionId,
+                        criterionName: criterion?.name || `Tiêu chí ${cs.criterionId}`,
+                        score: cs.score,
+                        comment: cs.comment,
+                        submissionTitle: submission.submissionTitle,
+                      });
+                    });
+                  });
+
+                  // Calculate total score for this judge
+                  const totalScore = judgeAllScores.reduce((sum, item) => {
+                    return sum + (item.score !== undefined && item.score !== null ? Number(item.score) : 0);
+                  }, 0);
+
+                  return {
+                    key: judgeIdx,
+                    label: (
+                      <div className="flex items-center justify-between w-full pr-4">
+                        <span className="text-text-primary font-semibold">
+                          {judge.judgeName}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Tag color="green" className="font-semibold">
+                            {totalScore.toFixed(2)}
+                          </Tag>
+                          {appeals.some(a => a.appealType === 'Score' && a.judgeId === judge.judgeId) ? (
+                            <Tag color="blue" size="small">
+                              Đã kháng cáo
+                            </Tag>
+                          ) : (
+                            <Button
+                              type="primary"
+                              size="small"
+                              icon={<SendOutlined />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAppealingJudgeIds(prev => new Set(prev).add(judge.judgeId));
+                                onOpenScoreAppealModal({
+                                  judgeId: judge.judgeId,
+                                  judgeName: judge.judgeName,
+                                  submissionId: judge.submissions?.[0]?.submissionId,
+                                  submissionTitle: judge.submissions?.[0]?.submissionTitle,
+                                  isJudgeAppeal: true,
+                                  onAppealComplete: () => {
+                                    setAppealingJudgeIds(prev => {
+                                      const newSet = new Set(prev);
+                                      newSet.delete(judge.judgeId);
+                                      return newSet;
+                                    });
+                                  },
+                                });
+                              }}
+                              disabled={appealingJudgeIds.has(judge.judgeId)}
+                              className="bg-gradient-to-r from-orange-500 to-red-400 hover:from-orange-600 hover:to-red-500 border-0 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {appealingJudgeIds.has(judge.judgeId) ? 'Đang gửi...' : 'Kháng cáo Score'}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ),
+                    children: (
+                      <div className="space-y-3">
+                        {judgeAllScores.length > 0 ? (
+                          judgeAllScores.map((item, itemIdx) => (
+                            <div
+                              key={itemIdx}
+                              className="p-3 bg-card-background/50 rounded-lg border border-card-border/50"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex-1">
+                                  <span className="text-text-primary font-medium text-sm">
+                                    {item.criterionName}
+                                  </span>
+                                  {item.submissionTitle && (
+                                    <p className="text-muted-foreground text-xs mt-1">
+                                      ({item.submissionTitle})
+                                    </p>
+                                  )}
+                                </div>
+                                <Tag color="blue" className="font-semibold">
+                                  {item.score !== undefined && item.score !== null
+                                    ? Number(item.score).toFixed(2)
+                                    : '-'}
+                                </Tag>
+                              </div>
+                              {item.comment && (
+                                <p className="text-text-secondary text-xs italic mt-2">
+                                  &ldquo;{item.comment}&rdquo;
+                                </p>
+                              )}
+                              {isLeader && (
+                                <div className="mt-3">
+                                  <Button
+                                    type="primary"
+                                    size="small"
+                                    icon={<SendOutlined />}
+                                    onClick={() => onOpenScoreAppealModal({
+                                      criterionId: item.criterionId,
+                                      judgeId: judge.judgeId,
+                                      score: item.score,
+                                      comment: item.comment,
+                                      judgeName: judge.judgeName,
+                                      submissionTitle: item.submissionTitle,
+                                    })}
+                                    className="bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 border-0 text-xs"
+                                  >
+                                    Phúc khảo điểm
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-muted-foreground text-xs">Chưa có điểm số</p>
+                        )}
+                      </div>
+                    ),
+                  };
+                })}
+                className="bg-card-background/30"
+              />
+            </div>
+          ) : isCriteriaScoresFormat && Array.isArray(scores.criteriaScores) && scores.criteriaScores.length > 0 ? (
             <div className="mt-4">
               <h5 className="text-md font-semibold text-text-primary mb-3">
                 Chi tiết điểm theo tiêu chí
@@ -240,78 +380,6 @@ const ScoresSection = ({
                           )}
                         </div>
                       </div>
-
-                      {/* Show per-judge scores if judges structure */}
-                      {isJudgesStructure && criteriaScore.judgeScores && criteriaScore.judgeScores.length > 0 && (
-                        <div className="mt-3 space-y-2">
-                          <p className="text-xs text-muted-foreground font-medium mb-2">Điểm từng giám khảo:</p>
-                          {criteriaScore.judgeScores.map((judgeScore, jsIdx) => {
-                            const judgeHasAppeal = hasScoreAppeal(
-                              { criterionId: criteriaScore.criterionId },
-                              judgeScore.judgeId,
-                              judgeScore.submissionId
-                            );
-                            
-                            return (
-                              <div
-                                key={jsIdx}
-                                className="pl-3 border-l-2 border-primary/30 py-2 bg-card-background/30 rounded"
-                              >
-                                <div className="flex items-center justify-between mb-1">
-                                  <div className="flex-1">
-                                    <span className="text-text-primary text-xs font-medium">
-                                      {judgeScore.judgeName}
-                                    </span>
-                                    {judgeScore.submissionTitle && (
-                                      <span className="text-muted-foreground text-xs ml-2">
-                                        ({judgeScore.submissionTitle})
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Tag color="blue" size="small" className="font-semibold">
-                                      {judgeScore.score !== undefined && judgeScore.score !== null
-                                        ? Number(judgeScore.score).toFixed(2)
-                                        : '-'}
-                                    </Tag>
-                                    {judgeHasAppeal && (
-                                      <Tag color="orange" size="small">
-                                        Đã phúc khảo
-                                      </Tag>
-                                    )}
-                                  </div>
-                                </div>
-                                {judgeScore.comment && (
-                                  <p className="text-text-secondary text-xs mt-1 italic">
-                                    &ldquo;{judgeScore.comment}&rdquo;
-                                  </p>
-                                )}
-                                {isLeader && !judgeHasAppeal && (
-                                  <div className="mt-2">
-                                    <Button
-                                      type="primary"
-                                      size="small"
-                                      icon={<SendOutlined />}
-                                      onClick={() => onOpenScoreAppealModal({
-                                        criterionId: criteriaScore.criterionId,
-                                        judgeId: judgeScore.judgeId,
-                                        submissionId: judgeScore.submissionId,
-                                        score: judgeScore.score,
-                                        comment: judgeScore.comment,
-                                        judgeName: judgeScore.judgeName,
-                                        submissionTitle: judgeScore.submissionTitle,
-                                      })}
-                                      className="bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 border-0 text-xs"
-                                    >
-                                      Phúc khảo điểm
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
 
                       {/* Show comment for old format */}
                       {!isJudgesStructure && criteriaScore.comment && (

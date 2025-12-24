@@ -9,6 +9,7 @@ export const submissionQueryKeys = {
     submissions: (teamId, phaseChallengeId) => [...submissionQueryKeys.origin, 'submissions', teamId, phaseChallengeId],
     submissionsByTeam: (teamId) => [...submissionQueryKeys.origin, 'submissions-by-team', teamId],
     submissionsByPhase: (phaseId) => [...submissionQueryKeys.origin, 'submissions-by-phase', phaseId],
+    submissionsByTeamAndPhase: (teamId, phaseId) => [...submissionQueryKeys.origin, 'submissions-by-team-phase', teamId, phaseId],
     allSubmissions: () => [...submissionQueryKeys.origin, 'all'],
 };
 
@@ -97,15 +98,15 @@ export const useGetSubmissionsByTeam = (teamId, options = {}) => {
     });
 };
 
-// Get submissions by phase
-export const useGetSubmissionsByPhase = (phaseId, options = {}) => {
+// Get submissions by team and phase
+export const useGetSubmissionsByPhase = (teamId, phaseId, options = {}) => {
     return useQuery({
-        queryKey: submissionQueryKeys.submissionsByPhase(phaseId),
+        queryKey: submissionQueryKeys.submissionsByTeamAndPhase(teamId, phaseId),
         queryFn: async () => {
-            const response = await axiosClient.get(`/Submission/phase/${phaseId}`);
+            const response = await axiosClient.get(`/Submission/team/${teamId}/phase/${phaseId}`);
             return response.data;
         },
-        enabled: !!phaseId && (options.enabled !== false),
+        enabled: !!teamId && !!phaseId && (options.enabled !== false),
         staleTime: 5 * 60 * 1000, // 5 minutes
         ...options,
     });
