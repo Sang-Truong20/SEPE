@@ -597,13 +597,27 @@ const StudentHackathonDetail = () => {
               Nhà tài trợ
             </h3>
             <div className="grid grid-cols-2 gap-3">
-              {['FPT University', 'SEAL', 'TechCorp', 'InnovateLab'].map(
+              {['FPT University', 'SEAL'].map(
                 (sponsor) => (
                   <div
                     key={sponsor}
                     className="p-3 bg-card-background/50 rounded-lg text-center border border-card-border/50"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-lg mx-auto mb-2" />
+                    {sponsor === 'FPT University' ? (
+                      <img
+                        src="/fpt-logo.png"
+                        alt="FPT University"
+                        className="w-16 h-16 object-contain mx-auto mb-2"
+                      />
+                    ) : sponsor === 'SEAL' ? (
+                      <img
+                        src="/seal-logo.JPG"
+                        alt="SEAL"
+                        className="w-16 h-16 object-contain mx-auto mb-2"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-lg mx-auto mb-2" />
+                    )}
                     <p className="text-xs text-muted-foreground">{sponsor}</p>
                   </div>
                 ),
