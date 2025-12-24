@@ -45,6 +45,7 @@ import { useGroups } from '../../hooks/admin/groups/useGroups';
 import { useGetHackathonPhases } from '../../hooks/student/hackathon-phase';
 import { getStatusDisplay } from '../../configs/statusConfig';
 import { useGetApprovedMentorsByHackathon } from '../../hooks/chapter/mentor-verification';
+import { useGetTracksByPhase } from '../../hooks/student/track-phase';
 
 const StudentHackathonDetail = () => {
   const navigate = useNavigate();
@@ -59,6 +60,26 @@ const StudentHackathonDetail = () => {
   const { fetchGroupsByHackathon } = useGroups();
   const { data: groupsData = [], isLoading: groupsLoading } =
     fetchGroupsByHackathon(id);
+
+  // Fetch tracks to get track names
+  const { data: tracksData = [] } = useGetTracksByPhase(phase1?.phaseId, { enabled: !!phase1?.phaseId });
+  const tracks = useMemo(() => {
+    if (Array.isArray(tracksData)) return tracksData;
+    if (Array.isArray(tracksData?.data)) return tracksData.data;
+    if (Array.isArray(tracksData?.tracks)) return tracksData.tracks;
+    return [];
+  }, [tracksData]);
+  
+  // Create a map from trackId to track name
+  const trackMap = useMemo(() => {
+    const map = {};
+    tracks.forEach(track => {
+      if (track.trackId) {
+        map[track.trackId] = track.name || `Track ${track.trackId}`;
+      }
+    });
+    return map;
+  }, [tracks]);
 
   const { data: myRegistrations } = useGetMyHackathonRegistrations();
 
@@ -440,7 +461,7 @@ const StudentHackathonDetail = () => {
                           Bảng {group.groupName}
                         </h4>
                         <Tag color="blue" size="small">
-                          Track {group.trackId}
+                          {trackMap[group.trackId] || `Track ${group.trackId}`}
                         </Tag>
                       </div>
                       <div className="space-y-2">
@@ -597,13 +618,27 @@ const StudentHackathonDetail = () => {
               Nhà tài trợ
             </h3>
             <div className="grid grid-cols-2 gap-3">
-              {['FPT University', 'SEAL', 'TechCorp', 'InnovateLab'].map(
+              {['FPT University', 'SEAL'].map(
                 (sponsor) => (
                   <div
                     key={sponsor}
                     className="p-3 bg-card-background/50 rounded-lg text-center border border-card-border/50"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-lg mx-auto mb-2" />
+                    {sponsor === 'FPT University' ? (
+                      <img
+                        src="/fpt-logo.png"
+                        alt="FPT University"
+                        className="w-16 h-16 object-contain mx-auto mb-2"
+                      />
+                    ) : sponsor === 'SEAL' ? (
+                      <img
+                        src="/seal-logo.JPG"
+                        alt="SEAL"
+                        className="w-16 h-16 object-contain mx-auto mb-2"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-lg mx-auto mb-2" />
+                    )}
                     <p className="text-xs text-muted-foreground">{sponsor}</p>
                   </div>
                 ),

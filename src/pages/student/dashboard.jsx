@@ -2,7 +2,6 @@ import {
   BarChartOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
-  FileTextOutlined,
   PlayCircleOutlined,
   SettingOutlined,
   TeamOutlined,
@@ -13,11 +12,12 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueries } from '@tanstack/react-query';
 import { PATH_NAME } from '../../constants';
+import axiosClient from '../../configs/axiosClient';
 import { useGetHackathons } from '../../hooks/student/hackathon';
 import { useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
 import { useGetNotifications } from '../../hooks/student/notification';
-import { useGetAllSubmissions } from '../../hooks/student/submission';
 import { useGetMyTeams } from '../../hooks/student/team';
 
 dayjs.extend(relativeTime);
@@ -28,7 +28,6 @@ const StudentDashboard = () => {
   // Fetch data from hooks
   const { data: hackathonRegistrations = [], isLoading: registrationsLoading } = useGetMyHackathonRegistrations();
   const { data: myTeamsData, isLoading: teamsLoading } = useGetMyTeams();
-  const { data: allSubmissions = [], isLoading: submissionsLoading } = useGetAllSubmissions();
   const { data: notifications = [] } = useGetNotifications();
 
   // Normalize teams data
@@ -39,13 +38,37 @@ const StudentDashboard = () => {
     return [];
   }, [myTeamsData]);
 
-  // Normalize submissions data
+  // Get team IDs
+  const teamIds = useMemo(() => {
+    return myTeams.map(team => team.teamId || team.id || team.teamID).filter(Boolean);
+  }, [myTeams]);
+
+  // Fetch submissions for each team
+  const submissionsQueries = useQueries({
+    queries: teamIds.map(teamId => ({
+      queryKey: ['student', 'submission', 'submissions-by-team', teamId],
+      queryFn: async () => {
+        const response = await axiosClient.get(`/Submission/team/${teamId}`);
+        return response.data;
+      },
+      enabled: !!teamId,
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  // Aggregate submissions from all teams
   const submissions = useMemo(() => {
-    if (!allSubmissions) return [];
-    if (Array.isArray(allSubmissions)) return allSubmissions;
-    if (Array.isArray(allSubmissions.data)) return allSubmissions.data;
-    return [];
-  }, [allSubmissions]);
+    const allSubmissions = [];
+    submissionsQueries.forEach(query => {
+      if (query.data) {
+        const data = Array.isArray(query.data) ? query.data : (query.data.data || []);
+        allSubmissions.push(...data);
+      }
+    });
+    return allSubmissions;
+  }, [submissionsQueries]);
+
+  const submissionsLoading = submissionsQueries.some(query => query.isLoading);
 
   // Normalize notifications data
   const notificationsList = useMemo(() => {
@@ -69,7 +92,14 @@ const StudentDashboard = () => {
   // Calculate statistics
   const hackathonsCount = hackathonRegistrations.length;
   const teamsCount = myTeams.length;
-  const submissionsCount = submissions.filter(s => s.isFinal).length;
+  
+  // Calculate hackathons waiting for mentor confirmation
+  const waitingMentorHackathonsCount = useMemo(() => {
+    return hackathonRegistrations.filter(reg => {
+      const status = reg.status || reg.registrationStatus;
+      return status?.toLowerCase() === 'waitingmentor' || status === 'WaitingMentor';
+    }).length;
+  }, [hackathonRegistrations]);
   
   // Calculate approved hackathons count
   const approvedHackathonsCount = useMemo(() => {
@@ -152,9 +182,9 @@ const StudentDashboard = () => {
       icon: TeamOutlined,
     },
     {
-      label: 'Bài nộp',
-      value: submissionsCount.toString(),
-      icon: FileTextOutlined,
+      label: 'Hackathon chờ mentor xác nhận',
+      value: waitingMentorHackathonsCount.toString(),
+      icon: ClockCircleOutlined,
     },
     {
       label: 'Hackathons đã duyệt',

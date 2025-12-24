@@ -16,15 +16,16 @@ const ScoreAppealModal = ({
   const { phaseId } = useParams();
 
   // Get scores data for submissionId and judgeId
+  // Only fetch when modal is visible to avoid unnecessary API calls
   const { data: scoresData } = useGetMyScoresGrouped(
     phaseId,
-    { enabled: !!phaseId && hasJoinedHackathon }
+    { enabled: !!phaseId && hasJoinedHackathon && visible }
   );
 
   const { data: teamOverviewData } = useGetTeamOverview(
     teamId,
     phaseId,
-    { enabled: !!teamId && !!phaseId && hasJoinedHackathon }
+    { enabled: !!teamId && !!phaseId && hasJoinedHackathon && visible }
   );
 
   // Get criteria for mapping criterionId to name
