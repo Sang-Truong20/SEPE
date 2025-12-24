@@ -13,7 +13,7 @@ import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import {
   useCreateDraftSubmission,
-  useGetSubmissionsByTeam,
+  useGetSubmissionsByPhase,
   useSetFinalSubmission,
 } from '../../../../hooks/student/submission';
 import { useIsTeamLeader } from '../../../../hooks/student/team-member';
@@ -72,42 +72,29 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader: propIsLea
     return propIsLeader || false;
   }, [isLeaderData, propIsLeader, isLeaderLoading, isLeaderError, teamId]);
 
-  // Get submissions for this team - API: /api/Submission/team/{teamId}
-  // Currently hardcoded to teamId = 8 for testing
+  // Get submissions for this phase - API: /api/Submission/phase/{phaseId}
   const {
     data: submissionsData,
     isLoading: submissionsLoading,
     isError: submissionsError,
     refetch: refetchSubmissions,
-  } = useGetSubmissionsByTeam(teamId, {
-    enabled: !!teamId && typeof teamId === 'number',
+  } = useGetSubmissionsByPhase(phaseId, {
+    enabled: !!phaseId && typeof phaseId === 'number',
   });
 
-  // Filter submissions by phaseId or phaseName
+  // Process submissions data
   const submissions = React.useMemo(() => {
     if (!submissionsData) return [];
     
     // Handle different response formats
-    const allSubmissions = Array.isArray(submissionsData)
+    return Array.isArray(submissionsData)
       ? submissionsData
       : Array.isArray(submissionsData?.data)
         ? submissionsData.data
         : Array.isArray(submissionsData?.submissions)
           ? submissionsData.submissions
           : [];
-    
-    if (!phaseId) return allSubmissions;
-    
-    // Filter by phaseId or phaseChallengeId if available
-    // If phaseId doesn't match, return all submissions (API already filters by team)
-    return allSubmissions.filter(sub => {
-      if (sub.phaseId === parseInt(phaseId) || sub.phaseChallengeId === parseInt(phaseId)) {
-        return true;
-      }
-      // If no phaseId match, show all submissions for this team
-      return true;
-    });
-  }, [submissionsData, phaseId]);
+  }, [submissionsData]);
 
   const createDraftMutation = useCreateDraftSubmission();
   const setFinalMutation = useSetFinalSubmission();
