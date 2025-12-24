@@ -78,10 +78,26 @@ export const useHackathonPhases = () => {
     // Create phase
     const createHackathonPhase = useMutation({
         mutationFn: (payload) => axiosClient.post('/HackathonPhase/', payload),
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({
-                queryKey: hackathonPhaseQueryKeys.list(variables.hackathonId)
-            });
+        onSuccess: async (_, variables) => {
+            // Handle both array and single object payload
+            const hackathonId = Array.isArray(variables)
+                ? variables[0]?.hackathonId
+                : variables?.hackathonId;
+
+            if (hackathonId) {
+                await queryClient.invalidateQueries({
+                    queryKey: hackathonPhaseQueryKeys.list(hackathonId),
+                });
+                // Also refetch directly to ensure it updates
+                await queryClient.refetchQueries({
+                    queryKey: hackathonPhaseQueryKeys.list(hackathonId),
+                });
+            } else {
+                // Fallback: invalidate all if hackathonId not found
+                await queryClient.invalidateQueries({
+                    queryKey: hackathonPhaseQueryKeys.all,
+                });
+            }
             message.success('Tạo giai đoạn hackathon thành công!');
         },
         onError: (error) => {
@@ -103,8 +119,21 @@ export const useHackathonPhases = () => {
     // Update phase
     const updateHackathonPhase = useMutation({
         mutationFn: ({ id, payload }) => axiosClient.put(`/HackathonPhase/${id}`, payload),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: hackathonPhaseQueryKeys.all });
+        onSuccess: async (_, variables) => {
+            // Invalidate specific list query if hackathonId is provided, otherwise invalidate all
+            if (variables.hackathonId) {
+                await queryClient.invalidateQueries({
+                    queryKey: hackathonPhaseQueryKeys.list(variables.hackathonId),
+                });
+                // Also refetch directly to ensure it updates
+                await queryClient.refetchQueries({
+                    queryKey: hackathonPhaseQueryKeys.list(variables.hackathonId),
+                });
+            } else {
+                await queryClient.invalidateQueries({
+                    queryKey: hackathonPhaseQueryKeys.all,
+                });
+            }
             message.success('Cập nhật giai đoạn hackathon thành công!');
         },
         onError: (error) => {
@@ -122,9 +151,22 @@ export const useHackathonPhases = () => {
      */
     // Delete phase
     const deleteHackathonPhase = useMutation({
-        mutationFn: (id) => axiosClient.delete(`/HackathonPhase/${id}`),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: hackathonPhaseQueryKeys.all });
+        mutationFn: ({ phaseId }) => axiosClient.delete(`/HackathonPhase/${phaseId}`),
+        onSuccess: async (_, variables) => {
+            // Invalidate specific list query if hackathonId is provided, otherwise invalidate all
+            if (variables.hackathonId) {
+                await queryClient.invalidateQueries({
+                    queryKey: hackathonPhaseQueryKeys.list(variables.hackathonId),
+                });
+                // Also refetch directly to ensure it updates
+                await queryClient.refetchQueries({
+                    queryKey: hackathonPhaseQueryKeys.list(variables.hackathonId),
+                });
+            } else {
+                await queryClient.invalidateQueries({
+                    queryKey: hackathonPhaseQueryKeys.all,
+                });
+            }
             message.success('Xóa giai đoạn hackathon thành công!');
         },
         onError: (error) => {

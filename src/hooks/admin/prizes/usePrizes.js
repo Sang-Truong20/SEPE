@@ -64,10 +64,21 @@ export const usePrizes = () => {
     // Create prize
     const createPrize = useMutation({
         mutationFn: (payload) => axiosClient.post('/Prize', payload),
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({
-                queryKey: prizeQueryKeys.list(variables.hackathonId)
-            });
+        onSuccess: async (_, variables) => {
+            if (variables.hackathonId) {
+                // Invalidate and refetch
+                await queryClient.invalidateQueries({
+                    queryKey: prizeQueryKeys.list(variables.hackathonId),
+                });
+                // Also refetch directly to ensure it updates
+                await queryClient.refetchQueries({
+                    queryKey: prizeQueryKeys.list(variables.hackathonId),
+                });
+            } else {
+                await queryClient.invalidateQueries({
+                    queryKey: prizeQueryKeys.all,
+                });
+            }
             message.success('Tạo giải thưởng thành công!');
         },
         onError: (error) => {
@@ -91,8 +102,21 @@ export const usePrizes = () => {
     // Update prize
     const updatePrize = useMutation({
         mutationFn: (payload) => axiosClient.put('/Prize', payload),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: prizeQueryKeys.all });
+        onSuccess: async (_, variables) => {
+            // Invalidate specific list query if hackathonId is provided, otherwise invalidate all
+            if (variables.hackathonId) {
+                await queryClient.invalidateQueries({
+                    queryKey: prizeQueryKeys.list(variables.hackathonId),
+                });
+                // Also refetch directly to ensure it updates
+                await queryClient.refetchQueries({
+                    queryKey: prizeQueryKeys.list(variables.hackathonId),
+                });
+            } else {
+                await queryClient.invalidateQueries({
+                    queryKey: prizeQueryKeys.all,
+                });
+            }
             message.success('Cập nhật giải thưởng thành công!');
         },
         onError: (error) => {
@@ -111,9 +135,22 @@ export const usePrizes = () => {
      */
     // Delete prize
     const deletePrize = useMutation({
-        mutationFn: (id) => axiosClient.delete(`/Prize/${id}`),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: prizeQueryKeys.all });
+        mutationFn: ({ prizeId }) => axiosClient.delete(`/Prize/${prizeId}`),
+        onSuccess: async (_, variables) => {
+            // Invalidate specific list query if hackathonId is provided, otherwise invalidate all
+            if (variables.hackathonId) {
+                await queryClient.invalidateQueries({
+                    queryKey: prizeQueryKeys.list(variables.hackathonId),
+                });
+                // Also refetch directly to ensure it updates
+                await queryClient.refetchQueries({
+                    queryKey: prizeQueryKeys.list(variables.hackathonId),
+                });
+            } else {
+                await queryClient.invalidateQueries({
+                    queryKey: prizeQueryKeys.all,
+                });
+            }
             message.success('Xóa giải thưởng thành công!');
         },
         onError: (error) => {
