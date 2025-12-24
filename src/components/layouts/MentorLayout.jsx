@@ -125,6 +125,12 @@ const MentorLayout = () => {
       path: PATH_NAME.MENTOR_DASHBOARD,
     },
     {
+      id: 'hackathons',
+      label: 'Hackathons',
+      icon: Trophy,
+      path: PATH_NAME.MENTOR_HACKATHONS,
+    },
+    {
       id: 'group-chat',
       label: 'Group Chat',
       icon: MessageSquare,

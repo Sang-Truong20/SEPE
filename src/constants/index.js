@@ -54,6 +54,7 @@ const PATH_NAME = {
   CHAPTER_PROFILE: '/chapter/profile',
   MENTOR: '/mentor',
   MENTOR_DASHBOARD: '/mentor/dashboard',
+  MENTOR_HACKATHONS: '/mentor/hackathons',
   MENTOR_RESOURCES: '/mentor/resources',
   MENTOR_NOTIFICATIONS: '/mentor/notifications',
   MENTOR_PROFILE: '/mentor/profile',

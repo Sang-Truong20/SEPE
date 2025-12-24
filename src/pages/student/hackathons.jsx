@@ -238,6 +238,18 @@ const StudentHackathons = () => {
         if (statusFilter === 'upcoming' && hackathonStatus !== 'pending' && hackathonStatus !== 'upcoming') {
           return false;
         }
+        if (statusFilter === 'participating') {
+          // Show only hackathons where user has registered (approved, pending, or waitingmentor status)
+          const registration = registrationsMap[h.hackathonId];
+          if (!registration) {
+            return false;
+          }
+          const regStatus = registration.status?.toLowerCase();
+          // Only show if registration exists and is not rejected
+          if (regStatus === 'rejected') {
+            return false;
+          }
+        }
       }
 
       // Filter by season
@@ -249,7 +261,7 @@ const StudentHackathons = () => {
 
       return true;
     });
-  }, [hackathons, searchTerm, statusFilter, seasonFilter]);
+  }, [hackathons, searchTerm, statusFilter, seasonFilter, registrationsMap]);
 
   if (isLoading) {
     return (
@@ -308,6 +320,7 @@ const StudentHackathons = () => {
         >
           <Option value="active">Đang diễn ra</Option>
           <Option value="upcoming">Sắp diễn ra</Option>
+          <Option value="participating">Đang tham gia</Option>
         </Select>
         <Select
           placeholder="Lọc theo mùa"
