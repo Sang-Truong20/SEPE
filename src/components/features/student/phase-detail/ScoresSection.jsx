@@ -3,8 +3,23 @@ import { Button, Card, Collapse, Spin, Tag } from 'antd';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetMyScoresGrouped, useGetTeamOverview } from '../../../../hooks/student/score';
-import { useGetCriteriaByPhase } from '../../../../hooks/student/criterion';
+import { useGetCriterion } from '../../../../hooks/student/criterion';
 import { useGetTeamPhaseAppeals } from '../../../../hooks/student/appeal';
+
+// Component to display criterion name by fetching from API
+const CriterionName = ({ criterionId }) => {
+  const { data: criterionData, isLoading } = useGetCriterion(criterionId);
+  
+  if (isLoading) {
+    return <span className="text-text-primary font-medium text-sm">...</span>;
+  }
+  
+  return (
+    <span className="text-text-primary font-medium text-sm">
+      {criterionData?.name || criterionData?.data?.name || `Tiêu chí ${criterionId}`}
+    </span>
+  );
+};
 
 const ScoresSection = ({
   teamId,
@@ -27,17 +42,6 @@ const ScoresSection = ({
     phaseId,
     { enabled: !!teamId && !!phaseId && hasJoinedHackathon }
   );
-
-  // Get criteria for mapping criterionId to name
-  const { data: criteriaData } = useGetCriteriaByPhase(phaseId);
-  const criteria = React.useMemo(() => {
-    if (!criteriaData) return [];
-    return Array.isArray(criteriaData)
-      ? criteriaData
-      : Array.isArray(criteriaData?.data)
-        ? criteriaData.data
-        : [];
-  }, [criteriaData]);
 
   // Check if we have team overview data with judges structure (new format)
   const isJudgesStructure = React.useMemo(() => {
@@ -217,12 +221,8 @@ const ScoresSection = ({
                   const judgeAllScores = [];
                   judge.submissions?.forEach(submission => {
                     submission.criteriaScores?.forEach(cs => {
-                      const criterion = criteria.find(c =>
-                        (c.criterionId || c.id) === cs.criterionId
-                      );
                       judgeAllScores.push({
                         criterionId: cs.criterionId,
-                        criterionName: criterion?.name || `Tiêu chí ${cs.criterionId}`,
                         score: cs.score,
                         comment: cs.comment,
                         submissionTitle: submission.submissionTitle,
@@ -292,9 +292,7 @@ const ScoresSection = ({
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex-1">
-                                  <span className="text-text-primary font-medium text-sm">
-                                    {item.criterionName}
-                                  </span>
+                                  <CriterionName criterionId={item.criterionId} />
                                   {item.submissionTitle && (
                                     <p className="text-muted-foreground text-xs mt-1">
                                       ({item.submissionTitle})
@@ -351,10 +349,6 @@ const ScoresSection = ({
               </h5>
               <div className="space-y-3">
                 {scores.criteriaScores.map((criteriaScore, idx) => {
-                  const criterion = criteria.find(c =>
-                    (c.criterionId || c.id) === criteriaScore.criterionId
-                  );
-                  
                   // Check if this criterion has any appeal (for old format)
                   const hasAnyAppeal = !isJudgesStructure && hasScoreAppeal(criteriaScore);
                   
@@ -364,9 +358,7 @@ const ScoresSection = ({
                       className="p-3 bg-card-background/50 rounded-lg border border-card-border/50"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-text-primary font-medium text-sm">
-                          {criterion?.name || `Tiêu chí ${criteriaScore.criterionId}`}
-                        </span>
+                        <CriterionName criterionId={criteriaScore.criterionId} />
                         <div className="flex items-center gap-2">
                           <Tag color="green" className="font-semibold">
                             {criteriaScore.score !== undefined && criteriaScore.score !== null
