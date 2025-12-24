@@ -95,7 +95,7 @@ const HackathonPhases = () => {
   const handleConfirmOk = () => {
     const { phaseId } = confirmModal;
     setDeletingId(phaseId);
-    deleteHackathonPhase.mutate(phaseId, {
+    deleteHackathonPhase.mutate({ phaseId, hackathonId }, {
       onSettled: () => {
         setDeletingId(null);
         setConfirmModal({ open: false, phaseId: null });

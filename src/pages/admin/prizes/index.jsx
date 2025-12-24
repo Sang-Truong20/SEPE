@@ -87,7 +87,7 @@ const Prizes = () => {
     const handleConfirmOk = () => {
         const { prizeId } = confirmModal;
         setDeletingId(prizeId);
-        deletePrize.mutate(prizeId, {
+        deletePrize.mutate({ prizeId, hackathonId }, {
             onSettled: () => {
                 setDeletingId(null);
                 setConfirmModal({ open: false, prizeId: null });

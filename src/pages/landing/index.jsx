@@ -201,9 +201,6 @@ const SEALLandingPage = () => {
               >
                 Bắt đầu →
               </button>
-              <button className="border border-white/20 px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/10 transition-all">
-                Xem demo
-              </button>
             </div>
 
             <div

@@ -124,7 +124,7 @@ const HackathonPhaseForm = ({ mode = 'create' }) => {
           startDate: values.startDate?.format('YYYY-MM-DDTHH:mm:ss.SSS[Z]'),
           endDate: values.endDate?.format('YYYY-MM-DDTHH:mm:ss.SSS[Z]'),
         };
-        await updateHackathonPhase.mutateAsync({ id, payload: updatePayload });
+        await updateHackathonPhase.mutateAsync({ id, payload: updatePayload, hackathonId: parseInt(hackathonId) });
       }
       navigate(`${PATH_NAME.ADMIN_HACKATHON_PHASES}?hackathonId=${hackathonId}`);
     } catch (e) {

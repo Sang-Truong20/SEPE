@@ -128,6 +128,7 @@ const PrizeForm = ({ mode = 'create' }) => {
                     prizeType: PrizeTypeEnum[values.prizeType]?.index,
                     rank: parseInt(values.rank),
                     reward: values.reward,
+                    hackathonId: parseInt(hackathonId),
                 };
                 await updatePrize.mutateAsync(payload);
             }
