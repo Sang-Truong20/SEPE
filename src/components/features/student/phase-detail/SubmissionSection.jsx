@@ -96,6 +96,11 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader: propIsLea
           : [];
   }, [submissionsData]);
 
+  // Check if there's already a final submission
+  const hasFinalSubmission = React.useMemo(() => {
+    return submissions.some(sub => sub.isFinal === true);
+  }, [submissions]);
+
   const createDraftMutation = useCreateDraftSubmission();
   const setFinalMutation = useSetFinalSubmission();
 
@@ -267,7 +272,7 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader: propIsLea
               onClick={() => handleViewDetail(record)}
             />
           </Tooltip>
-          {!record.isFinal && isLeader && (
+          {!record.isFinal && isLeader && !hasFinalSubmission && (
             <Tooltip title="Nộp bài final">
               <Button
                 type="text"
@@ -310,7 +315,7 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader: propIsLea
             >
               Tạo bản nháp
             </Button>
-            {isLeader && (
+            {isLeader && !hasFinalSubmission && (
               <Button
                 type="primary"
                 icon={<SendOutlined />}
@@ -326,6 +331,17 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader: propIsLea
                 Nộp bài final
               </Button>
             )}
+            {isLeader && hasFinalSubmission && (
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                disabled
+                className="bg-gray-500 cursor-not-allowed"
+                title="Đã nộp bài final cho phase này"
+              >
+                Đã nộp bài final
+              </Button>
+            )}
           </Space>
         </div>
 
@@ -339,7 +355,9 @@ const SubmissionSection = ({ teamId, phaseId, selectedTrack, isLeader: propIsLea
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">
                 {isLeader
-                  ? 'Bạn là team leader. Bạn có thể tạo bản nháp và nộp bài final.'
+                  ? hasFinalSubmission
+                    ? 'Bạn là team leader. Đã nộp bài final cho phase này. Bạn vẫn có thể tạo bản nháp mới.'
+                    : 'Bạn là team leader. Bạn có thể tạo bản nháp và nộp bài final.'
                   : 'Bạn là team member. Bạn chỉ có thể tạo bản nháp. Chỉ team leader mới có thể nộp bài final.'}
               </p>
               
