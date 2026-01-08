@@ -40,17 +40,16 @@ const StatusBadge = ({ status }) => {
   // Always use Vietnamese label, fallback to 'Không rõ' if not mapped
   const label = statusMap[normalized] || 'Không rõ';
   let classes =
-    'px-2.5 py-0.5 rounded-full text-xs font-semibold border border-white/10 text-gray-200 bg-white/5';
+    'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border whitespace-nowrap';
 
   if (normalized === 'pending') {
-    classes =
-      'px-2.5 py-0.5 rounded-full text-xs font-semibold border border-amber-500/40 text-amber-300 bg-amber-500/10';
+    classes += ' border-amber-500/50 text-amber-300 bg-amber-500/20';
   } else if (normalized === 'approved') {
-    classes =
-      'px-2.5 py-0.5 rounded-full text-xs font-semibold border border-emerald-500/40 text-emerald-300 bg-emerald-500/10';
+    classes += ' border-emerald-500/50 text-emerald-300 bg-emerald-500/20';
   } else if (normalized === 'rejected') {
-    classes =
-      'px-2.5 py-0.5 rounded-full text-xs font-semibold border border-red-500/40 text-red-300 bg-red-500/10';
+    classes += ' border-red-500/50 text-red-300 bg-red-500/20';
+  } else {
+    classes += ' border-white/10 text-gray-200 bg-white/5';
   }
 
   return <span className={classes}>{label}</span>;
@@ -274,14 +273,16 @@ const ChapterMentorManagement = () => {
                           title: 'Tên',
                           dataIndex: 'name',
                           key: 'name',
+                          width: 200,
+                          ellipsis: { showTitle: false },
                           render: (value, record) => (
-                            <div className="flex items-center gap-2 text-white">
-                              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">
+                            <div className="flex items-center gap-2 text-white min-w-0">
+                              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold flex-shrink-0">
                                 {value?.charAt(0)?.toUpperCase() || '?'}
                               </div>
-                              <div className="flex flex-col">
-                                <span className="font-medium">{value}</span>
-                                <span className="text-gray-400 text-xs">{record.department}</span>
+                              <div className="flex flex-col min-w-0 flex-1">
+                                <span className="font-medium truncate" title={value}>{value}</span>
+                                <span className="text-gray-400 text-xs truncate" title={record.department}>{record.department}</span>
                               </div>
                             </div>
                           ),
@@ -290,36 +291,52 @@ const ChapterMentorManagement = () => {
                           title: 'Email',
                           dataIndex: 'email',
                           key: 'email',
-                          render: (val) => <span className="text-gray-300">{val}</span>,
+                          width: 200,
+                          ellipsis: { showTitle: false },
+                          render: (val) => (
+                            <span className="text-gray-300 truncate block" title={val}>{val}</span>
+                          ),
                         },
-                          {
+                        {
                           title: 'Điện thoại',
                           dataIndex: 'phone',
                           key: 'phone',
-                          render: (val) => <span className="text-gray-300">{val}</span>,
+                          width: 150,
+                          ellipsis: { showTitle: false },
+                          render: (val) => (
+                            <span className="text-gray-300 truncate block" title={val}>{val || '—'}</span>
+                          ),
                         },
                         {
                           title: 'Chức vụ',
                           dataIndex: 'position',
                           key: 'position',
-                          render: (val) => <Tag color="purple">{val}</Tag>,
+                          width: 150,
+                          ellipsis: { showTitle: false },
+                          render: (val) => (
+                            <Tag color="purple" className="truncate max-w-full" title={val}>
+                              {val || '—'}
+                            </Tag>
+                          ),
                         },
                         {
                           title: 'Trạng thái',
                           dataIndex: 'status',
                           key: 'status',
+                          width: 120,
                           render: (status) => <StatusBadge status={status} />,
                         },
                         {
                           title: 'CV/Portfolio',
                           key: 'cv',
+                          width: 120,
                           render: (_, record) =>
                             record.cv ? (
                               <a
                                 href={record.cv}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-emerald-400 hover:text-emerald-300"
+                                className="text-emerald-400 hover:text-emerald-300 whitespace-nowrap"
                               >
                                 Xem
                               </a>
@@ -331,20 +348,26 @@ const ChapterMentorManagement = () => {
                           title: 'Ngày gửi',
                           dataIndex: 'submittedAt',
                           key: 'submittedAt',
-                          render: (val) => <span className="text-gray-300">{val}</span>,
+                          width: 180,
+                          ellipsis: { showTitle: false },
+                          render: (val) => (
+                            <span className="text-gray-300 truncate block" title={val}>{val || '—'}</span>
+                          ),
                         },
                         {
                           title: 'Thao tác',
                           key: 'actions',
+                          width: 180,
+                          fixed: 'right',
                           render: (_, record) => {
                             const isPending = record.status === 'pending';
                             return (
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <Button
                                   size="small"
                                   icon={<EyeOutlined />}
                                   onClick={() => showModal(record)}
-                                  className="bg-white/5 text-white border-white/20"
+                                  className="bg-white/5 text-white border-white/20 whitespace-nowrap"
                                 >
                                   Xem
                                 </Button>
@@ -356,6 +379,7 @@ const ChapterMentorManagement = () => {
                                       onClick={() => handleApprove(record.id, record.hackathonId)}
                                       className="bg-emerald-600 text-white border-0"
                                       loading={approveMutation.isPending}
+                                      title="Phê duyệt"
                                     />
                                     <Button
                                       size="small"
@@ -363,6 +387,7 @@ const ChapterMentorManagement = () => {
                                       onClick={() => showModal(record)}
                                       className="bg-red-600 text-white border-0"
                                       loading={rejectMutation.isPending}
+                                      title="Từ chối"
                                     />
                                   </>
                                 )}
@@ -374,6 +399,7 @@ const ChapterMentorManagement = () => {
                       dataSource={filteredApplications}
                       rowKey="id"
                       pagination={{ pageSize: 8, showSizeChanger: true }}
+                      scroll={{ x: 'max-content' }}
                       className="[&_.ant-table]:bg-transparent [&_th]:!bg-white/5 [&_th]:!text-white [&_td]:!text-gray-300 [&_td]:border-white/10 [&_th]:border-white/10 [&_tr:hover_td]:!bg-white/5"
                     />
                   </Card>
