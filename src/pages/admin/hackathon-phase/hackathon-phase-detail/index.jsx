@@ -507,6 +507,7 @@ const HackathonPhaseDetail = () => {
           dataIndex: 'weight',
           key: 'weight',
           className: 'text-gray-400',
+          render: (weight) => (weight != null ? `${weight} %` : '—'),
         },
       ],
       actions: {

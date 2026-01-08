@@ -5,15 +5,12 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import {
   Bell,
   BookOpen,
-  ChevronDown,
   Home,
-  LogOut,
   MessageSquare,
   Target,
   Trophy,
-  User,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 import {
@@ -24,7 +21,7 @@ import {
   useRejectTeamInvite,
 } from '../../hooks/student/notification';
 import { useUserData } from '../../hooks/useUserData';
-import { useLogout } from '../../hooks/useLogout';
+import ProfileDropdown from '../ui/ProfileDropdown';
 
 dayjs.extend(relativeTime);
 
@@ -67,7 +64,6 @@ const mockNotifications = [
 const MentorLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
 
@@ -106,7 +102,6 @@ const MentorLayout = () => {
   const acceptInvite = useAcceptTeamInvite();
   const rejectInvite = useRejectTeamInvite();
   const { userInfo: authUser } = useUserData();
-  const mutationLogout = useLogout();
 
   const recentNotifications = notifications.slice(0, 5);
 
@@ -157,10 +152,7 @@ const MentorLayout = () => {
     return dayjs(timestamp).format('DD/MM/YYYY HH:mm');
   };
 
-  const formatTime = (timestamp) => {
-    if (!timestamp) return '';
-    return dayjs(timestamp).fromNow();
-  };
+
 
   const handleNotificationClick = (notification) => {
     const notificationId = notification.notificationId || notification.id;
@@ -213,6 +205,18 @@ const MentorLayout = () => {
     }
   };
 
+  // Close notification on ESC key
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isNotificationOpen) {
+        setIsNotificationOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isNotificationOpen]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation - Top bar */}
@@ -255,7 +259,6 @@ const MentorLayout = () => {
                 <button
                   onClick={() => {
                     setIsNotificationOpen(!isNotificationOpen);
-                    setIsDropdownOpen(false);
                   }}
                   className="relative p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400/20"
                 >
@@ -379,83 +382,13 @@ const MentorLayout = () => {
                 )}
               </div>
 
-              {/* Dropdown Avatar */}
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setIsDropdownOpen(!isDropdownOpen);
-                    setIsNotificationOpen(false);
-                  }}
-                  className="flex items-center space-x-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400/20"
-                >
-                  <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-
-                  <ChevronDown
-                    className={`w-4 h-4 text-white transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-
-                {isDropdownOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setIsDropdownOpen(false)}
-                    />
-
-                    <div className="absolute right-0 top-full mt-2 w-72 bg-darkv2-secondary/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50">
-                      <div className="p-4 border-b border-white/10">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center">
-                            <User className="w-6 h-6 text-white" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-white font-medium truncate">
-                              {userData.name}
-                            </p>
-                            <p className="text-muted-foreground text-sm truncate">
-                              {userData.email}
-                            </p>
-                            <p className="text-green-400 text-xs font-medium">
-                              {userData.role}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="py-2">
-                        <button
-                          onClick={() => {
-                            handleNavigate(
-                              PATH_NAME.MENTOR_PROFILE ||
-                                PATH_NAME.STUDENT_PROFILE,
-                            );
-                            setIsDropdownOpen(false);
-                          }}
-                          className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
-                        >
-                          <User className="w-5 h-5 text-muted-foreground" />
-                          <span className="text-white">Hồ sơ cá nhân</span>
-                        </button>
-
-                        <div className="border-t border-white/10 my-2"></div>
-
-                        <button
-                          onClick={() => {
-                            setIsDropdownOpen(false);
-                            mutationLogout();
-                          }}
-                          className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-500/10 transition-colors"
-                        >
-                          <LogOut className="w-5 h-5 text-red-400" />
-                          <span className="text-red-400">Đăng xuất</span>
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+              {/* Profile Dropdown */}
+              <ProfileDropdown
+                userData={userData}
+                profilePath={PATH_NAME.MENTOR_PROFILE || PATH_NAME.STUDENT_PROFILE}
+                profileLabel="Hồ sơ cá nhân"
+                onCloseNotification={() => setIsNotificationOpen(false)}
+              />
             </div>
           </div>
 

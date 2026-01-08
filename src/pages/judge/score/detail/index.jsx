@@ -204,7 +204,7 @@ const ScoreDetail = () => {
                       <div className="space-y-2">
                         <div>
                           <span className="text-gray-400">Trọng số:</span>
-                          <span className="text-white ml-2 font-semibold">{criterion.weight}</span>
+                          <span className="text-white ml-2 font-semibold">{criterion.weight} %</span>
                         </div>
                       </div>
                     ),

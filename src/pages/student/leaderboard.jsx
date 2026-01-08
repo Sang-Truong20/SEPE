@@ -1,4 +1,4 @@
-import { CrownOutlined, FilterOutlined, StarOutlined } from '@ant-design/icons';
+import { FilterOutlined, TrophyOutlined } from '@ant-design/icons';
 import { Button, Card, Select, Table, Tabs } from 'antd';
 import { useMemo, useState } from 'react';
 import { useGetHackathons } from '../../hooks/student/hackathon';
@@ -35,17 +35,31 @@ const StudentLeaderboard = () => {
       key: 'rank',
       width: 80,
       render: (rank) => {
-        let icon = null;
-        if (rank === 1) icon = <CrownOutlined className="text-yellow-400" />;
-        else if (rank === 2) icon = <CrownOutlined className="text-gray-400" />;
-        else if (rank === 3) icon = <StarOutlined className="text-amber-600" />;
-        else icon = <span className="text-text-secondary">{rank}</span>;
-
-        return (
-          <div className="flex items-center gap-2">
-            {icon}
-          </div>
-        );
+        if (rank === 1) {
+          return (
+            <div className="flex items-center justify-center">
+              <TrophyOutlined className="text-yellow-400 text-xl" />
+            </div>
+          );
+        } else if (rank === 2) {
+          return (
+            <div className="flex items-center justify-center">
+              <TrophyOutlined className="text-gray-300 text-xl" />
+            </div>
+          );
+        } else if (rank === 3) {
+          return (
+            <div className="flex items-center justify-center">
+              <TrophyOutlined className="text-amber-600 text-xl" />
+            </div>
+          );
+        } else {
+          return (
+            <div className="flex items-center justify-center">
+              <span className="text-text-secondary font-medium">{rank}</span>
+            </div>
+          );
+        }
       },
     },
     {

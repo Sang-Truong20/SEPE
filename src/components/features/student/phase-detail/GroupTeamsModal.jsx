@@ -1,8 +1,30 @@
 import { TeamOutlined, TrophyOutlined } from '@ant-design/icons';
 import { Modal, Spin, Table } from 'antd';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 const GroupTeamsModal = ({ visible, onClose, groupTeams, loading }) => {
+  // Sort teams by averageScore descending (highest first) and recalculate rank
+  const sortedTeams = useMemo(() => {
+    if (!groupTeams || groupTeams.length === 0) return [];
+    
+    // Create a copy to avoid mutating original array
+    const teams = [...groupTeams];
+    
+    // Sort by averageScore descending (highest first)
+    teams.sort((a, b) => {
+      const scoreA = a.averageScore || 0;
+      const scoreB = b.averageScore || 0;
+      return scoreB - scoreA; // Descending order
+    });
+    
+    // Recalculate rank after sorting
+    teams.forEach((team, index) => {
+      team.rank = index + 1;
+    });
+    
+    return teams;
+  }, [groupTeams]);
+
   return (
     <Modal
       title={
@@ -21,9 +43,9 @@ const GroupTeamsModal = ({ visible, onClose, groupTeams, loading }) => {
         <div className="flex items-center justify-center py-8">
           <Spin size="large" />
         </div>
-      ) : groupTeams.length > 0 ? (
+      ) : sortedTeams.length > 0 ? (
         <Table
-          dataSource={groupTeams}
+          dataSource={sortedTeams}
           rowKey={(record) => record.groupTeamId || record.teamId || record.id}
           pagination={false}
           columns={[
@@ -31,8 +53,8 @@ const GroupTeamsModal = ({ visible, onClose, groupTeams, loading }) => {
               title: 'Hạng',
               key: 'rank',
               width: 80,
-              render: (_, record, index) => {
-                const rank = record.rank || index + 1;
+              render: (_, record) => {
+                const rank = record.rank;
                 if (rank === 1) return <TrophyOutlined className="text-yellow-400 text-xl" />;
                 if (rank === 2) return <TrophyOutlined className="text-gray-400 text-xl" />;
                 if (rank === 3) return <TrophyOutlined className="text-amber-600 text-xl" />;

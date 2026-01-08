@@ -156,7 +156,7 @@ const TrackDetailModal = ({
                         )}
                         {criterion.weight && (
                           <p className="text-slate-400 text-xs mt-2">
-                            Trọng số: {criterion.weight} điểm
+                            Trọng số: {criterion.weight} %
                           </p>
                         )}
                       </div>
