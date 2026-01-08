@@ -7,19 +7,13 @@ import {
   TeamList,
   JoinTeamModal,
   SearchTeamsTab,
-  JoinRequestsTab,
-  TeamJoinRequestsTab,
 } from '../../components/features/student/team';
 import {
   useCreateTeam,
   useGetMyTeams,
   useGetTeams,
 } from '../../hooks/student/team';
-import {
-  useGetMyTeamJoinRequests,
-  useCreateTeamJoinRequest,
-  useGetTeamJoinRequestsToMyTeams,
-} from '../../hooks/student/team-join-request';
+import { useCreateTeamJoinRequest } from '../../hooks/student/team-join-request';
 import {
   useGetTeamMembers,
   useLeaveTeam,
@@ -55,28 +49,6 @@ const StudentTeams = () => {
   const leaveTeamMutation = useLeaveTeam();
   const createJoinRequestMutation = useCreateTeamJoinRequest();
   const { userInfo } = useUserData();
-
-  const { data: joinRequestsData, isLoading: joinRequestsLoading } =
-    useGetMyTeamJoinRequests();
-
-  // Extract join requests from response
-  const joinRequests = Array.isArray(joinRequestsData)
-    ? joinRequestsData
-    : joinRequestsData?.data
-      ? joinRequestsData.data
-      : [];
-
-  const {
-    data: teamJoinRequestsData,
-    isLoading: teamJoinRequestsLoading,
-    refetch: refetchTeamJoinRequests,
-  } = useGetTeamJoinRequestsToMyTeams();
-
-  const teamJoinRequests = Array.isArray(teamJoinRequestsData)
-    ? teamJoinRequestsData
-    : teamJoinRequestsData?.data
-      ? teamJoinRequestsData.data
-      : [];
 
   // My teams from /Team/my-teams
   const myTeamsArray = Array.isArray(myTeamsData)
@@ -252,22 +224,6 @@ const StudentTeams = () => {
     />
   );
 
-  const renderInvitationsTab = () => (
-    <JoinRequestsTab
-      joinRequests={joinRequests}
-      joinRequestsLoading={joinRequestsLoading}
-    />
-  );
-
-  const renderTeamJoinRequestsTab = () => (
-    <TeamJoinRequestsTab
-      requests={teamJoinRequests}
-      isLoading={teamJoinRequestsLoading}
-      onRefetchRequests={refetchTeamJoinRequests}
-      showRespondButton={false}
-    />
-  );
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -311,16 +267,6 @@ const StudentTeams = () => {
             key: 'search',
             label: 'Tìm team',
             children: renderSearchTeamsTab(),
-          },
-          {
-            key: 'invitations',
-            label: 'Lời mời',
-            children: renderInvitationsTab(),
-          },
-          {
-            key: 'team-join-requests',
-            label: 'Yêu cầu tham gia',
-            children: renderTeamJoinRequestsTab(),
           },
         ]}
         className="[&_.ant-tabs-tab]:text-text-secondary [&_.ant-tabs-tab-active]:text-primary [&_.ant-tabs-ink-bar]:bg-primary [&_.ant-tabs-content]:text-white"
