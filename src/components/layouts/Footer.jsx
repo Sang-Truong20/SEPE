@@ -90,7 +90,7 @@ const Footer = () => {
 
         <div className="border-t border-white/10 mt-10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs md:text-sm text-gray-500 text-center md:text-left">
-            © 2025{' '}
+            © {new Date().getFullYear()}{' '}
             <span className="text-white font-medium">SEAL Hackathon</span> · FPT
             University. Tất cả quyền được bảo lưu.
           </p>

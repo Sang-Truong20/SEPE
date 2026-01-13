@@ -1,18 +1,22 @@
-import { CheckOutlined, ClockCircleOutlined, CloseOutlined } from '@ant-design/icons';
+import {
+  CheckOutlined,
+  ClockCircleOutlined,
+  CloseOutlined,
+} from '@ant-design/icons';
 import { Button, Modal, Popconfirm } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import {
-  BarChart3,
-  Bell,
-  Home,
-  Trophy,
-  Users,
-} from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import { BarChart3, Bell, Home, Trophy, Users } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
-import { useAcceptTeamInvite, useGetNotifications, useGetUnreadCount, useMarkAsRead, useRejectTeamInvite } from '../../hooks/student/notification';
+import {
+  useAcceptTeamInvite,
+  useGetNotifications,
+  useGetUnreadCount,
+  useMarkAsRead,
+  useRejectTeamInvite,
+} from '../../hooks/student/notification';
 import { useGetMyVerification } from '../../hooks/student/verify';
 import { useUserData } from '../../hooks/useUserData';
 import ProfileDropdown from '../ui/ProfileDropdown';
@@ -24,7 +28,8 @@ const StudentLayout = () => {
   const navigate = useNavigate();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
-  const { data: notificationsData, isLoading: notificationsLoading } = useGetNotifications();
+  const { data: notificationsData, isLoading: notificationsLoading } =
+    useGetNotifications();
 
   const notifications = Array.isArray(notificationsData)
     ? notificationsData
@@ -42,17 +47,19 @@ const StudentLayout = () => {
   const { userInfo: authUser } = useUserData();
   const { data: verificationData } = useGetMyVerification();
 
-  const recentNotifications = Array.isArray(notifications) ? notifications.slice(0, 5) : [];
+  const recentNotifications = Array.isArray(notifications)
+    ? notifications.slice(0, 5)
+    : [];
 
   // Get verification status from verificationData
   const getVerificationStatus = () => {
     if (!verificationData) return undefined;
-    
+
     // Handle both response structures
-    const status = verificationData?.hasSubmitted 
-      ? verificationData?.data?.status 
+    const status = verificationData?.hasSubmitted
+      ? verificationData?.data?.status
       : verificationData?.status;
-    
+
     return status === 'Approved';
   };
 
@@ -99,8 +106,6 @@ const StudentLayout = () => {
     return dayjs(timestamp).format('DD/MM/YYYY HH:mm');
   };
 
-
-
   const handleNotificationClick = (notification) => {
     const notificationId = notification.notificationId || notification.id;
     if (!notification.isRead && notificationId) {
@@ -113,10 +118,14 @@ const StudentLayout = () => {
     const teamId = notification.relatedId || notification.teamId;
     if (teamId) {
       acceptInvite.mutate(
-        { notificationId: notification.notificationId || notification.id, teamId },
+        {
+          notificationId: notification.notificationId || notification.id,
+          teamId,
+        },
         {
           onSuccess: () => {
-            const notificationId = notification.notificationId || notification.id;
+            const notificationId =
+              notification.notificationId || notification.id;
             if (notificationId) {
               markAsRead.mutate(notificationId);
             }
@@ -131,10 +140,14 @@ const StudentLayout = () => {
     const teamId = notification.relatedId || notification.teamId;
     if (teamId) {
       rejectInvite.mutate(
-        { notificationId: notification.notificationId || notification.id, teamId },
+        {
+          notificationId: notification.notificationId || notification.id,
+          teamId,
+        },
         {
           onSuccess: () => {
-            const notificationId = notification.notificationId || notification.id;
+            const notificationId =
+              notification.notificationId || notification.id;
             if (notificationId) {
               markAsRead.mutate(notificationId);
             }
@@ -230,8 +243,9 @@ const StudentLayout = () => {
                     <div className="absolute right-0 top-full mt-2 w-96 bg-darkv2-secondary/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 max-h-[600px] flex flex-col">
                       {/* Header */}
                       <div className="p-4 border-b border-white/10 flex items-center justify-between">
-                        <h3 className="text-white font-semibold text-lg">Thông báo</h3>
-
+                        <h3 className="text-white font-semibold text-lg">
+                          Thông báo
+                        </h3>
                       </div>
 
                       {/* Notifications List */}
@@ -247,11 +261,16 @@ const StudentLayout = () => {
 
                               return (
                                 <div
-                                  key={notification.notificationId || notification.id}
+                                  key={
+                                    notification.notificationId ||
+                                    notification.id
+                                  }
                                   className={`p-4 hover:bg-white/5 transition-colors cursor-pointer ${
                                     isUnread ? 'bg-blue-500/5' : ''
                                   }`}
-                                  onClick={() => handleNotificationClick(notification)}
+                                  onClick={() =>
+                                    handleNotificationClick(notification)
+                                  }
                                 >
                                   <div className="flex items-start space-x-3">
                                     {isUnread && (
@@ -260,13 +279,17 @@ const StudentLayout = () => {
                                     <div className="flex-1 min-w-0">
                                       <p
                                         className={`text-sm font-medium truncate ${
-                                          isUnread ? 'text-white' : 'text-muted-foreground'
+                                          isUnread
+                                            ? 'text-white'
+                                            : 'text-muted-foreground'
                                         }`}
                                       >
-                                        {notification.title || notification.message}
+                                        {notification.title ||
+                                          notification.message}
                                       </p>
                                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                        {notification.message || notification.content}
+                                        {notification.message ||
+                                          notification.content}
                                       </p>
                                       <p className="text-xs text-muted-foreground mt-2">
                                         {dayjs(
@@ -349,7 +372,9 @@ const StudentLayout = () => {
         open={!!selectedNotification}
         title={
           <div className="text-white">
-            {selectedNotification?.title || selectedNotification?.message || 'Chi tiết thông báo'}
+            {selectedNotification?.title ||
+              selectedNotification?.message ||
+              'Chi tiết thông báo'}
           </div>
         }
         onCancel={() => setSelectedNotification(null)}
@@ -363,7 +388,11 @@ const StudentLayout = () => {
           >
             Xem tất cả thông báo
           </Button>,
-          <Button key="close" type="primary" onClick={() => setSelectedNotification(null)}>
+          <Button
+            key="close"
+            type="primary"
+            onClick={() => setSelectedNotification(null)}
+          >
             Đóng
           </Button>,
         ]}
@@ -376,18 +405,24 @@ const StudentLayout = () => {
             <div className="p-4 rounded-lg border border-white/10 bg-white/5 text-sm space-y-3">
               <div className="flex justify-between gap-2">
                 <span className="text-gray-400">Loại</span>
-                <span className="text-white">{selectedNotification.type || 'N/A'}</span>
+                <span className="text-white">
+                  {selectedNotification.type || 'N/A'}
+                </span>
               </div>
               <div className="flex justify-between gap-2">
                 <span className="text-gray-400">Tiêu đề</span>
                 <span className="text-white text-right">
-                  {selectedNotification.title || selectedNotification.message || '—'}
+                  {selectedNotification.title ||
+                    selectedNotification.message ||
+                    '—'}
                 </span>
               </div>
               <div className="flex justify-between gap-2">
                 <span className="text-gray-400">Nội dung</span>
                 <span className="text-white text-right">
-                  {selectedNotification.message || selectedNotification.content || '—'}
+                  {selectedNotification.message ||
+                    selectedNotification.content ||
+                    '—'}
                 </span>
               </div>
               <div className="flex justify-between gap-2">
@@ -402,18 +437,22 @@ const StudentLayout = () => {
                   )}
                 </span>
               </div>
-              {(selectedNotification.teamName || selectedNotification.teamId) && (
+              {(selectedNotification.teamName ||
+                selectedNotification.teamId) && (
                 <div className="flex justify-between gap-2">
                   <span className="text-gray-400">Đội</span>
                   <span className="text-white text-right">
-                    {selectedNotification.teamName || selectedNotification.teamId}
+                    {selectedNotification.teamName ||
+                      selectedNotification.teamId}
                   </span>
                 </div>
               )}
               {selectedNotification.relatedId && (
                 <div className="flex justify-between gap-2">
                   <span className="text-gray-400">Liên quan ID</span>
-                  <span className="text-white text-right">{selectedNotification.relatedId}</span>
+                  <span className="text-white text-right">
+                    {selectedNotification.relatedId}
+                  </span>
                 </div>
               )}
             </div>
@@ -453,11 +492,7 @@ const StudentLayout = () => {
                     loading: rejectInvite.isPending,
                   }}
                 >
-                  <Button
-                    danger
-                    size="small"
-                    icon={<CloseOutlined />}
-                  >
+                  <Button danger size="small" icon={<CloseOutlined />}>
                     Từ chối
                   </Button>
                 </Popconfirm>
@@ -466,7 +501,9 @@ const StudentLayout = () => {
                     size="small"
                     className="border-white/20 bg-white/5 hover:bg-white/10 text-white"
                     onClick={() => {
-                      navigate(`${PATH_NAME.STUDENT_TEAMS}/${selectedNotification.teamId}`);
+                      navigate(
+                        `${PATH_NAME.STUDENT_TEAMS}/${selectedNotification.teamId}`,
+                      );
                       setSelectedNotification(null);
                     }}
                   >
@@ -594,7 +631,8 @@ const StudentLayout = () => {
 
           <div className="border-t border-white/10 mt-8 pt-8 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              © 2024 SEPE Student Portal. Tất cả quyền được bảo lưu.
+              © {new Date().getFullYear()} SEPE Student Portal. Tất cả quyền
+              được bảo lưu.
             </p>
           </div>
         </div>
