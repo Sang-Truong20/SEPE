@@ -1,42 +1,42 @@
 // components/partner/scores/PhaseScores.jsx
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  ConfigProvider,
-  theme,
-  Button,
-  Card,
-  Tag,
-  Modal,
-  Form,
-  InputNumber,
-  Input,
-  Space,
-  message,
-  Collapse,
-  Row,
-  Col,
-  Empty,
-  Typography,
-  Alert,
-  Tabs,
-} from 'antd';
 import {
   ArrowLeftOutlined,
-  TrophyOutlined,
   EditOutlined,
-  FileTextOutlined,
   FileSearchOutlined,
+  FileTextOutlined,
+  TrophyOutlined,
 } from '@ant-design/icons';
-import EntityTable from '../../../components/ui/EntityTable.jsx';
-import { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query'; // ← THÊM IMPORT NÀY
-import { useSubmission } from '../../../hooks/admin/submission/useSubmission.js';
-import { useCriteria } from '../../../hooks/admin/criterias/useCriteria.js';
-import { useTracks } from '../../../hooks/admin/tracks/useTracks.js';
-import { useScores } from '../../../hooks/admin/score/useScore.js';
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Collapse,
+  ConfigProvider,
+  Empty,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Row,
+  Space,
+  Tabs,
+  Tag,
+  Typography,
+  message,
+  theme,
+} from 'antd';
+import { useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import EntityTable from '../../../components/ui/EntityTable.jsx';
 import { PATH_NAME } from '../../../constants/index.js';
-import { useUsers } from '../../../hooks/admin/users/useUsers.js';
 import { useAppeal } from '../../../hooks/admin/appeal/useAppeal.js';
+import { useCriteria } from '../../../hooks/admin/criterias/useCriteria.js';
+import { useScores } from '../../../hooks/admin/score/useScore.js';
+import { useSubmission } from '../../../hooks/admin/submission/useSubmission.js';
+import { useTracks } from '../../../hooks/admin/tracks/useTracks.js';
+import { useUsers } from '../../../hooks/admin/users/useUsers.js';
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 
@@ -49,53 +49,77 @@ const PhaseScores = () => {
   const { fetchSubmissionsByPhase } = useSubmission();
   const { fetchCriteria } = useCriteria();
   const { fetchTracks } = useTracks();
-  const { createScore, reScore, updateScoreById, fetchMyScoresGrouped } = useScores();
+  const { createScore, reScore, updateScoreById, fetchMyScoresGrouped } =
+    useScores();
   const { fetchUsers } = useUsers();
   const { fetchAppealsByPhase } = useAppeal();
 
   const { data: allTracks = [], isLoading: tracksLoading } = fetchTracks;
-  const { data: submissionsData = [], isLoading: submissionsLoading } = fetchSubmissionsByPhase(phaseId);
-  const { data: allCriteria = [], isLoading: criteriaLoading } = fetchCriteria(phaseId);
+  const { data: submissionsData = [], isLoading: submissionsLoading } =
+    fetchSubmissionsByPhase(phaseId);
+  const { data: allCriteria = [], isLoading: criteriaLoading } =
+    fetchCriteria(phaseId);
   const { data: allScore = [] } = fetchMyScoresGrouped(phaseId);
   const { data: allUsers = [] } = fetchUsers;
   const { data: appealsData = [] } = fetchAppealsByPhase(phaseId);
 
-  const [detailsModal, setDetailsModal] = useState({ open: false, submission: null, track: null });
+  const [detailsModal, setDetailsModal] = useState({
+    open: false,
+    submission: null,
+    track: null,
+  });
   const [editModal, setEditModal] = useState({
     open: false,
     submission: null,
     track: null,
     criteria: [],
     isReScore: false,
-    appeal: null
+    appeal: null,
   });
-  const [submissionModal, setSubmissionModal] = useState({ open: false, submission: null });
+  const [submissionModal, setSubmissionModal] = useState({
+    open: false,
+    submission: null,
+  });
   const [form] = Form.useForm();
 
   // ===== DATA 1: Chấm điểm thường - từ fetchSubmissionsByPhase =====
   const enrichedSubmissions = useMemo(() => {
     return submissionsData
-      ?.filter(s => s.isFinal)
-      ?.map(submission => {
+      ?.filter((s) => s.isFinal)
+      ?.map((submission) => {
         const track = allTracks?.find(
           (t) =>
             t?.name === submission?.trackName &&
-            String(t?.phaseId ?? '') === String(phaseId ?? '')
+            String(t?.phaseId ?? '') === String(phaseId ?? ''),
         );
         const challenges = track?.challenges || [];
 
-        const relevantCriteria = allCriteria?.filter(c => !c?.trackId || c?.trackId === track?.trackId);
+        const relevantCriteria = allCriteria?.filter(
+          (c) => !c?.trackId || c?.trackId === track?.trackId,
+        );
 
-        const scores = allScore
-          ?.filter((s) => s?.submissionId === submission?.submissionId)
-          ?.pop()
-          ?.scores || [];
+        const scores =
+          allScore
+            ?.filter((s) => s?.submissionId === submission?.submissionId)
+            ?.pop()?.scores || [];
+        // Tính tổng trọng số để chuẩn hóa thành phần trăm
+        const totalWeight = relevantCriteria?.reduce(
+          (sum, c) => sum + (c?.weight || 0),
+          0,
+        );
         const totalWeighted = scores?.reduce((sum, s) => {
-          const crit = relevantCriteria?.find(c => c?.criteriaId === s?.criteriaId);
-          return sum + (s?.scoreValue || 0) * (crit?.weight || 1);
+          const crit = relevantCriteria?.find(
+            (c) => c?.criteriaId === s?.criteriaId,
+          );
+          if (!crit || !totalWeight) return sum;
+          // Nhân điểm với phần trăm trọng số (weight / totalWeight)
+          const weightPercent = (crit?.weight || 0) / totalWeight;
+          return sum + (s?.scoreValue || 0) * weightPercent;
         }, 0);
         submission.scores = scores;
-        const submittedBy = allUsers?.find(u => u?.userId === submission?.submittedBy)?.fullName || '--';
+        const submittedBy =
+          allUsers?.find((u) => u?.userId === submission?.submittedBy)
+            ?.fullName || '--';
 
         return {
           ...submission,
@@ -106,7 +130,11 @@ const PhaseScores = () => {
           totalScore: totalWeighted?.toFixed(2),
           scoredCount: scores?.length,
           criteriaCount: relevantCriteria?.length,
-          status: scores?.length === relevantCriteria?.length && scores?.every(s => s?.scoreValue != null) ? 'scored' : 'pending',
+          status:
+            scores?.length === relevantCriteria?.length &&
+            scores?.every((s) => s?.scoreValue != null)
+              ? 'scored'
+              : 'pending',
           isReScore: false,
         };
       })
@@ -116,124 +144,172 @@ const PhaseScores = () => {
   // ===== DATA 2: Chấm phúc khảo - từ fetchAppealsByPhase =====
   const enrichedAppeals = useMemo(() => {
     // Chỉ lấy appeals có status = 'Approved' và appealType = 'Score'
-    const approvedAppeals = appealsData?.data?.filter(
-      appeal => appeal?.status === 'Approved'
-    ) || [];
+    const approvedAppeals =
+      appealsData?.data?.filter((appeal) => appeal?.status === 'Approved') ||
+      [];
 
-    return approvedAppeals?.map(appeal => {
-      // Tìm submission tương ứng
-      const submission = submissionsData?.find(s => s?.submissionId === appeal?.submissionId);
+    return approvedAppeals
+      ?.map((appeal) => {
+        // Tìm submission tương ứng
+        const submission = submissionsData?.find(
+          (s) => s?.submissionId === appeal?.submissionId,
+        );
 
-      const track = allTracks?.find(
-        (t) =>
-          t?.name === submission?.trackName &&
-          String(t?.phaseId ?? '') === String(phaseId ?? '')
-      );
-      const challenges = track?.challenges || [];
-      const relevantCriteria = allCriteria?.filter(c => !c?.trackId || c?.trackId === track?.trackId);
+        const track = allTracks?.find(
+          (t) =>
+            t?.name === submission?.trackName &&
+            String(t?.phaseId ?? '') === String(phaseId ?? ''),
+        );
+        const challenges = track?.challenges || [];
+        const relevantCriteria = allCriteria?.filter(
+          (c) => !c?.trackId || c?.trackId === track?.trackId,
+        );
 
-      const scores = allScore
-        ?.filter((s) => s?.submissionId === appeal?.submissionId)
-        ?.pop()
-        ?.scores || [];
-      const totalWeighted = scores?.reduce((sum, s) => {
-        const crit = relevantCriteria?.find(c => c?.criteriaId === s?.criteriaId);
-        return sum + (s?.scoreValue || 0) * (crit?.weight || 1);
-      }, 0);
-
-      const submittedBy = allUsers?.find(u => u?.userId === submission?.submittedBy)?.fullName || '--';
-
-      return {
-        ...submission,
-        appeal,
-        appealId: appeal?.appealId,
-        teamName: appeal?.teamName || submission?.teamName,
-        track,
-        submittedBy,
-        challenges,
-        relevantCriteria,
-        scores,
-        totalScore: totalWeighted?.toFixed(2),
-        scoredCount: scores?.length,
-        criteriaCount: relevantCriteria?.length,
-        isReScore: true, // Flag để biết đây là chấm phúc khảo
-      };
-    })
-    ?.sort((a, b) => new Date(b?.appeal?.reviewedAt) - new Date(a?.appeal?.reviewedAt)); // Sort by review date
-  }, [appealsData, submissionsData, allTracks, allCriteria, phaseId, allScore, allUsers]);
-
-  const tableModel = useMemo(() => ({
-    entityName: 'Bảng điểm các đội',
-    rowKey: 'id',
-    columns: [
-      {
-        title: 'Đội thi',
-        dataIndex: 'teamName',
-        key: 'teamName',
-        width: 180,
-        render: text => <span className="font-medium">{text || 'Chưa đặt tên'}</span>,
-      },
-      {
-        title: 'Hạng mục',
-        dataIndex: ['track', 'name'],
-        key: 'track',
-        render: name => name ? <Tag color="purple">{name}</Tag> : '-',
-      },
-      {
-        title: 'Thử thách',
-        key: 'challenges',
-        type: 'custom',
-        ellipsis: true,
-        width: 500,
-        render: (_, record) => {
-          const challenges = record?.challenges || [];
-          if (challenges?.length === 0) {
-            return <Tag color="default">Chưa có thử thách</Tag>;
-          }
-          return (
-            <Space wrap>
-              {challenges?.map((ch) => (
-                <Button
-                  key={ch?.challengeId}
-                  size="small"
-                  type="primary"
-                  ghost
-                  className="text-xs"
-                >
-                  {ch?.title}
-                </Button>
-              ))}
-            </Space>
+        const scores =
+          allScore
+            ?.filter((s) => s?.submissionId === appeal?.submissionId)
+            ?.pop()?.scores || [];
+        // Tính tổng trọng số để chuẩn hóa thành phần trăm
+        const totalWeight = relevantCriteria?.reduce(
+          (sum, c) => sum + (c?.weight || 0),
+          0,
+        );
+        const totalWeighted = scores?.reduce((sum, s) => {
+          const crit = relevantCriteria?.find(
+            (c) => c?.criteriaId === s?.criteriaId,
           );
-        },
-      },
-      {
-        title: 'Tiêu chí',
-        key: 'criteria',
-        render: (_, r) => <Tag>{r?.scoredCount}/{r?.criteriaCount}</Tag>,
-      },
-      {
-        title: 'Tổng điểm',
-        dataIndex: 'totalScore',
-        key: 'totalScore',
-        render: score => <strong className="text-lg text-green-400">{score}</strong>,
-        sorter: (a, b) => a?.totalScore - b?.totalScore,
-      },
-    ],
-    actions: {
-      view: { tooltip: 'Xem chi tiết', icon: <FileTextOutlined />, className: 'text-blue-400' },
-      edit: { tooltip: 'Chấm điểm', icon: <EditOutlined />, className: 'text-yellow-500' },
-      extra: [
+          if (!crit || !totalWeight) return sum;
+          // Nhân điểm với phần trăm trọng số (weight / totalWeight)
+          const weightPercent = (crit?.weight || 0) / totalWeight;
+          return sum + (s?.scoreValue || 0) * weightPercent;
+        }, 0);
+
+        const submittedBy =
+          allUsers?.find((u) => u?.userId === submission?.submittedBy)
+            ?.fullName || '--';
+
+        return {
+          ...submission,
+          appeal,
+          appealId: appeal?.appealId,
+          teamName: appeal?.teamName || submission?.teamName,
+          track,
+          submittedBy,
+          challenges,
+          relevantCriteria,
+          scores,
+          totalScore: totalWeighted?.toFixed(2),
+          scoredCount: scores?.length,
+          criteriaCount: relevantCriteria?.length,
+          isReScore: true, // Flag để biết đây là chấm phúc khảo
+        };
+      })
+      ?.sort(
+        (a, b) =>
+          new Date(b?.appeal?.reviewedAt) - new Date(a?.appeal?.reviewedAt),
+      ); // Sort by review date
+  }, [
+    appealsData,
+    submissionsData,
+    allTracks,
+    allCriteria,
+    phaseId,
+    allScore,
+    allUsers,
+  ]);
+
+  const tableModel = useMemo(
+    () => ({
+      entityName: 'Bảng điểm các đội',
+      rowKey: 'id',
+      columns: [
         {
-          key: 'viewSubmission',
-          tooltip: (record) => record?.filePath ? 'Xem bài nộp' : 'Không có file',
-          icon: <FileSearchOutlined />,
-          className: 'text-cyan-400',
-          disabled: (record) => !record?.filePath,
+          title: 'Đội thi',
+          dataIndex: 'teamName',
+          key: 'teamName',
+          width: 180,
+          render: (text) => (
+            <span className="font-medium">{text || 'Chưa đặt tên'}</span>
+          ),
+        },
+        {
+          title: 'Hạng mục',
+          dataIndex: ['track', 'name'],
+          key: 'track',
+          render: (name) => (name ? <Tag color="purple">{name}</Tag> : '-'),
+        },
+        {
+          title: 'Thử thách',
+          key: 'challenges',
+          type: 'custom',
+          ellipsis: true,
+          width: 500,
+          render: (_, record) => {
+            const challenges = record?.challenges || [];
+            if (challenges?.length === 0) {
+              return <Tag color="default">Chưa có thử thách</Tag>;
+            }
+            return (
+              <Space wrap>
+                {challenges?.map((ch) => (
+                  <Button
+                    key={ch?.challengeId}
+                    size="small"
+                    type="primary"
+                    ghost
+                    className="text-xs"
+                  >
+                    {ch?.title}
+                  </Button>
+                ))}
+              </Space>
+            );
+          },
+        },
+        {
+          title: 'Tiêu chí',
+          key: 'criteria',
+          render: (_, r) => (
+            <Tag>
+              {r?.scoredCount}/{r?.criteriaCount}
+            </Tag>
+          ),
+        },
+        {
+          title: 'Tổng điểm',
+          dataIndex: 'totalScore',
+          key: 'totalScore',
+          render: (score) => (
+            <strong className="text-lg text-green-400">{score}</strong>
+          ),
+          sorter: (a, b) => a?.totalScore - b?.totalScore,
         },
       ],
-    },
-  }), []);
+      actions: {
+        view: {
+          tooltip: 'Xem chi tiết',
+          icon: <FileTextOutlined />,
+          className: 'text-blue-400',
+        },
+        edit: {
+          tooltip: 'Chấm điểm',
+          icon: <EditOutlined />,
+          className: 'text-yellow-500',
+        },
+        extra: [
+          {
+            key: 'viewSubmission',
+            tooltip: (record) =>
+              record?.filePath ? 'Xem bài nộp' : 'Không có file',
+            icon: <FileSearchOutlined />,
+            className: 'text-cyan-400',
+            disabled: (record) => !record?.filePath,
+          },
+        ],
+      },
+    }),
+    [],
+  );
 
   const handlers = {
     onView: (record) => {
@@ -257,7 +333,7 @@ const PhaseScores = () => {
       form.resetFields();
 
       const fieldValues = {};
-      record?.scores?.forEach(s => {
+      record?.scores?.forEach((s) => {
         fieldValues[`score_${s?.criteriaId}`] = s?.scoreValue;
         fieldValues[`comment_${s?.criteriaId}`] = s?.comment || '';
       });
@@ -275,76 +351,84 @@ const PhaseScores = () => {
   };
 
   const handleSaveScore = () => {
-    form.validateFields().then(values => {
-      const criteriaScores = editModal?.criteria?.map(c => ({
-        criterionId: c?.criteriaId,
-        score: values[`score_${c?.criteriaId}`] || 0,
-        comment: values[`comment_${c?.criteriaId}`] || null,
-      }));
+    form
+      .validateFields()
+      .then((values) => {
+        const criteriaScores = editModal?.criteria?.map((c) => ({
+          criterionId: c?.criteriaId,
+          score: values[`score_${c?.criteriaId}`] || 0,
+          comment: values[`comment_${c?.criteriaId}`] || null,
+        }));
 
-      const payload = {
-        submissionId: editModal?.submission?.submissionId,
-        criteriaScores
-      };
-
-      // Determine which mutation to use based on the situation
-      let mutation;
-      let mutationParams;
-
-      if (editModal?.isReScore && editModal?.appeal?.appealId) {
-        // Use reScore API for approved appeals
-        mutation = reScore;
-        mutationParams = {
-          appealId: editModal.appeal.appealId,
-          payload
+        const payload = {
+          submissionId: editModal?.submission?.submissionId,
+          criteriaScores,
         };
-      } else if (editModal?.existingScores?.length > 0) {
-        // Use updateScoreById for editing existing scores
-        // Note: We need to update each score individually or use the first scoreId
-        const firstScoreId = editModal.existingScores[0]?.scoreId;
-        if (firstScoreId) {
-          mutation = updateScoreById;
+
+        // Determine which mutation to use based on the situation
+        let mutation;
+        let mutationParams;
+
+        if (editModal?.isReScore && editModal?.appeal?.appealId) {
+          // Use reScore API for approved appeals
+          mutation = reScore;
           mutationParams = {
-            scoreId: firstScoreId,
-            payload
+            appealId: editModal.appeal.appealId,
+            payload,
           };
+        } else if (editModal?.existingScores?.length > 0) {
+          // Use updateScoreById for editing existing scores
+          // Note: We need to update each score individually or use the first scoreId
+          const firstScoreId = editModal.existingScores[0]?.scoreId;
+          if (firstScoreId) {
+            mutation = updateScoreById;
+            mutationParams = {
+              scoreId: firstScoreId,
+              payload,
+            };
+          } else {
+            mutation = createScore;
+            mutationParams = payload;
+          }
         } else {
+          // Use createScore for new scores
           mutation = createScore;
           mutationParams = payload;
         }
-      } else {
-        // Use createScore for new scores
-        mutation = createScore;
-        mutationParams = payload;
-      }
 
-      mutation.mutate(mutationParams, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ['myScoresGrouped', phaseId]
-          });
-          queryClient.invalidateQueries({
-            queryKey: ['submissionsByPhase', phaseId]
-          });
-          queryClient.invalidateQueries({
-            queryKey: ['Appeals', 'byPhase', phaseId]
-          });
+        mutation.mutate(mutationParams, {
+          onSuccess: () => {
+            queryClient.invalidateQueries({
+              queryKey: ['myScoresGrouped', phaseId],
+            });
+            queryClient.invalidateQueries({
+              queryKey: ['submissionsByPhase', phaseId],
+            });
+            queryClient.invalidateQueries({
+              queryKey: ['Appeals', 'byPhase', phaseId],
+            });
 
-          setEditModal({ open: false });
-          form.resetFields();
-        },
-        onError: (error) => {
-          console.error('Save score error:', error);
-        }
+            setEditModal({ open: false });
+            form.resetFields();
+          },
+          onError: (error) => {
+            console.error('Save score error:', error);
+          },
+        });
+      })
+      .catch(() => {
+        message.warning('Vui lòng kiểm tra lại thông tin nhập vào!');
       });
-    }).catch(() => {
-      message.warning('Vui lòng kiểm tra lại thông tin nhập vào!');
-    });
   };
 
   const currentSubmission = submissionModal?.submission;
 
-  if (!phaseId) return <div className="text-center py-16 text-gray-400">Vui lòng chọn giai đoạn</div>;
+  if (!phaseId)
+    return (
+      <div className="text-center py-16 text-gray-400">
+        Vui lòng chọn giai đoạn
+      </div>
+    );
 
   return (
     <ConfigProvider
@@ -372,13 +456,18 @@ const PhaseScores = () => {
           <Card className="bg-neutral-900 border border-neutral-800 mb-6">
             <div className="flex justify-between items-center">
               <div>
-                <Title level={3} className="!text-white !mb-1">Bảng điểm Phase {phaseId}</Title>
+                <Title level={3} className="!text-white !mb-1">
+                  Bảng điểm Phase {phaseId}
+                </Title>
                 <Text className="text-gray-400">
-                  Chấm thường: {enrichedSubmissions?.length} đội | Phúc khảo: {enrichedAppeals?.length} bài
+                  Chấm thường: {enrichedSubmissions?.length} đội | Phúc khảo:{' '}
+                  {enrichedAppeals?.length} bài
                 </Text>
               </div>
               <Tag icon={<TrophyOutlined />} color="gold" size="large">
-                Tổng cộng: {(enrichedSubmissions?.length || 0) + (enrichedAppeals?.length || 0)}
+                Tổng cộng:{' '}
+                {(enrichedSubmissions?.length || 0) +
+                  (enrichedAppeals?.length || 0)}
               </Tag>
             </div>
           </Card>
@@ -401,7 +490,9 @@ const PhaseScores = () => {
                   <EntityTable
                     model={tableModel}
                     data={enrichedSubmissions}
-                    loading={submissionsLoading || criteriaLoading || tracksLoading}
+                    loading={
+                      submissionsLoading || criteriaLoading || tracksLoading
+                    }
                     handlers={handlers}
                     emptyText="Chưa có bài nộp cuối cùng"
                   />
@@ -428,7 +519,9 @@ const PhaseScores = () => {
                     <EntityTable
                       model={tableModel}
                       data={enrichedAppeals}
-                      loading={submissionsLoading || criteriaLoading || tracksLoading}
+                      loading={
+                        submissionsLoading || criteriaLoading || tracksLoading
+                      }
                       handlers={handlers}
                       emptyText="Không có bài nào cần chấm phúc khảo"
                     />
@@ -441,10 +534,16 @@ const PhaseScores = () => {
           {/* Modal Bài nộp */}
           <Modal
             open={submissionModal?.open}
-            onCancel={() => setSubmissionModal({ open: false, submission: null })}
+            onCancel={() =>
+              setSubmissionModal({ open: false, submission: null })
+            }
             footer={null}
             width={950}
-            title={<Title level={4}><FileSearchOutlined /> Bài nộp của đội</Title>}
+            title={
+              <Title level={4}>
+                <FileSearchOutlined /> Bài nộp của đội
+              </Title>
+            }
           >
             {currentSubmission ? (
               <div className="space-y-4">
@@ -454,18 +553,45 @@ const PhaseScores = () => {
                   message={
                     <Space direction="vertical" size={2}>
                       <Text strong>{currentSubmission?.teamName}</Text>
-                      <Text>Hạng mục: <Tag color="purple">{currentSubmission?.track?.name || currentSubmission?.trackName}</Tag></Text>
-                      <Text>Nộp lúc: {currentSubmission?.submittedAt ? new Date(currentSubmission.submittedAt).toLocaleString('vi-VN') : '--'}</Text>
+                      <Text>
+                        Hạng mục:{' '}
+                        <Tag color="purple">
+                          {currentSubmission?.track?.name ||
+                            currentSubmission?.trackName}
+                        </Tag>
+                      </Text>
+                      <Text>
+                        Nộp lúc:{' '}
+                        {currentSubmission?.submittedAt
+                          ? new Date(
+                              currentSubmission.submittedAt,
+                            ).toLocaleString('vi-VN')
+                          : '--'}
+                      </Text>
                     </Space>
                   }
                 />
 
-                <Card title="Thông tin bài nộp" className="bg-neutral-900 border border-neutral-800">
+                <Card
+                  title="Thông tin bài nộp"
+                  className="bg-neutral-900 border border-neutral-800"
+                >
                   <Row gutter={[16, 12]}>
-                    <Col span={12}><Text strong>Tiêu đề:</Text> {currentSubmission?.title || 'Chưa có tiêu đề'}</Col>
-                    <Col span={12}><Text strong>Phase:</Text> {currentSubmission?.phaseName || phaseId}</Col>
-                    <Col span={12}><Text strong>Đội thi:</Text> {currentSubmission?.teamName}</Col>
-                    <Col span={12}><Text strong>Người nộp:</Text> {currentSubmission?.submittedBy || '--'}</Col>
+                    <Col span={12}>
+                      <Text strong>Tiêu đề:</Text>{' '}
+                      {currentSubmission?.title || 'Chưa có tiêu đề'}
+                    </Col>
+                    <Col span={12}>
+                      <Text strong>Phase:</Text>{' '}
+                      {currentSubmission?.phaseName || phaseId}
+                    </Col>
+                    <Col span={12}>
+                      <Text strong>Đội thi:</Text> {currentSubmission?.teamName}
+                    </Col>
+                    <Col span={12}>
+                      <Text strong>Người nộp:</Text>{' '}
+                      {currentSubmission?.submittedBy || '--'}
+                    </Col>
                   </Row>
                 </Card>
               </div>
@@ -480,37 +606,62 @@ const PhaseScores = () => {
             onCancel={() => setDetailsModal({ open: false })}
             footer={null}
             width={950}
-            title={<Title level={4}><FileTextOutlined /> Chi tiết bài thi</Title>}
+            title={
+              <Title level={4}>
+                <FileTextOutlined /> Chi tiết bài thi
+              </Title>
+            }
           >
             {detailsModal?.submission && (
               <div className="space-y-6">
-                {detailsModal?.submission?.isReScore && detailsModal?.submission?.appeal && (
-                  <Alert
-                    message={
-                      <Space direction="vertical" size={4}>
-                        <Text strong className="text-orange-500">
-                          🔄 Bài nộp cần chấm phúc khảo - Khiếu nại đã được duyệt
-                        </Text>
-                        <Text><strong>Lý do khiếu nại:</strong> {detailsModal.submission.appeal.reason || detailsModal.submission.appeal.message || 'Không có lý do'}</Text>
-                        {detailsModal.submission.appeal.adminResponse && (
-                          <Text><strong>Phản hồi admin:</strong> {detailsModal.submission.appeal.adminResponse}</Text>
-                        )}
-                        <Text type="secondary" style={{ fontSize: '12px' }}>
-                          <strong>Ngày duyệt:</strong> {detailsModal.submission.appeal.reviewedAt ? new Date(detailsModal.submission.appeal.reviewedAt).toLocaleString('vi-VN') : '--'}
-                        </Text>
-                      </Space>
-                    }
-                    type="warning"
-                    showIcon
-                    banner
-                    className="mb-4"
-                  />
-                )}
+                {detailsModal?.submission?.isReScore &&
+                  detailsModal?.submission?.appeal && (
+                    <Alert
+                      message={
+                        <Space direction="vertical" size={4}>
+                          <Text strong className="text-orange-500">
+                            🔄 Bài nộp cần chấm phúc khảo - Khiếu nại đã được
+                            duyệt
+                          </Text>
+                          <Text>
+                            <strong>Lý do khiếu nại:</strong>{' '}
+                            {detailsModal.submission.appeal.reason ||
+                              detailsModal.submission.appeal.message ||
+                              'Không có lý do'}
+                          </Text>
+                          {detailsModal.submission.appeal.adminResponse && (
+                            <Text>
+                              <strong>Phản hồi admin:</strong>{' '}
+                              {detailsModal.submission.appeal.adminResponse}
+                            </Text>
+                          )}
+                          <Text type="secondary" style={{ fontSize: '12px' }}>
+                            <strong>Ngày duyệt:</strong>{' '}
+                            {detailsModal.submission.appeal.reviewedAt
+                              ? new Date(
+                                  detailsModal.submission.appeal.reviewedAt,
+                                ).toLocaleString('vi-VN')
+                              : '--'}
+                          </Text>
+                        </Space>
+                      }
+                      type="warning"
+                      showIcon
+                      banner
+                      className="mb-4"
+                    />
+                  )}
 
                 <Card title="Thông tin đội thi">
                   <Row gutter={[16, 12]}>
-                    <Col span={12}><Text strong>Đội:</Text> {detailsModal?.submission?.teamName}</Col>
-                    <Col span={12}><Text strong>Hạng mục:</Text> <Tag color="purple">{detailsModal?.track?.name}</Tag></Col>
+                    <Col span={12}>
+                      <Text strong>Đội:</Text>{' '}
+                      {detailsModal?.submission?.teamName}
+                    </Col>
+                    <Col span={12}>
+                      <Text strong>Hạng mục:</Text>{' '}
+                      <Tag color="purple">{detailsModal?.track?.name}</Tag>
+                    </Col>
                     <Col span={24}>
                       <Text strong>Thử thách trong hạng mục:</Text>
                       <div className="mt-2">
@@ -524,57 +675,79 @@ const PhaseScores = () => {
                                 ghost
                                 className="text-xs"
                                 onClick={() =>
-                                  navigate(`${PATH_NAME?.JUDGE_CHALLENGES}/${ch?.challengeId}`)
+                                  navigate(
+                                    `${PATH_NAME?.JUDGE_CHALLENGES}/${ch?.challengeId}`,
+                                  )
                                 }
                               >
                                 {ch?.title}
                               </Button>
                             ))
-                          )  : (
+                          ) : (
                             <Tag color="default">Chưa có thử thách</Tag>
                           )}
                         </Space>
                       </div>
                     </Col>
-
                   </Row>
                 </Card>
 
-                <Card title={<><TrophyOutlined /> Tiêu chí chấm điểm</>}>
+                <Card
+                  title={
+                    <>
+                      <TrophyOutlined /> Tiêu chí chấm điểm
+                    </>
+                  }
+                >
                   {detailsModal?.submission?.relevantCriteria?.length > 0 ? (
                     <Collapse>
-                      {detailsModal?.submission?.relevantCriteria?.map(crit => {
-                        const score = detailsModal?.submission?.scores?.find(s => s.criteriaName === crit.name);
-                        return (
-                          <Collapse.Panel
-                            key={crit?.criteriaId}
-                            header={
-                              <div className="flex justify-between">
-                                <span className="font-medium">{crit?.name}</span>
-                                <Space>
-                                  <Tag>Trọng số: {crit?.weight}</Tag>
-                                  {score && <Tag color="green">Điểm: {score?.scoreValue}/{crit?.weight}</Tag>}
-                                </Space>
-                              </div>
-                            }
-                          >
-                            {score?.comment && (
-                              <div>
-                                <Text type="secondary">Nhận xét:</Text><br />
-                                <Text>{score.comment}</Text>
-                              </div>
-                            )}
-                          </Collapse.Panel>
-                        );
-                      })}
+                      {detailsModal?.submission?.relevantCriteria?.map(
+                        (crit) => {
+                          const score = detailsModal?.submission?.scores?.find(
+                            (s) => s.criteriaName === crit.name,
+                          );
+                          return (
+                            <Collapse.Panel
+                              key={crit?.criteriaId}
+                              header={
+                                <div className="flex justify-between">
+                                  <span className="font-medium">
+                                    {crit?.name}
+                                  </span>
+                                  <Space>
+                                    <Tag>Trọng số: {crit?.weight}</Tag>
+                                    {score && (
+                                      <Tag color="green">
+                                        Điểm: {score?.scoreValue}
+                                      </Tag>
+                                    )}
+                                  </Space>
+                                </div>
+                              }
+                            >
+                              {score?.comment && (
+                                <div>
+                                  <Text type="secondary">Nhận xét:</Text>
+                                  <br />
+                                  <Text>{score.comment}</Text>
+                                </div>
+                              )}
+                            </Collapse.Panel>
+                          );
+                        },
+                      )}
                     </Collapse>
-                  ) : <Empty description="Không có tiêu chí" />}
+                  ) : (
+                    <Empty description="Không có tiêu chí" />
+                  )}
                 </Card>
 
                 <Card className="bg-gradient-to-r from-emerald-900 to-green-900 text-white">
                   <div className="flex justify-between items-center">
                     <div>
-                      <Text className="text-green-200 text-lg">Tổng điểm cuối cùng</Text>
+                      <Text className="text-green-200 text-lg">
+                        Tổng điểm cuối cùng
+                      </Text>
                       <Title level={1} className="!text-white !mt-0">
                         {detailsModal?.submission?.totalScore}
                       </Title>
@@ -594,15 +767,24 @@ const PhaseScores = () => {
               form.resetFields();
             }}
             onOk={handleSaveScore}
-            okText={editModal?.isReScore ? "💾 Lưu điểm phúc khảo" : "💾 Lưu điểm"}
+            okText={
+              editModal?.isReScore ? '💾 Lưu điểm phúc khảo' : '💾 Lưu điểm'
+            }
             cancelText="Hủy"
             width={900}
-            confirmLoading={createScore?.isPending || reScore?.isPending || updateScoreById?.isPending}
+            confirmLoading={
+              createScore?.isPending ||
+              reScore?.isPending ||
+              updateScoreById?.isPending
+            }
             title={
               <Space>
                 {editModal?.isReScore ? <FileTextOutlined /> : <EditOutlined />}
                 <Text strong>
-                  {editModal?.isReScore ? '🔄 Chấm phúc khảo' : 'Chấm điểm thường'}: {editModal.submission?.teamName}
+                  {editModal?.isReScore
+                    ? '🔄 Chấm phúc khảo'
+                    : 'Chấm điểm thường'}
+                  : {editModal.submission?.teamName}
                 </Text>
               </Space>
             }
@@ -616,12 +798,25 @@ const PhaseScores = () => {
                       <Text strong className="text-orange-500">
                         🔄 Chấm phúc khảo - Bài nộp này đã được duyệt khiếu nại
                       </Text>
-                      <Text><strong>Lý do khiếu nại:</strong> {editModal.appeal.reason || editModal.appeal.message || 'Không có lý do'}</Text>
+                      <Text>
+                        <strong>Lý do khiếu nại:</strong>{' '}
+                        {editModal.appeal.reason ||
+                          editModal.appeal.message ||
+                          'Không có lý do'}
+                      </Text>
                       {editModal.appeal.adminResponse && (
-                        <Text><strong>Phản hồi admin:</strong> {editModal.appeal.adminResponse}</Text>
+                        <Text>
+                          <strong>Phản hồi admin:</strong>{' '}
+                          {editModal.appeal.adminResponse}
+                        </Text>
                       )}
                       <Text type="secondary" style={{ fontSize: '12px' }}>
-                        <strong>Ngày duyệt:</strong> {editModal.appeal.reviewedAt ? new Date(editModal.appeal.reviewedAt).toLocaleString('vi-VN') : '--'}
+                        <strong>Ngày duyệt:</strong>{' '}
+                        {editModal.appeal.reviewedAt
+                          ? new Date(
+                              editModal.appeal.reviewedAt,
+                            ).toLocaleString('vi-VN')
+                          : '--'}
                       </Text>
                     </Space>
                   }
@@ -635,7 +830,8 @@ const PhaseScores = () => {
                 className="mb-4"
                 message={
                   <Space>
-                    <Text strong>Hạng mục:</Text> <Tag color="purple">{editModal.track?.name}</Tag>
+                    <Text strong>Hạng mục:</Text>{' '}
+                    <Tag color="purple">{editModal.track?.name}</Tag>
                   </Space>
                 }
                 type="info"
@@ -643,7 +839,11 @@ const PhaseScores = () => {
               />
 
               {editModal.track?.challenges?.length > 0 && (
-                <Card size="small" title="Các thử thách trong hạng mục" className="mb-6 bg-neutral-800">
+                <Card
+                  size="small"
+                  title="Các thử thách trong hạng mục"
+                  className="mb-6 bg-neutral-800"
+                >
                   <Space wrap>
                     {editModal?.track?.challenges?.map((ch) => (
                       <Button
@@ -653,7 +853,9 @@ const PhaseScores = () => {
                         ghost
                         className="text-xs"
                         onClick={() =>
-                          navigate(`${PATH_NAME.JUDGE_CHALLENGES}/${ch.challengeId}`)
+                          navigate(
+                            `${PATH_NAME.JUDGE_CHALLENGES}/${ch.challengeId}`,
+                          )
                         }
                       >
                         {ch.title}
@@ -664,8 +866,10 @@ const PhaseScores = () => {
               )}
 
               <Title level={5}>Chấm điểm theo tiêu chí</Title>
-              {editModal?.criteria?.map(crit => {
-                const existing = editModal.existingScores.find(s => s.criteriaName === crit.name);
+              {editModal?.criteria?.map((crit) => {
+                const existing = editModal.existingScores.find(
+                  (s) => s.criteriaName === crit.name,
+                );
 
                 const scoreValidator = (_, value) => {
                   if (value === undefined || value === null || value === '') {
@@ -675,7 +879,11 @@ const PhaseScores = () => {
                     return Promise.reject(new Error('Điểm phải lớn hơn 0!'));
                   }
                   if (value > crit.weight) {
-                    return Promise.reject(new Error(`Điểm không được lớn hơn trọng số (${crit.weight})!`));
+                    return Promise.reject(
+                      new Error(
+                        `Điểm không được lớn hơn trọng số (${crit.weight})!`,
+                      ),
+                    );
                   }
                   return Promise.resolve();
                 };
@@ -688,7 +896,9 @@ const PhaseScores = () => {
                     bordered={false}
                   >
                     <div className="flex justify-between items-center mb-3">
-                      <Text strong className="text-lg">{crit.name}</Text>
+                      <Text strong className="text-lg">
+                        {crit.name}
+                      </Text>
                       <Tag color="blue" className="text-sm">
                         Trọng số: {crit.weight}
                       </Tag>
@@ -701,7 +911,7 @@ const PhaseScores = () => {
                           initialValue={existing?.scoreValue ?? undefined}
                           rules={[
                             { required: true },
-                            { validator: scoreValidator }
+                            { validator: scoreValidator },
                           ]}
                           validateTrigger={['onChange', 'onBlur']}
                         >
