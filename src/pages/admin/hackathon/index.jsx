@@ -1,5 +1,5 @@
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { Button, ConfigProvider, Modal, theme } from 'antd';
+import { Button, ConfigProvider, Modal, theme, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -48,8 +48,21 @@ const Hackathons = () => {
           dataIndex: 'description',
           key: 'description',
           type: 'text',
-          ellipsis: true,
-          className: 'text-gray-300 line-clamp-2 block',
+          width: 300,
+          ellipsis: { tooltip: true },
+          onCell: () => ({
+            style: { maxWidth: '300px', overflow: 'hidden' }
+          }),
+          render: (text) => (
+            <Tooltip title={text}>
+              <div 
+                className="line-clamp-2 text-gray-300"
+                style={{ maxWidth: '100%', wordBreak: 'break-word' }}
+              >
+                {text || '--'}
+              </div>
+            </Tooltip>
+          ),
         },
         {
           title: 'Ngày bắt đầu',
