@@ -1,10 +1,10 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
-import { callRefreshToken } from '../services/auth';
 import { performLogout } from '../hooks/useLogout';
+import { callRefreshToken } from '../services/auth';
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_BASE_URL || 'https://sealfall25.somee.com/api',
+  baseURL: import.meta.env.VITE_BASE_URL || 'https://www.sealfall25.somee.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
