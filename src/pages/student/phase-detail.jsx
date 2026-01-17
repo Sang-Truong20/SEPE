@@ -3,30 +3,30 @@ import { Alert, Button, Card, Form, Tabs, message } from 'antd';
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  PhaseInfoCard,
-  TracksSelection,
-  PhaseInfoSidebar,
-  SubmissionSection,
-  PenaltiesTab,
-  AppealsTab,
-  GroupsSection,
-  QualifiedTeamsSection,
-  RankingSection,
-  ScoresSection,
-  GroupTeamsModal,
-  PenaltyAppealModal,
-  ScoreAppealModal,
-  getPhaseStatus
+    AppealsTab,
+    GroupTeamsModal,
+    GroupsSection,
+    PenaltiesTab,
+    PenaltyAppealModal,
+    PhaseInfoCard,
+    PhaseInfoSidebar,
+    QualifiedTeamsSection,
+    RankingSection,
+    ScoreAppealModal,
+    ScoresSection,
+    SubmissionSection,
+    TracksSelection,
+    getPhaseStatus
 } from '../../components/features/student/phase-detail';
+import { useCreateAppeal } from '../../hooks/student/appeal';
+import { useGetGroupTeams } from '../../hooks/student/group';
 import { useGetHackathon } from '../../hooks/student/hackathon';
 import { useGetHackathonPhases } from '../../hooks/student/hackathon-phase';
 import { useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
-import { useGetTeams, useGetMyTeams } from '../../hooks/student/team';
-import { useCreateAppeal } from '../../hooks/student/appeal';
+import { useGetMyTeams, useGetTeams } from '../../hooks/student/team';
 import { useGetTeamMembers } from '../../hooks/student/team-member';
 import { useSelectTeamTrack } from '../../hooks/student/team-track';
 import { useGetTracksByPhase } from '../../hooks/student/track';
-import { useGetGroupTeams } from '../../hooks/student/group';
 import { useUserData } from '../../hooks/useUserData';
 
 const StudentPhaseDetail = () => {
@@ -181,6 +181,7 @@ const StudentPhaseDetail = () => {
   const [appealForm] = Form.useForm();
   const [scoreAppealModalVisible, setScoreAppealModalVisible] = React.useState(false);
   const [selectedCriteriaScore, setSelectedCriteriaScore] = React.useState(null);
+  const [scoreAppealCompleteCallback, setScoreAppealCompleteCallback] = React.useState(null);
   const [scoreAppealForm] = Form.useForm();
   const [groupModalVisible, setGroupModalVisible] = React.useState(false);
   const [selectedGroupId, setSelectedGroupId] = React.useState(null);
@@ -301,6 +302,7 @@ const StudentPhaseDetail = () => {
 
   const handleOpenScoreAppealModal = (criteriaScore) => {
     setSelectedCriteriaScore(criteriaScore);
+    setScoreAppealCompleteCallback(criteriaScore?.onAppealComplete || null);
     scoreAppealForm.resetFields();
     scoreAppealForm.setFieldsValue({
       reason: '',
@@ -344,6 +346,11 @@ const StudentPhaseDetail = () => {
       setScoreAppealModalVisible(false);
       setSelectedCriteriaScore(null);
       scoreAppealForm.resetFields();
+      // Call the callback to unlock the button after successful submission
+      if (scoreAppealCompleteCallback) {
+        scoreAppealCompleteCallback();
+        setScoreAppealCompleteCallback(null);
+      }
     } catch (error) {
       console.error('Error creating score appeal:', error);
       message.error(error?.response?.data?.message || 'Không thể gửi phúc khảo. Vui lòng thử lại.');
@@ -568,6 +575,11 @@ const StudentPhaseDetail = () => {
           setScoreAppealModalVisible(false);
           setSelectedCriteriaScore(null);
           scoreAppealForm.resetFields();
+          // Call the callback to unlock the button when modal is closed
+          if (scoreAppealCompleteCallback) {
+            scoreAppealCompleteCallback();
+            setScoreAppealCompleteCallback(null);
+          }
         }}
         onSubmit={handleCreateScoreAppeal}
         selectedCriteriaScore={selectedCriteriaScore}
