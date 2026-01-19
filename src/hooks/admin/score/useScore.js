@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import axiosClient from "../../../configs/axiosClient";
 import useMessage from "../../util/getError";
@@ -140,8 +140,8 @@ export const useScores = () => {
    * describe: Update existing scores for a submission (dùng POST giống create)
    */
   const updateScoreById = useMutation({
-    mutationFn: ({ scoreId, payload }) =>
-      axiosClient.put(`/Score/scores/${scoreId}`, payload),
+    mutationFn: ({ scoreId, scoreValue, comment }) =>
+      axiosClient.put(`/Score/scores/${scoreId}`, { scoreValue, comment }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: scoreQueryKeys.all });
       message.success("Cập nhật điểm thành công!");
