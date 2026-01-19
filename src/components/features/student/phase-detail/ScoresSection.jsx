@@ -2,9 +2,9 @@ import { BarChartOutlined, SendOutlined } from '@ant-design/icons';
 import { Button, Card, Collapse, Spin, Tag } from 'antd';
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { useGetMyScoresGrouped, useGetTeamOverview } from '../../../../hooks/student/score';
-import { useGetCriterion } from '../../../../hooks/student/criterion';
 import { useGetTeamPhaseAppeals } from '../../../../hooks/student/appeal';
+import { useGetCriterion } from '../../../../hooks/student/criterion';
+import { useGetMyScoresGrouped, useGetTeamOverview } from '../../../../hooks/student/score';
 
 // Component to display criterion name by fetching from API
 const CriterionName = ({ criterionId }) => {
@@ -70,6 +70,7 @@ const ScoresSection = ({
               criterionId,
               scores: [],
               judgeScores: [],
+              weight: cs.weight || 0, // Store weight
             };
           }
 
@@ -80,6 +81,7 @@ const ScoresSection = ({
             submissionId: submission.submissionId,
             submissionTitle: submission.submissionTitle,
             score: cs.score,
+            weight: cs.weight,
             comment: cs.comment,
           });
 
@@ -94,6 +96,7 @@ const ScoresSection = ({
     // Calculate average for each criterion
     return Object.values(criteriaMap).map(item => ({
       criterionId: item.criterionId,
+      weight: item.weight,
       score: item.scores.length > 0
         ? item.scores.reduce((sum, val) => sum + val, 0) / item.scores.length
         : null,
@@ -224,15 +227,18 @@ const ScoresSection = ({
                       judgeAllScores.push({
                         criterionId: cs.criterionId,
                         score: cs.score,
+                        weight: cs.weight,
                         comment: cs.comment,
                         submissionTitle: submission.submissionTitle,
                       });
                     });
                   });
 
-                  // Calculate total score for this judge
+                  // Calculate total score for this judge (score * weight / 10)
                   const totalScore = judgeAllScores.reduce((sum, item) => {
-                    return sum + (item.score !== undefined && item.score !== null ? Number(item.score) : 0);
+                    const weight = item.weight || 0;
+                    const score = item.score !== undefined && item.score !== null ? Number(item.score) : 0;
+                    return sum + (score * (weight / 10));
                   }, 0);
 
                   return {
@@ -299,11 +305,16 @@ const ScoresSection = ({
                                     </p>
                                   )}
                                 </div>
-                                <Tag color="blue" className="font-semibold">
-                                  {item.score !== undefined && item.score !== null
-                                    ? Number(item.score).toFixed(2)
-                                    : '-'}
-                                </Tag>
+                                <div className="flex items-center gap-2">
+                                  <Tag className="text-xs bg-slate-800 border-slate-700 text-slate-400">
+                                    Trọng số: {(item.weight || 0) * 10}%
+                                  </Tag>
+                                  <Tag color="blue" className="font-semibold">
+                                    {item.score !== undefined && item.score !== null
+                                      ? Number(item.score).toFixed(2)
+                                      : '-'}
+                                  </Tag>
+                                </div>
                               </div>
                               {item.comment && (
                                 <p className="text-text-secondary text-xs italic mt-2">
