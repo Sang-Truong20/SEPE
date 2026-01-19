@@ -234,11 +234,11 @@ const ScoresSection = ({
                     });
                   });
 
-                  // Calculate total score for this judge (score * weight / 10)
+                  // Calculate total score for this judge (score * weight / 100)
                   const totalScore = judgeAllScores.reduce((sum, item) => {
                     const weight = item.weight || 0;
                     const score = item.score !== undefined && item.score !== null ? Number(item.score) : 0;
-                    return sum + (score * (weight / 10));
+                    return sum + (score * (weight / 100));
                   }, 0);
 
                   return {
@@ -294,35 +294,53 @@ const ScoresSection = ({
                           judgeAllScores.map((item, itemIdx) => (
                             <div
                               key={itemIdx}
-                              className="p-3 bg-card-background/50 rounded-lg border border-card-border/50"
+                              className="p-4 bg-white/[0.03] hover:bg-white/[0.06] transition-all duration-300 rounded-xl border border-white/5 shadow-inner"
                             >
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex-1">
-                                  <CriterionName criterionId={item.criterionId} />
-                                  {item.submissionTitle && (
-                                    <p className="text-muted-foreground text-xs mt-1">
-                                      ({item.submissionTitle})
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Tag className="text-xs bg-slate-800 border-slate-700 text-slate-400">
-                                    Trọng số: {(item.weight || 0) * 10}%
-                                  </Tag>
-                                  <Tag color="blue" className="font-semibold">
-                                    {item.score !== undefined && item.score !== null
-                                      ? Number(item.score).toFixed(2)
-                                      : '-'}
-                                  </Tag>
-                                </div>
+                              {/* Top Row: Info */}
+                              <div className="mb-4">
+                                <CriterionName criterionId={item.criterionId} />
+                                {item.submissionTitle && (
+                                  <span className="text-slate-400 text-[11px] ml-2 font-medium bg-white/5 px-2 py-0.5 rounded uppercase tracking-tighter">
+                                    {item.submissionTitle}
+                                  </span>
+                                )}
+                                {item.comment && (
+                                  <p className="text-slate-400 text-xs italic mt-3 py-2.5 px-4 bg-black/40 rounded-lg border-l-2 border-primary/20 leading-relaxed">
+                                    &ldquo;{item.comment}&rdquo;
+                                  </p>
+                                )}
                               </div>
-                              {item.comment && (
-                                <p className="text-text-secondary text-xs italic mt-2">
-                                  &ldquo;{item.comment}&rdquo;
-                                </p>
-                              )}
-                              {isLeader && (
-                                <div className="mt-3">
+
+                              {/* Bottom Row: Score Badges */}
+                              <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5">
+                                <div className="flex flex-wrap items-center gap-3">
+                                  <div className="flex flex-col">
+                                    <span className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Trọng số</span>
+                                    <div className="h-7 min-w-[50px] flex items-center justify-center text-xs bg-slate-800/80 border border-slate-700/50 text-slate-300 px-2 rounded font-medium">
+                                      {item.weight || 0}%
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex flex-col">
+                                    <span className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Điểm</span>
+                                    <div className="h-7 min-w-[50px] flex items-center justify-center text-xs bg-blue-500/10 border border-blue-500/20 text-blue-400 px-2 rounded font-bold">
+                                      {item.score !== undefined && item.score !== null
+                                        ? Number(item.score).toFixed(2)
+                                        : '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col">
+                                    <span className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Điểm thực nhận</span>
+                                    <div className="h-7 min-w-[50px] flex items-center justify-center text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 rounded font-bold">
+                                      {item.score !== undefined && item.score !== null && item.weight !== undefined
+                                        ? (Number(item.score) * (Number(item.weight) / 100)).toFixed(2)
+                                        : '-'}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {isLeader && (
                                   <Button
                                     type="primary"
                                     size="small"
@@ -335,12 +353,12 @@ const ScoresSection = ({
                                       judgeName: judge.judgeName,
                                       submissionTitle: item.submissionTitle,
                                     })}
-                                    className="bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 border-0 text-xs"
+                                    className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs h-8 px-4 rounded-lg transition-all"
                                   >
-                                    Phúc khảo điểm
+                                    Phúc khảo
                                   </Button>
-                                </div>
-                              )}
+                                )}
+                              </div>
                             </div>
                           ))
                         ) : (
@@ -366,45 +384,68 @@ const ScoresSection = ({
                   return (
                     <div
                       key={criteriaScore.criterionId || `criterion-${idx}`}
-                      className="p-3 bg-card-background/50 rounded-lg border border-card-border/50"
+                      className="p-4 bg-white/[0.03] hover:bg-white/[0.06] transition-all duration-300 rounded-xl border border-white/5 shadow-inner"
                     >
-                      <div className="flex items-center justify-between mb-2">
+                      {/* Top Row: Info */}
+                      <div className="mb-4">
                         <CriterionName criterionId={criteriaScore.criterionId} />
-                        <div className="flex items-center gap-2">
-                          <Tag color="green" className="font-semibold">
-                            {criteriaScore.score !== undefined && criteriaScore.score !== null
-                              ? Number(criteriaScore.score).toFixed(2)
-                              : '-'}
-                          </Tag>
-                          {hasAnyAppeal && (
-                            <Tag color="blue" size="small">
-                              Đã phúc khảo
-                            </Tag>
-                          )}
-                        </div>
+                        {criteriaScore.comment && (
+                          <p className="text-slate-400 text-xs italic mt-3 py-2.5 px-4 bg-black/40 rounded-lg border-l-2 border-primary/20 leading-relaxed">
+                            &ldquo;{criteriaScore.comment}&rdquo;
+                          </p>
+                        )}
                       </div>
 
-                      {/* Show comment for old format */}
-                      {!isJudgesStructure && criteriaScore.comment && (
-                        <p className="text-text-secondary text-xs mt-2">
-                          {criteriaScore.comment}
-                        </p>
-                      )}
+                      {/* Bottom Row: Score Badges */}
+                      <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="flex flex-col">
+                            <span className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Trọng số</span>
+                            <div className="h-7 min-w-[50px] flex items-center justify-center text-xs bg-slate-800/80 border border-slate-700/50 text-slate-300 px-2 rounded font-medium">
+                              {criteriaScore.weight || 0}%
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col">
+                            <span className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Điểm TB</span>
+                            <div className="h-7 min-w-[50px] flex items-center justify-center text-xs bg-blue-500/10 border border-blue-500/20 text-blue-400 px-2 rounded font-bold">
+                              {criteriaScore.score !== undefined && criteriaScore.score !== null
+                                ? Number(criteriaScore.score).toFixed(2)
+                                : '-'}
+                            </div>
+                          </div>
 
-                      {/* Show appeal button for old format */}
-                      {!isJudgesStructure && isLeader && !hasAnyAppeal && (
-                        <div className="mt-3">
+                          <div className="flex flex-col">
+                            <span className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Điểm thực nhận TB</span>
+                            <div className="h-7 min-w-[50px] flex items-center justify-center text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 rounded font-bold">
+                              {criteriaScore.score !== undefined && criteriaScore.score !== null && criteriaScore.weight !== undefined
+                                ? (Number(criteriaScore.score) * (Number(criteriaScore.weight) / 100)).toFixed(2)
+                                : '-'}
+                            </div>
+                          </div>
+
+                          {!isJudgesStructure && hasAnyAppeal && (
+                            <div className="flex flex-col">
+                              <span className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Trạng thái</span>
+                              <div className="h-7 px-3 flex items-center justify-center text-[10px] bg-blue-500/20 text-blue-300 rounded border border-blue-500/20 font-bold">
+                                Đã phúc khảo
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {!isJudgesStructure && isLeader && !hasAnyAppeal && (
                           <Button
                             type="primary"
                             size="small"
                             icon={<SendOutlined />}
                             onClick={() => onOpenScoreAppealModal(criteriaScore)}
-                            className="bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-600 hover:to-emerald-500 border-0"
+                            className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs h-8 px-4 rounded-lg transition-all"
                           >
-                            Phúc khảo điểm
+                            Phúc khảo
                           </Button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   );
                 })}
