@@ -81,6 +81,15 @@ const PhaseScores = () => {
     submission: null,
   });
   const [form] = Form.useForm();
+  const watchedValues = Form.useWatch([], form);
+
+  const liveTotalScore = useMemo(() => {
+    if (!editModal?.criteria) return 0;
+    return editModal.criteria.reduce((sum, crit) => {
+      const val = watchedValues?.[`score_${crit.criteriaId}`] || 0;
+      return sum + val * ((crit.weight || 0) / 10);
+    }, 0);
+  }, [watchedValues, editModal?.criteria]);
 
   // ===== DATA 1: Chấm điểm thường - từ fetchSubmissionsByPhase =====
   const enrichedSubmissions = useMemo(() => {
@@ -102,19 +111,14 @@ const PhaseScores = () => {
           allScore
             ?.filter((s) => s?.submissionId === submission?.submissionId)
             ?.pop()?.scores || [];
-        // Tính tổng trọng số để chuẩn hóa thành phần trăm
-        const totalWeight = relevantCriteria?.reduce(
-          (sum, c) => sum + (c?.weight || 0),
-          0,
-        );
+        // Tính tổng điểm: tổng các điểm sau khi nhân với trọng số
         const totalWeighted = scores?.reduce((sum, s) => {
           const crit = relevantCriteria?.find(
-            (c) => c?.criteriaId === s?.criteriaId,
+            (c) => c?.name === s?.criteriaName,
           );
-          if (!crit || !totalWeight) return sum;
-          // Nhân điểm với phần trăm trọng số (weight / totalWeight)
-          const weightPercent = (crit?.weight || 0) / totalWeight;
-          return sum + (s?.scoreValue || 0) * weightPercent;
+          if (!crit) return sum;
+          // Nhân điểm với trọng số (chia 10 vì trọng số 3 tương đương 30%)
+          return sum + (s?.scoreValue || 0) * ((crit?.weight || 0) / 10);
         }, 0);
         submission.scores = scores;
         const submittedBy =
@@ -169,19 +173,14 @@ const PhaseScores = () => {
           allScore
             ?.filter((s) => s?.submissionId === appeal?.submissionId)
             ?.pop()?.scores || [];
-        // Tính tổng trọng số để chuẩn hóa thành phần trăm
-        const totalWeight = relevantCriteria?.reduce(
-          (sum, c) => sum + (c?.weight || 0),
-          0,
-        );
+        // Tính tổng điểm: tổng các điểm sau khi nhân với trọng số
         const totalWeighted = scores?.reduce((sum, s) => {
           const crit = relevantCriteria?.find(
-            (c) => c?.criteriaId === s?.criteriaId,
+            (c) => c?.name === s?.criteriaName,
           );
-          if (!crit || !totalWeight) return sum;
-          // Nhân điểm với phần trăm trọng số (weight / totalWeight)
-          const weightPercent = (crit?.weight || 0) / totalWeight;
-          return sum + (s?.scoreValue || 0) * weightPercent;
+          if (!crit) return sum;
+          // Nhân điểm với trọng số (chia 10 vì trọng số 3 tương đương 30%)
+          return sum + (s?.scoreValue || 0) * ((crit?.weight || 0) / 10);
         }, 0);
 
         const submittedBy =
@@ -715,7 +714,7 @@ const PhaseScores = () => {
                                     {crit?.name}
                                   </span>
                                   <Space>
-                                    <Tag>Trọng số: {crit?.weight}</Tag>
+                                    <Tag>Trọng số: {crit?.weight * 10}%</Tag>
                                     {score && (
                                       <Tag color="green">
                                         Điểm: {score?.scoreValue}
@@ -830,13 +829,27 @@ const PhaseScores = () => {
                 className="mb-4"
                 message={
                   <Space>
-                    <Text strong>Hạng mục:</Text>{' '}
+                    <Text strong>Hạng mục:</Text>{" "}
                     <Tag color="purple">{editModal.track?.name}</Tag>
                   </Space>
                 }
                 type="info"
                 showIcon
               />
+
+              <Card className="bg-gradient-to-r from-emerald-900 to-green-900 text-white mb-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <Text className="text-green-200 text-lg">
+                      Tổng điểm hiện tại
+                    </Text>
+                    <Title level={1} className="!text-white !mt-0">
+                      {liveTotalScore.toFixed(2)}
+                    </Title>
+                  </div>
+                  <TrophyOutlined className="text-6xl opacity-80" />
+                </div>
+              </Card>
 
               {editModal.track?.challenges?.length > 0 && (
                 <Card
@@ -900,7 +913,7 @@ const PhaseScores = () => {
                         {crit.name}
                       </Text>
                       <Tag color="blue" className="text-sm">
-                        Trọng số: {crit.weight}
+                        Trọng số: {crit.weight * 10}%
                       </Tag>
                     </div>
                     <Row gutter={16}>
