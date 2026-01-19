@@ -81,6 +81,15 @@ const PhaseScores = () => {
     submission: null,
   });
   const [form] = Form.useForm();
+  const watchedValues = Form.useWatch([], form);
+
+  const liveTotalScore = useMemo(() => {
+    if (!editModal?.criteria) return 0;
+    return editModal.criteria.reduce((sum, crit) => {
+      const val = watchedValues?.[`score_${crit.criteriaId}`] || 0;
+      return sum + val * ((crit.weight || 0) / 10);
+    }, 0);
+  }, [watchedValues, editModal?.criteria]);
 
   // ===== DATA 1: Chấm điểm thường - từ fetchSubmissionsByPhase =====
   const enrichedSubmissions = useMemo(() => {
@@ -102,19 +111,14 @@ const PhaseScores = () => {
           allScore
             ?.filter((s) => s?.submissionId === submission?.submissionId)
             ?.pop()?.scores || [];
-        // Tính tổng trọng số để chuẩn hóa thành phần trăm
-        const totalWeight = relevantCriteria?.reduce(
-          (sum, c) => sum + (c?.weight || 0),
-          0,
-        );
+        // Tính tổng điểm: tổng các điểm sau khi nhân với trọng số
         const totalWeighted = scores?.reduce((sum, s) => {
           const crit = relevantCriteria?.find(
-            (c) => c?.criteriaId === s?.criteriaId,
+            (c) => c?.name === s?.criteriaName,
           );
-          if (!crit || !totalWeight) return sum;
-          // Nhân điểm với phần trăm trọng số (weight / totalWeight)
-          const weightPercent = (crit?.weight || 0) / totalWeight;
-          return sum + (s?.scoreValue || 0) * weightPercent;
+          if (!crit) return sum;
+          // Nhân điểm với trọng số (chia 10 vì trọng số 3 tương đương 30%)
+          return sum + (s?.scoreValue || 0) * ((crit?.weight || 0) / 10);
         }, 0);
         submission.scores = scores;
         const submittedBy =
@@ -169,19 +173,14 @@ const PhaseScores = () => {
           allScore
             ?.filter((s) => s?.submissionId === appeal?.submissionId)
             ?.pop()?.scores || [];
-        // Tính tổng trọng số để chuẩn hóa thành phần trăm
-        const totalWeight = relevantCriteria?.reduce(
-          (sum, c) => sum + (c?.weight || 0),
-          0,
-        );
+        // Tính tổng điểm: tổng các điểm sau khi nhân với trọng số
         const totalWeighted = scores?.reduce((sum, s) => {
           const crit = relevantCriteria?.find(
-            (c) => c?.criteriaId === s?.criteriaId,
+            (c) => c?.name === s?.criteriaName,
           );
-          if (!crit || !totalWeight) return sum;
-          // Nhân điểm với phần trăm trọng số (weight / totalWeight)
-          const weightPercent = (crit?.weight || 0) / totalWeight;
-          return sum + (s?.scoreValue || 0) * weightPercent;
+          if (!crit) return sum;
+          // Nhân điểm với trọng số (chia 10 vì trọng số 3 tương đương 30%)
+          return sum + (s?.scoreValue || 0) * ((crit?.weight || 0) / 10);
         }, 0);
 
         const submittedBy =
@@ -350,76 +349,106 @@ const PhaseScores = () => {
     },
   };
 
-  const handleSaveScore = () => {
-    form
-      .validateFields()
-      .then((values) => {
-        const criteriaScores = editModal?.criteria?.map((c) => ({
-          criterionId: c?.criteriaId,
-          score: values[`score_${c?.criteriaId}`] || 0,
-          comment: values[`comment_${c?.criteriaId}`] || null,
-        }));
+  const handleSaveIndividualScore = (crit) => {
+    const scoreVal = form.getFieldValue(`score_${crit.criteriaId}`);
+    const commentVal = form.getFieldValue(`comment_${crit.criteriaId}`);
 
-        const payload = {
-          submissionId: editModal?.submission?.submissionId,
-          criteriaScores,
-        };
+    // Manual validation for these specific fields
+    if (scoreVal === undefined || scoreVal === null || scoreVal === "") {
+      message.warning(`Vui lòng nhập điểm cho ${crit.name}`);
+      return;
+    }
+    if (scoreVal < 0 || scoreVal > 10) {
+      message.warning(`Điểm cho ${crit.name} phải từ 0 đến 10`);
+      return;
+    }
 
-        // Determine which mutation to use based on the situation
-        let mutation;
-        let mutationParams;
+    const existing = editModal.existingScores?.find(
+      (s) => s.criteriaName === crit.name
+    );
 
-        if (editModal?.isReScore && editModal?.appeal?.appealId) {
-          // Use reScore API for approved appeals
-          mutation = reScore;
-          mutationParams = {
-            appealId: editModal.appeal.appealId,
-            payload,
+    let mutation;
+    let mutationParams;
+
+    if (editModal?.isReScore && editModal?.appeal?.appealId) {
+      mutation = reScore;
+      mutationParams = {
+        appealId: editModal.appeal.appealId,
+        payload: {
+          submissionId: editModal.submission.submissionId,
+          criteriaScores: [
+            {
+              criterionId: crit.criteriaId,
+              score: scoreVal,
+              comment: commentVal || null,
+            },
+          ],
+        },
+      };
+    } else if (existing?.scoreId) {
+      mutation = updateScoreById;
+      mutationParams = {
+        scoreId: existing.scoreId,
+        scoreValue: scoreVal,
+        comment: commentVal || null,
+      };
+    } else {
+      mutation = createScore;
+      mutationParams = {
+        submissionId: editModal.submission.submissionId,
+        criteriaScores: [
+          {
+            criterionId: crit.criteriaId,
+            score: scoreVal,
+            comment: commentVal || null,
+          },
+        ],
+      };
+    }
+
+    mutation.mutate(mutationParams, {
+      onSuccess: (response) => {
+        // 1. Invalidate queries to sync with server
+        queryClient.invalidateQueries({ queryKey: ["Scores"] });
+        queryClient.invalidateQueries({ queryKey: ["Submissions"] });
+        queryClient.invalidateQueries({ queryKey: ["Appeals"] });
+
+        // 2. Update local state immediately so if they stay in or reopen, it's fresh
+        setEditModal((prev) => {
+          const newScores = [...(prev.existingScores || [])];
+          const existingIdx = newScores.findIndex(
+            (s) => s.criteriaName === crit.name
+          );
+
+          // Construct the new score object
+          const updatedScore = {
+            ...(existingIdx >= 0 ? newScores[existingIdx] : {}),
+            criteriaId: crit.criteriaId,
+            criteriaName: crit.name,
+            scoreValue: scoreVal,
+            comment: commentVal,
+            // If the response contains the new scoreId, update it (relevant for new scores)
+            ...(response?.data?.scoreId ? { scoreId: response.data.scoreId } : {}),
           };
-        } else if (editModal?.existingScores?.length > 0) {
-          // Use updateScoreById for editing existing scores
-          // Note: We need to update each score individually or use the first scoreId
-          const firstScoreId = editModal.existingScores[0]?.scoreId;
-          if (firstScoreId) {
-            mutation = updateScoreById;
-            mutationParams = {
-              scoreId: firstScoreId,
-              payload,
-            };
+
+          if (existingIdx >= 0) {
+            newScores[existingIdx] = updatedScore;
           } else {
-            mutation = createScore;
-            mutationParams = payload;
+            newScores.push(updatedScore);
           }
-        } else {
-          // Use createScore for new scores
-          mutation = createScore;
-          mutationParams = payload;
-        }
 
-        mutation.mutate(mutationParams, {
-          onSuccess: () => {
-            queryClient.invalidateQueries({
-              queryKey: ['myScoresGrouped', phaseId],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ['submissionsByPhase', phaseId],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ['Appeals', 'byPhase', phaseId],
-            });
-
-            setEditModal({ open: false });
-            form.resetFields();
-          },
-          onError: (error) => {
-            console.error('Save score error:', error);
-          },
+          return { ...prev, existingScores: newScores };
         });
-      })
-      .catch(() => {
-        message.warning('Vui lòng kiểm tra lại thông tin nhập vào!');
-      });
+
+      },
+      onError: (error) => {
+        console.error("Save score error:", error);
+        message.error("Không thể lưu điểm. Vui lòng thử lại!");
+      },
+    });
   };
+
+
 
   const currentSubmission = submissionModal?.submission;
 
@@ -715,7 +744,7 @@ const PhaseScores = () => {
                                     {crit?.name}
                                   </span>
                                   <Space>
-                                    <Tag>Trọng số: {crit?.weight}</Tag>
+                                    <Tag>Trọng số: {crit?.weight * 10}%</Tag>
                                     {score && (
                                       <Tag color="green">
                                         Điểm: {score?.scoreValue}
@@ -766,18 +795,20 @@ const PhaseScores = () => {
               setEditModal({ open: false });
               form.resetFields();
             }}
-            onOk={handleSaveScore}
-            okText={
-              editModal?.isReScore ? '💾 Lưu điểm phúc khảo' : '💾 Lưu điểm'
-            }
-            cancelText="Hủy"
+            footer={[
+              <Button
+                key="close"
+                onClick={() => {
+                  setEditModal({ open: false });
+                  form.resetFields();
+                }}
+              >
+                Hoàn tất
+              </Button>,
+            ]}
             width={900}
-            confirmLoading={
-              createScore?.isPending ||
-              reScore?.isPending ||
-              updateScoreById?.isPending
-            }
             title={
+
               <Space>
                 {editModal?.isReScore ? <FileTextOutlined /> : <EditOutlined />}
                 <Text strong>
@@ -830,13 +861,27 @@ const PhaseScores = () => {
                 className="mb-4"
                 message={
                   <Space>
-                    <Text strong>Hạng mục:</Text>{' '}
+                    <Text strong>Hạng mục:</Text>{" "}
                     <Tag color="purple">{editModal.track?.name}</Tag>
                   </Space>
                 }
                 type="info"
                 showIcon
               />
+
+              <Card className="bg-gradient-to-r from-emerald-900 to-green-900 text-white mb-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <Text className="text-green-200 text-lg">
+                      Tổng điểm hiện tại
+                    </Text>
+                    <Title level={1} className="!text-white !mt-0">
+                      {liveTotalScore.toFixed(2)}
+                    </Title>
+                  </div>
+                  <TrophyOutlined className="text-6xl opacity-80" />
+                </div>
+              </Card>
 
               {editModal.track?.challenges?.length > 0 && (
                 <Card
@@ -876,14 +921,10 @@ const PhaseScores = () => {
                     return Promise.reject(new Error('Vui lòng nhập điểm!'));
                   }
                   if (value < 0) {
-                    return Promise.reject(new Error('Điểm phải lớn hơn 0!'));
+                    return Promise.reject(new Error('Điểm phải từ 0 trở lên!'));
                   }
-                  if (value > crit.weight) {
-                    return Promise.reject(
-                      new Error(
-                        `Điểm không được lớn hơn trọng số (${crit.weight})!`,
-                      ),
-                    );
+                  if (value > 10) {
+                    return Promise.reject(new Error('Điểm tối đa là 10!'));
                   }
                   return Promise.resolve();
                 };
@@ -900,14 +941,28 @@ const PhaseScores = () => {
                         {crit.name}
                       </Text>
                       <Tag color="blue" className="text-sm">
-                        Trọng số: {crit.weight}
+                        Trọng số: {crit.weight * 10}%
                       </Tag>
+                      <Button
+                        type="primary"
+                        size="small"
+                        icon={<TrophyOutlined />}
+                        loading={
+                          createScore.isPending ||
+                          updateScoreById.isPending ||
+                          reScore.isPending
+                        }
+                        onClick={() => handleSaveIndividualScore(crit)}
+                      >
+                        Lưu tiêu chí này
+                      </Button>
                     </div>
+
                     <Row gutter={16}>
                       <Col span={10}>
                         <Form.Item
                           name={`score_${crit.criteriaId}`}
-                          label={`Điểm (0 < điểm ≤ ${crit.weight})`}
+                          label="Thang điểm (0 - 10)"
                           initialValue={existing?.scoreValue ?? undefined}
                           rules={[
                             { required: true },
@@ -917,11 +972,11 @@ const PhaseScores = () => {
                         >
                           <InputNumber
                             min={0}
-                            max={crit.weight}
-                            step={0.5}
+                            max={10}
+                            step={0.1}
                             precision={2}
                             className="w-full"
-                            placeholder={`0 - ${crit.weight}`}
+                            placeholder="Nhập điểm từ 0 - 10"
                             style={{ width: '100%' }}
                           />
                         </Form.Item>
