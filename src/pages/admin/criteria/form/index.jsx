@@ -71,15 +71,15 @@ const CriterionForm = ({ mode = 'create' }) => {
             required: true,
             message: 'Vui lòng nhập trọng số',
             min: 1,
-            max: 5,
+            max: 10,
             step: 1,
             rules: [
               { required: true, message: 'Vui lòng nhập trọng số' },
               {
                 type: 'number',
                 min: 1,
-                max: 5,
-                message: 'Trọng số phải từ 1 đến 5',
+                max: 10,
+                message: 'Trọng số phải từ 1 đến 10',
               },
             ],
           },
@@ -120,7 +120,7 @@ const CriterionForm = ({ mode = 'create' }) => {
           c.name.trim() !== '' &&
           c.weight != null &&
           c.weight >= 1 &&
-          c.weight <= 5,
+          c.weight <= 10,
       );
 
       if (validCriteria.length === 0) {
@@ -261,15 +261,15 @@ const CriterionForm = ({ mode = 'create' }) => {
                         validateStatus={
                           item.weight != null &&
                           item.weight >= 1 &&
-                          item.weight <= 5
+                          item.weight <= 10
                             ? ''
                             : 'error'
                         }
                         help={
                           item.weight == null
                             ? 'Vui lòng nhập trọng số'
-                            : item.weight < 1 || item.weight > 5
-                              ? 'Trọng số phải từ 1 đến 5'
+                            : item.weight < 1 || item.weight > 10
+                              ? 'Trọng số phải từ 1 đến 10'
                               : ''
                         }
                       >
@@ -280,7 +280,7 @@ const CriterionForm = ({ mode = 'create' }) => {
                           }
                           placeholder="VD: 1, 2, 3, 4, 5"
                           min={1}
-                          max={5}
+                          max={10}
                           step={1}
                           className="w-full"
                           style={{ width: '100%' }}
