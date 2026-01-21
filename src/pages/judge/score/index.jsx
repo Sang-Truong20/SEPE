@@ -87,7 +87,7 @@ const PhaseScores = () => {
     if (!editModal?.criteria) return 0;
     return editModal.criteria.reduce((sum, crit) => {
       const val = watchedValues?.[`score_${crit.criteriaId}`] || 0;
-      return sum + val * ((crit.weight || 0) / 10);
+      return sum + val * ((crit.weight || 0) / 100);
     }, 0);
   }, [watchedValues, editModal?.criteria]);
 
@@ -117,8 +117,8 @@ const PhaseScores = () => {
             (c) => c?.name === s?.criteriaName,
           );
           if (!crit) return sum;
-          // Nhân điểm với trọng số (chia 10 vì trọng số 3 tương đương 30%)
-          return sum + (s?.scoreValue || 0) * ((crit?.weight || 0) / 10);
+          // Nhân điểm với trọng số (chia 100 vì trọng số 50 tương đương 50%)
+          return sum + (s?.scoreValue || 0) * ((crit?.weight || 0) / 100);
         }, 0);
         
         const submittedBy =
@@ -180,8 +180,8 @@ const PhaseScores = () => {
             (c) => c?.name === s?.criteriaName,
           );
           if (!crit) return sum;
-          // Nhân điểm với trọng số (chia 10 vì trọng số 3 tương đương 30%)
-          return sum + (s?.scoreValue || 0) * ((crit?.weight || 0) / 10);
+          // Nhân điểm với trọng số (chia 100 vì trọng số 50 tương đương 50%)
+          return sum + (s?.scoreValue || 0) * ((crit?.weight || 0) / 100);
         }, 0);
 
         const submittedBy =
