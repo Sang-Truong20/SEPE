@@ -139,6 +139,37 @@ export const useScores = () => {
    * response: 200 OK
    * describe: Update existing scores for a submission (dùng POST giống create)
    */
+  // 5. Cập nhật batch scores cho submission (PUT - dùng để update toàn bộ scores)
+  /**
+   * API: PUT /api/Score/submit
+   * method: PUT
+   * path: /api/Score/submit
+   * request body:
+   *   - submissionId: integer
+   *   - criteriaScores: array of criteria score objects
+   *       - criterionId: integer
+   *       - score: number (double)
+   *       - comment: string | null
+   * response: 200 OK
+   * describe: Update batch scores for a submission
+   * example payload:
+   * {
+   *   "submissionId": 10,
+   *   "criteriaScores": [ { "criterionId": 1, "score": 8.5, "comment": "Good" } ]
+   * }
+   */
+  const updateScoreBatch = useMutation({
+    mutationFn: (payload) => axiosClient.put("/Score/submit", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: scoreQueryKeys.all });
+      message.success("Cập nhật điểm thành công!");
+    },
+    onError: (error) => {
+      console.error("Error updating score batch:", error);
+      message.error(getMessage(error));
+    },
+  });
+
   const updateScoreById = useMutation({
     mutationFn: ({ scoreId, scoreValue, comment }) =>
       axiosClient.put(`/Score/scores/${scoreId}`, { scoreValue, comment }),
@@ -159,6 +190,7 @@ export const useScores = () => {
 
     // Mutations
     createScore,        // Tạo mới hoặc overwrite toàn bộ scores cho submission
+    updateScoreBatch,   // Cập nhật batch scores cho submission (PUT)
     reScore,            // Chấm lại theo appeal (dùng appealId)
     updateScoreById,    // Edit chi tiết một criterion score theo scoreId
   };

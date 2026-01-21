@@ -49,7 +49,7 @@ const PhaseScores = () => {
   const { fetchSubmissionsByPhase } = useSubmission();
   const { fetchCriteria } = useCriteria();
   const { fetchTracks } = useTracks();
-  const { createScore, reScore, updateScoreById, fetchMyScoresGrouped } =
+  const { createScore, updateScoreBatch, reScore, updateScoreById, fetchMyScoresGrouped } =
     useScores();
   const { fetchUsers } = useUsers();
   const { fetchAppealsByPhase } = useAppeal();
@@ -120,13 +120,14 @@ const PhaseScores = () => {
           // Nhân điểm với trọng số (chia 10 vì trọng số 3 tương đương 30%)
           return sum + (s?.scoreValue || 0) * ((crit?.weight || 0) / 10);
         }, 0);
-        submission.scores = scores;
+        
         const submittedBy =
           allUsers?.find((u) => u?.userId === submission?.submittedBy)
             ?.fullName || '--';
 
         return {
           ...submission,
+          scores, // Include scores in the returned object
           track,
           submittedBy,
           challenges,
@@ -319,25 +320,33 @@ const PhaseScores = () => {
       });
     },
     onEdit: (record) => {
+      // Use scores from the enriched record (already computed from latest allScore via useMemo)
+      // This ensures we always get the latest data since enrichedSubmissions/enrichedAppeals 
+      // are recalculated whenever allScore changes
+      const freshScores = record?.scores || [];
+
       setEditModal({
         open: true,
         submission: record,
         track: record?.track,
         criteria: record?.relevantCriteria,
-        existingScores: record?.scores || [],
+        existingScores: freshScores,
         isReScore: record?.isReScore || false,
         appeal: record?.appeal || null,
       });
 
+      // Reset form first
       form.resetFields();
 
-      const fieldValues = {};
-      record?.scores?.forEach((s) => {
-        fieldValues[`score_${s?.criteriaId}`] = s?.scoreValue;
-        fieldValues[`comment_${s?.criteriaId}`] = s?.comment || '';
-      });
-
-      form.setFieldsValue(fieldValues);
+      // Set field values after a small delay to ensure form has mounted
+      setTimeout(() => {
+        const fieldValues = {};
+        freshScores?.forEach((s) => {
+          fieldValues[`score_${s?.criteriaId}`] = s?.scoreValue;
+          fieldValues[`comment_${s?.criteriaId}`] = s?.comment || '';
+        });
+        form.setFieldsValue(fieldValues);
+      }, 50);
     },
     onExtraAction: (key, record) => {
       if (key === 'viewSubmission') {
@@ -407,13 +416,29 @@ const PhaseScores = () => {
     }
 
     mutation.mutate(mutationParams, {
-      onSuccess: (response) => {
-        // 1. Invalidate queries to sync with server
-        queryClient.invalidateQueries({ queryKey: ["Scores"] });
-        queryClient.invalidateQueries({ queryKey: ["Submissions"] });
+      onSuccess: async (response) => {
+        // 1. Invalidate queries first
+        queryClient.invalidateQueries({ 
+          queryKey: ["Scores", "list", { phaseId: phaseId }]
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: ["Submissions", "byPhase", phaseId]
+        });
         queryClient.invalidateQueries({ queryKey: ["Appeals"] });
 
-        // 2. Update local state immediately so if they stay in or reopen, it's fresh
+        // 2. Wait for refetch to complete
+        await Promise.all([
+          queryClient.refetchQueries({ 
+            queryKey: ["Scores", "list", { phaseId: phaseId }],
+            type: 'active'
+          }),
+          queryClient.refetchQueries({ 
+            queryKey: ["Submissions", "byPhase", phaseId],
+            type: 'active'
+          }),
+        ]);
+
+        // 3. Update local state immediately so if they stay in or reopen, it's fresh
         setEditModal((prev) => {
           const newScores = [...(prev.existingScores || [])];
           const existingIdx = newScores.findIndex(
@@ -448,7 +473,98 @@ const PhaseScores = () => {
     });
   };
 
+  const handleSubmitAllScores = (values) => {
+    // Collect all criteria scores from form values
+    const criteriaScores = editModal?.criteria?.map((crit) => {
+      const scoreVal = values[`score_${crit.criteriaId}`];
+      const commentVal = values[`comment_${crit.criteriaId}`] || '';
 
+      // Basic validation
+      if (scoreVal === undefined || scoreVal === null || scoreVal === '') {
+        message.warning(`Vui lòng nhập điểm cho ${crit.name}`);
+        return null;
+      }
+      if (scoreVal < 0 || scoreVal > 10) {
+        message.warning(`Điểm cho ${crit.name} phải từ 0 đến 10`);
+        return null;
+      }
+
+      return {
+        criterionId: crit.criteriaId,
+        score: scoreVal,
+        comment: commentVal,
+      };
+    }).filter(Boolean); // Remove null entries
+
+    if (!criteriaScores || criteriaScores.length === 0) {
+      message.warning('Không có tiêu chí nào được nhập điểm');
+      return;
+    }
+
+    let mutation;
+    let mutationParams;
+
+    if (editModal?.isReScore && editModal?.appeal?.appealId) {
+      mutation = reScore;
+      mutationParams = {
+        appealId: editModal.appeal.appealId,
+        payload: {
+          submissionId: editModal.submission.submissionId,
+          criteriaScores: criteriaScores,
+        },
+      };
+    } else {
+      mutation = updateScoreBatch;
+      mutationParams = {
+        submissionId: editModal.submission.submissionId,
+        criteriaScores: criteriaScores,
+      };
+    }
+
+    mutation.mutate(mutationParams, {
+      onSuccess: async () => {
+        // 1. Invalidate queries first
+        queryClient.invalidateQueries({ 
+          queryKey: ["Scores", "list", { phaseId: phaseId }]
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: ["Submissions", "byPhase", phaseId]
+        });
+        queryClient.invalidateQueries({ queryKey: ["Appeals"] });
+
+        // 2. Wait for refetch to complete
+        await Promise.all([
+          queryClient.refetchQueries({ 
+            queryKey: ["Scores", "list", { phaseId: phaseId }],
+            type: 'active'
+          }),
+          queryClient.refetchQueries({ 
+            queryKey: ["Submissions", "byPhase", phaseId],
+            type: 'active'
+          }),
+        ]);
+
+        // 3. Small delay to ensure React has time to update
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // 4. Reset form and close modal
+        form.resetFields();
+        setEditModal({ 
+          open: false,
+          submission: null,
+          track: null,
+          criteria: [],
+          existingScores: [],
+          isReScore: false,
+          appeal: null,
+        });
+      },
+      onError: (error) => {
+        console.error("Save scores error:", error);
+        message.error("Không thể lưu điểm. Vui lòng thử lại!");
+      },
+    });
+  };
 
   const currentSubmission = submissionModal?.submission;
 
@@ -744,7 +860,7 @@ const PhaseScores = () => {
                                     {crit?.name}
                                   </span>
                                   <Space>
-                                    <Tag>Trọng số: {crit?.weight * 10}%</Tag>
+                                    <Tag>Trọng số: {crit?.weight}%</Tag>
                                     {score && (
                                       <Tag color="green">
                                         Điểm: {score?.scoreValue}
@@ -792,15 +908,31 @@ const PhaseScores = () => {
           <Modal
             open={editModal?.open}
             onCancel={() => {
-              setEditModal({ open: false });
               form.resetFields();
+              setEditModal({ 
+                open: false,
+                submission: null,
+                track: null,
+                criteria: [],
+                existingScores: [],
+                isReScore: false,
+                appeal: null,
+              });
             }}
             footer={[
               <Button
                 key="close"
                 onClick={() => {
-                  setEditModal({ open: false });
                   form.resetFields();
+                  setEditModal({ 
+                    open: false,
+                    submission: null,
+                    track: null,
+                    criteria: [],
+                    existingScores: [],
+                    isReScore: false,
+                    appeal: null,
+                  });
                 }}
               >
                 Hoàn tất
@@ -820,7 +952,12 @@ const PhaseScores = () => {
               </Space>
             }
           >
-            <Form form={form} layout="vertical">
+            <Form 
+              key={`score-form-${editModal?.submission?.submissionId}-${editModal.existingScores?.length || 0}`}
+              form={form} 
+              layout="vertical" 
+              onFinish={handleSubmitAllScores}
+            >
               {editModal?.isReScore && editModal?.appeal && (
                 <Alert
                   className="mb-4"
@@ -941,21 +1078,8 @@ const PhaseScores = () => {
                         {crit.name}
                       </Text>
                       <Tag color="blue" className="text-sm">
-                        Trọng số: {crit.weight * 10}%
+                        Trọng số: {crit.weight}%
                       </Tag>
-                      <Button
-                        type="primary"
-                        size="small"
-                        icon={<TrophyOutlined />}
-                        loading={
-                          createScore.isPending ||
-                          updateScoreById.isPending ||
-                          reScore.isPending
-                        }
-                        onClick={() => handleSaveIndividualScore(crit)}
-                      >
-                        Lưu tiêu chí này
-                      </Button>
                     </div>
 
                     <Row gutter={16}>
@@ -1003,6 +1127,40 @@ const PhaseScores = () => {
                   </Card>
                 );
               })}
+
+              <div className="flex justify-end gap-3 pt-6 border-t border-neutral-800">
+                <Button
+                  onClick={() => {
+                    form.resetFields();
+                    setEditModal({ 
+                      open: false,
+                      submission: null,
+                      track: null,
+                      criteria: [],
+                      existingScores: [],
+                      isReScore: false,
+                      appeal: null,
+                    });
+                  }}
+                  className="!text-text-primary !bg-dark-accent/30 hover:!bg-dark-accent/60 !border !border-dark-accent rounded-md transition-colors duration-200"
+                >
+                  Hủy
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  icon={<TrophyOutlined />}
+                  loading={
+                    createScore.isPending ||
+                    updateScoreBatch.isPending ||
+                    updateScoreById.isPending ||
+                    reScore.isPending
+                  }
+                  className="bg-primary hover:bg-primary/90 transition-colors duration-150"
+                >
+                  Lưu tất cả điểm
+                </Button>
+              </div>
             </Form>
           </Modal>
         </div>
