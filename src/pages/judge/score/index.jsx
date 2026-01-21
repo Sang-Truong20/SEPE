@@ -744,7 +744,7 @@ const PhaseScores = () => {
                                     {crit?.name}
                                   </span>
                                   <Space>
-                                    <Tag>Trọng số: {crit?.weight * 10}%</Tag>
+                                    <Tag>Trọng số: {crit?.weight}%</Tag>
                                     {score && (
                                       <Tag color="green">
                                         Điểm: {score?.scoreValue}
@@ -941,7 +941,7 @@ const PhaseScores = () => {
                         {crit.name}
                       </Text>
                       <Tag color="blue" className="text-sm">
-                        Trọng số: {crit.weight * 10}%
+                        Trọng số: {crit.weight}%
                       </Tag>
                       <Button
                         type="primary"
