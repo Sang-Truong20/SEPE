@@ -1,26 +1,26 @@
 import {
-  Spin,
+  ArrowLeftOutlined,
+  DeleteOutlined,
+  FileTextOutlined,
+  PlusOutlined,
+  SaveOutlined,
+} from '@ant-design/icons';
+import {
+  Button,
+  Card,
   ConfigProvider,
-  theme,
   Form,
   Input,
   InputNumber,
-  Button,
   Space,
-  Card,
+  Spin,
+  theme,
 } from 'antd';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMemo, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import CreateEditForm from '../../../../components/ui/CreateEditForm.jsx';
-import { useCriteria } from '../../../../hooks/admin/criterias/useCriteria.js';
 import { PATH_NAME } from '../../../../constants';
-import {
-  PlusOutlined,
-  DeleteOutlined,
-  ArrowLeftOutlined,
-  FileTextOutlined,
-  SaveOutlined,
-} from '@ant-design/icons';
+import { useCriteria } from '../../../../hooks/admin/criterias/useCriteria.js';
 
 const CriterionForm = ({ mode = 'create' }) => {
   const { id: criterionId } = useParams(); // for edit
@@ -71,15 +71,15 @@ const CriterionForm = ({ mode = 'create' }) => {
             required: true,
             message: 'Vui lòng nhập trọng số',
             min: 1,
-            max: 10,
+            max: 100,
             step: 1,
             rules: [
               { required: true, message: 'Vui lòng nhập trọng số' },
               {
                 type: 'number',
                 min: 1,
-                max: 10,
-                message: 'Trọng số phải từ 1 đến 10',
+                max: 100,
+                message: 'Trọng số phải từ 1 đến 100',
               },
             ],
           },
@@ -120,7 +120,7 @@ const CriterionForm = ({ mode = 'create' }) => {
           c.name.trim() !== '' &&
           c.weight != null &&
           c.weight >= 1 &&
-          c.weight <= 10,
+          c.weight <= 100,
       );
 
       if (validCriteria.length === 0) {
@@ -261,15 +261,15 @@ const CriterionForm = ({ mode = 'create' }) => {
                         validateStatus={
                           item.weight != null &&
                           item.weight >= 1 &&
-                          item.weight <= 10
+                          item.weight <= 100
                             ? ''
                             : 'error'
                         }
                         help={
                           item.weight == null
                             ? 'Vui lòng nhập trọng số'
-                            : item.weight < 1 || item.weight > 10
-                              ? 'Trọng số phải từ 1 đến 10'
+                            : item.weight < 1 || item.weight > 100
+                              ? 'Trọng số phải từ 1 đến 100'
                               : ''
                         }
                       >
@@ -280,7 +280,7 @@ const CriterionForm = ({ mode = 'create' }) => {
                           }
                           placeholder="VD: 1, 2, 3, 4, 5"
                           min={1}
-                          max={10}
+                          max={100}
                           step={1}
                           className="w-full"
                           style={{ width: '100%' }}
