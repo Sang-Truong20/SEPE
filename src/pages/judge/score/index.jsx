@@ -5,6 +5,7 @@ import {
   FileSearchOutlined,
   FileTextOutlined,
   TrophyOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query'; // ← THÊM IMPORT NÀY
 import {
@@ -73,8 +74,10 @@ const PhaseScores = () => {
     submission: null,
     track: null,
     criteria: [],
+    existingScores: [],
     isReScore: false,
     appeal: null,
+    isUpdate: false, // true = update (PUT), false = create (POST)
   });
   const [submissionModal, setSubmissionModal] = useState({
     open: false,
@@ -293,8 +296,9 @@ const PhaseScores = () => {
         },
         edit: {
           tooltip: 'Chấm điểm',
-          icon: <EditOutlined />,
+          icon: <CheckCircleOutlined />,
           className: 'text-yellow-500',
+          hidden: (record) => record?.status === 'scored',
         },
         extra: [
           {
@@ -304,6 +308,13 @@ const PhaseScores = () => {
             icon: <FileSearchOutlined />,
             className: 'text-cyan-400',
             disabled: (record) => !record?.filePath,
+          },
+          {
+            key: 'updateScore',
+            tooltip: 'Cập nhật điểm',
+            icon: <EditOutlined />,
+            className: 'text-green-500',
+            hidden: (record) => record?.status !== 'scored',
           },
         ],
       },
@@ -324,6 +335,11 @@ const PhaseScores = () => {
       // This ensures we always get the latest data since enrichedSubmissions/enrichedAppeals 
       // are recalculated whenever allScore changes
       const freshScores = record?.scores || [];
+      
+      // Determine if this is an update or create action
+      // Update: all criteria have scores (status === 'scored')
+      // Create: missing some scores or no scores at all
+      const isUpdate = record?.status === 'scored' && freshScores.length === record?.criteriaCount;
 
       setEditModal({
         open: true,
@@ -333,6 +349,7 @@ const PhaseScores = () => {
         existingScores: freshScores,
         isReScore: record?.isReScore || false,
         appeal: record?.appeal || null,
+        isUpdate: isUpdate,
       });
 
       // Reset form first
@@ -354,6 +371,9 @@ const PhaseScores = () => {
           open: true,
           submission: record,
         });
+      } else if (key === 'updateScore') {
+        // Use the same handler as onEdit for updating scores
+        handlers.onEdit(record);
       }
     },
   };
@@ -505,6 +525,7 @@ const PhaseScores = () => {
     let mutationParams;
 
     if (editModal?.isReScore && editModal?.appeal?.appealId) {
+      // Re-scoring case (appeal)
       mutation = reScore;
       mutationParams = {
         appealId: editModal.appeal.appealId,
@@ -513,8 +534,16 @@ const PhaseScores = () => {
           criteriaScores: criteriaScores,
         },
       };
-    } else {
+    } else if (editModal?.isUpdate) {
+      // Update existing scores (PUT)
       mutation = updateScoreBatch;
+      mutationParams = {
+        submissionId: editModal.submission.submissionId,
+        criteriaScores: criteriaScores,
+      };
+    } else {
+      // Create new scores (POST)
+      mutation = createScore;
       mutationParams = {
         submissionId: editModal.submission.submissionId,
         criteriaScores: criteriaScores,
@@ -557,6 +586,7 @@ const PhaseScores = () => {
           existingScores: [],
           isReScore: false,
           appeal: null,
+          isUpdate: false,
         });
       },
       onError: (error) => {
@@ -917,6 +947,7 @@ const PhaseScores = () => {
                 existingScores: [],
                 isReScore: false,
                 appeal: null,
+                isUpdate: false,
               });
             }}
             footer={[
@@ -932,6 +963,7 @@ const PhaseScores = () => {
                     existingScores: [],
                     isReScore: false,
                     appeal: null,
+                    isUpdate: false,
                   });
                 }}
               >
@@ -946,7 +978,9 @@ const PhaseScores = () => {
                 <Text strong>
                   {editModal?.isReScore
                     ? '🔄 Chấm phúc khảo'
-                    : 'Chấm điểm thường'}
+                    : editModal?.isUpdate
+                      ? '✏️ Cập nhật điểm'
+                      : '📝 Chấm điểm thường'}
                   : {editModal.submission?.teamName}
                 </Text>
               </Space>
@@ -1140,6 +1174,7 @@ const PhaseScores = () => {
                       existingScores: [],
                       isReScore: false,
                       appeal: null,
+                      isUpdate: false,
                     });
                   }}
                   className="!text-text-primary !bg-dark-accent/30 hover:!bg-dark-accent/60 !border !border-dark-accent rounded-md transition-colors duration-200"
@@ -1158,7 +1193,11 @@ const PhaseScores = () => {
                   }
                   className="bg-primary hover:bg-primary/90 transition-colors duration-150"
                 >
-                  Lưu tất cả điểm
+                  {editModal?.isReScore
+                    ? 'Lưu điểm phúc khảo'
+                    : editModal?.isUpdate
+                      ? 'Cập nhật điểm'
+                      : 'Chấm điểm'}
                 </Button>
               </div>
             </Form>
