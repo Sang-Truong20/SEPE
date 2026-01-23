@@ -5,11 +5,10 @@ import { callRefreshToken } from '../services/auth';
 
 const axiosClient = axios.create({
   baseURL:
-    'http://seal252.eba-f3jreccz.ap-southeast-1.elasticbeanstalk.com/api',
+    import.meta.env.VITE_BASE_URL || 'https://www.sealfall25.somee.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
 });
 
 let isRefreshing = false;
