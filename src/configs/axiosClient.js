@@ -5,7 +5,6 @@ import { callRefreshToken } from '../services/auth';
 
 const axiosClient = axios.create({
   baseURL:
-    import.meta.env.VITE_BASE_URL ||
     'http://seal252.eba-f3jreccz.ap-southeast-1.elasticbeanstalk.com/api',
   headers: {
     'Content-Type': 'application/json',
