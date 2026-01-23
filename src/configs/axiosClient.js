@@ -4,7 +4,9 @@ import { performLogout } from '../hooks/useLogout';
 import { callRefreshToken } from '../services/auth';
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_BASE_URL || 'https://www.sealfall25.somee.com/api',
+  baseURL:
+    import.meta.env.VITE_BASE_URL ||
+    'http://seal252.eba-f3jreccz.ap-southeast-1.elasticbeanstalk.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -14,7 +16,7 @@ let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
@@ -27,13 +29,13 @@ const processQueue = (error, token = null) => {
 
 axiosClient.interceptors.request.use(
   (config) => {
-    const accessToken = Cookies.get("accessToken");
+    const accessToken = Cookies.get('accessToken');
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
-  (err) => Promise.reject(err)
+  (err) => Promise.reject(err),
 );
 
 axiosClient.interceptors.response.use(
@@ -52,11 +54,11 @@ axiosClient.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then(token => {
+          .then((token) => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
             return axiosClient(originalRequest);
           })
-          .catch(err => Promise.reject(err));
+          .catch((err) => Promise.reject(err));
       }
 
       originalRequest._retry = true;
@@ -74,10 +76,11 @@ axiosClient.interceptors.response.use(
         const res = await callRefreshToken(refreshToken);
 
         if (res?.status === 200) {
-          const { accessToken: newAccessToken, refreshToken: newRefreshToken } = res.data;
+          const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+            res.data;
 
-          Cookies.set("accessToken", newAccessToken);
-          if (newRefreshToken) Cookies.set("refreshToken", newRefreshToken);
+          Cookies.set('accessToken', newAccessToken);
+          if (newRefreshToken) Cookies.set('refreshToken', newRefreshToken);
 
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           axiosClient.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
@@ -98,7 +101,7 @@ axiosClient.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosClient;
