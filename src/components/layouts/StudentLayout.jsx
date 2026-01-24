@@ -1,7 +1,7 @@
 import {
-  CheckOutlined,
-  ClockCircleOutlined,
-  CloseOutlined,
+    CheckOutlined,
+    ClockCircleOutlined,
+    CloseOutlined,
 } from '@ant-design/icons';
 import { Button, Modal, Popconfirm } from 'antd';
 import dayjs from 'dayjs';
@@ -12,11 +12,11 @@ import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
 import {
-  useAcceptTeamInvite,
-  useGetNotifications,
-  useGetUnreadCount,
-  useMarkAsRead,
-  useRejectTeamInvite,
+    useAcceptTeamInvite,
+    useGetNotifications,
+    useGetUnreadCount,
+    useMarkAsRead,
+    useRejectTeamInvite,
 } from '../../hooks/student/notification';
 import { useGetMyVerification } from '../../hooks/student/verify';
 import { useUserData } from '../../hooks/useUserData';
