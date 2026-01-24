@@ -128,14 +128,15 @@ export const useSubmission = () => {
     /**
      * Fetch all submissions.
      * @type {import('@tanstack/react-query').UseQueryResult}
+     * DEPRECATED: Use fetchSubmissionsByPhase instead for better performance
      */
-    const fetchSubmissions = useQuery({
-        queryKey: submissionQueryKeys.lists(),
-        queryFn: async () => {
-            const response = await axiosClient.get('/Submission/dashboard');
-            return response.data;
-        },
-    });
+    // const fetchSubmissions = useQuery({
+    //     queryKey: submissionQueryKeys.lists(),
+    //     queryFn: async () => {
+    //         const response = await axiosClient.get('/Submission');
+    //         return response.data;
+    //     },
+    // });
 
     /**
      * Fetch a single submission by id.
@@ -261,7 +262,6 @@ export const useSubmission = () => {
     });
 
     return {
-        fetchSubmissions,
         fetchSubmission,
         fetchSubmissionsByTeam,
         fetchSubmissionsByPhase,

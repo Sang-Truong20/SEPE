@@ -35,7 +35,7 @@ import { PATH_NAME } from '../../../constants/index.js';
 import { useAppeal } from '../../../hooks/admin/appeal/useAppeal.js';
 import { useCriteria } from '../../../hooks/admin/criterias/useCriteria.js';
 import { useScores } from '../../../hooks/admin/score/useScore.js';
-import { useSubmission } from '../../../hooks/admin/submission/useSubmission.js';
+import { useSubmission } from '../../../hooks/judge/submission/useSubmission.js';
 import { useTracks } from '../../../hooks/admin/tracks/useTracks.js';
 const { TextArea } = Input;
 const { Title, Text } = Typography;
