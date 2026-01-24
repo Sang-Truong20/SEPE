@@ -6,6 +6,7 @@ import {
 import { Button, Modal, Popconfirm } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import utc from 'dayjs/plugin/utc';
 import {
   Bell,
   BookOpen,
@@ -28,6 +29,7 @@ import { useUserData } from '../../hooks/useUserData';
 import ProfileDropdown from '../ui/ProfileDropdown';
 
 dayjs.extend(relativeTime);
+dayjs.extend(utc);
 
 // Mock data for UI preview
 const mockNotifications = [
@@ -153,7 +155,8 @@ const MentorLayout = () => {
 
   const formatFullDateTime = (timestamp) => {
     if (!timestamp) return '—';
-    return dayjs(timestamp).format('DD/MM/YYYY HH:mm');
+    // Convert UTC to UTC+7
+    return dayjs.utc(timestamp).utcOffset(7).format('DD/MM/YYYY HH:mm');
   };
 
   const handleNotificationClick = (notification) => {
@@ -351,11 +354,12 @@ const MentorLayout = () => {
                                           notification.content}
                                       </p>
                                       <p className="text-xs text-muted-foreground mt-2">
-                                        {dayjs(
-                                          notification.createdAt ||
+                                        {dayjs.utc(
+                                          notification.sentAt ||
+                                            notification.createdAt ||
                                             notification.createdDate ||
                                             notification.timestamp,
-                                        ).fromNow()}
+                                        ).utcOffset(7).format('DD/MM/YYYY HH:mm')}
                                       </p>
                                     </div>
                                   </div>

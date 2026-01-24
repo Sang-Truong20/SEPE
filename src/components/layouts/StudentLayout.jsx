@@ -6,6 +6,7 @@ import {
 import { Button, Modal, Popconfirm } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import utc from 'dayjs/plugin/utc';
 import { BarChart3, Bell, Home, Trophy, Users } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -22,6 +23,7 @@ import { useUserData } from '../../hooks/useUserData';
 import ProfileDropdown from '../ui/ProfileDropdown';
 
 dayjs.extend(relativeTime);
+dayjs.extend(utc);
 
 const StudentLayout = () => {
   const location = useLocation();
@@ -103,7 +105,8 @@ const StudentLayout = () => {
 
   const formatFullDateTime = (timestamp) => {
     if (!timestamp) return '—';
-    return dayjs(timestamp).format('DD/MM/YYYY HH:mm');
+    // Convert UTC to UTC+7
+    return dayjs.utc(timestamp).utcOffset(7).format('DD/MM/YYYY HH:mm');
   };
 
   const handleNotificationClick = (notification) => {
@@ -292,11 +295,12 @@ const StudentLayout = () => {
                                           notification.content}
                                       </p>
                                       <p className="text-xs text-muted-foreground mt-2">
-                                        {dayjs(
-                                          notification.createdAt ||
+                                        {dayjs.utc(
+                                          notification.sentAt ||
+                                            notification.createdAt ||
                                             notification.createdDate ||
                                             notification.timestamp,
-                                        ).fromNow()}
+                                        ).utcOffset(7).format('DD/MM/YYYY HH:mm')}
                                       </p>
                                     </div>
                                   </div>
