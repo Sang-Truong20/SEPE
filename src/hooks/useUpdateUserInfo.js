@@ -4,16 +4,15 @@ import axiosClient from '../configs/axiosClient';
 
 /**
  * Hook to update user info
- * API: PUT /api/Auth/update-info/{id}
- * @param {string} id - User ID
+ * API: PUT /api/Auth/update-info
  * @param {object} payload - { fullName: string }
  */
 export const useUpdateUserInfo = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, fullName }) => {
-      const response = await axiosClient.put(`/Auth/update-info/${id}`, {
+    mutationFn: async ({ fullName }) => {
+      const response = await axiosClient.put(`/Auth/update-info`, {
         fullName,
       });
       return response.data;

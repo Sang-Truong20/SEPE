@@ -1,11 +1,11 @@
 // components/partner/scores/PhaseScores.jsx
 import {
   ArrowLeftOutlined,
+  CheckCircleOutlined,
   EditOutlined,
   FileSearchOutlined,
   FileTextOutlined,
   TrophyOutlined,
-  CheckCircleOutlined,
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query'; // ← THÊM IMPORT NÀY
 import {

@@ -130,13 +130,8 @@ const ChapterProfile = () => {
           form={updateNameForm}
           layout="vertical"
           onFinish={(values) => {
-            const userId = userInfo?.id || userInfo?.userId;
-            if (!userId) {
-              message.error('Không tìm thấy thông tin người dùng');
-              return;
-            }
             updateUserInfoMutation.mutate(
-              { id: userId, fullName: values.fullName },
+              { fullName: values.fullName },
               {
                 onSuccess: async () => {
                   setIsUpdateNameModalVisible(false);
