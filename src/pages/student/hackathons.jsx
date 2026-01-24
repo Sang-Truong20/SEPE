@@ -1,15 +1,15 @@
 import {
-  SearchOutlined,
-  TrophyOutlined
+    SearchOutlined,
+    TrophyOutlined
 } from '@ant-design/icons';
 import { Alert, Input, Select, Spin } from 'antd';
 import dayjs from 'dayjs';
 import { Archive, ArrowRight, CheckCircle, Hourglass, Layers, Terminal, Zap } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getStatusDisplay } from '../../configs/statusConfig';
 import { useGetHackathons } from '../../hooks/student/hackathon';
 import { useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
-import { getStatusDisplay } from '../../configs/statusConfig';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -23,21 +23,31 @@ const formatDate = (dateString) => {
 // Helper lấy màu và icon theo trạng thái
 const getStatusConfig = (status) => {
   const statusDisplay = getStatusDisplay(status, 'hackathon');
+  const normalizedStatus = status?.toString().toLowerCase();
 
   // Map color từ statusConfig sang styles
   const styleMap = {
     warning: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     processing: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]',
-    success: 'bg-zinc-800 text-zinc-400 border-zinc-700',
-    default: 'bg-zinc-800 text-zinc-400 border-zinc-700',
+    success: 'bg-green-500/10 text-green-400 border-green-500/20',
+    default: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
   };
 
   const iconMap = {
     warning: Hourglass,
     processing: Zap,
-    success: Archive,
+    success: CheckCircle,
     default: Archive,
   };
+
+  // Special handling for completed status
+  if (normalizedStatus === 'completed' || normalizedStatus === 'complete' || normalizedStatus === 'done') {
+    return {
+      label: statusDisplay.text,
+      styles: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+      icon: CheckCircle
+    };
+  }
 
   return {
     label: statusDisplay.text,
@@ -220,9 +230,6 @@ const StudentHackathons = () => {
     if (!hackathons || !Array.isArray(hackathons)) return [];
 
     return hackathons.filter(h => {
-      // Filter out completed hackathons
-      if (h.status?.toLowerCase() === 'completed') return false;
-
       // Search by name
       if (searchTerm) {
         const nameMatch = h.name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -236,6 +243,9 @@ const StudentHackathons = () => {
           return false;
         }
         if (statusFilter === 'upcoming' && hackathonStatus !== 'pending' && hackathonStatus !== 'upcoming') {
+          return false;
+        }
+        if (statusFilter === 'completed' && hackathonStatus !== 'completed' && hackathonStatus !== 'complete' && hackathonStatus !== 'done') {
           return false;
         }
         if (statusFilter === 'participating') {
@@ -320,6 +330,7 @@ const StudentHackathons = () => {
         >
           <Option value="active">Đang diễn ra</Option>
           <Option value="upcoming">Sắp diễn ra</Option>
+          <Option value="completed">Đã kết thúc</Option>
           <Option value="participating">Đang tham gia</Option>
         </Select>
         <Select
