@@ -1,11 +1,11 @@
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ConfigProvider, theme, Card, Tag, Table, Row, Col, Divider, Collapse } from 'antd';
-import {TrophyOutlined, UserOutlined, FileTextOutlined, BarsOutlined } from '@ant-design/icons';
+import { BarsOutlined, FileTextOutlined, TrophyOutlined, UserOutlined } from '@ant-design/icons';
+import { Card, Col, Collapse, ConfigProvider, Divider, Row, Table, Tag, theme } from 'antd';
 import { useMemo } from 'react';
-import { useSubmission } from '../../../../hooks/admin/submission/useSubmission.js';
-import { useCriteria } from '../../../../hooks/admin/criterias/useCriteria.js';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import EntityDetail from '../../../../components/ui/EntityDetail.jsx';
 import { PATH_NAME } from '../../../../constants/index.js';
+import { useCriteria } from '../../../../hooks/admin/criterias/useCriteria.js';
+import { useSubmission } from '../../../../hooks/admin/submission/useSubmission.js';
 
 const ScoreDetail = () => {
   const [searchParams] = useSearchParams();

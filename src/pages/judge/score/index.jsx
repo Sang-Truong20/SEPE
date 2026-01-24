@@ -37,7 +37,6 @@ import { useCriteria } from '../../../hooks/admin/criterias/useCriteria.js';
 import { useScores } from '../../../hooks/admin/score/useScore.js';
 import { useSubmission } from '../../../hooks/admin/submission/useSubmission.js';
 import { useTracks } from '../../../hooks/admin/tracks/useTracks.js';
-import { useUsers } from '../../../hooks/admin/users/useUsers.js';
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 
@@ -52,8 +51,9 @@ const PhaseScores = () => {
   const { fetchTracks } = useTracks();
   const { createScore, updateScoreBatch, reScore, updateScoreById, fetchMyScoresGrouped } =
     useScores();
-  const { fetchUsers } = useUsers();
   const { fetchAppealsByPhase } = useAppeal();
+
+  // Removed useUsers hook - no longer using Auth/users API
 
   const { data: allTracks = [], isLoading: tracksLoading } = fetchTracks;
   const { data: submissionsData = [], isLoading: submissionsLoading } =
@@ -61,7 +61,6 @@ const PhaseScores = () => {
   const { data: allCriteria = [], isLoading: criteriaLoading } =
     fetchCriteria(phaseId);
   const { data: allScore = [] } = fetchMyScoresGrouped(phaseId);
-  const { data: allUsers = [] } = fetchUsers;
   const { data: appealsData = [] } = fetchAppealsByPhase(phaseId);
 
   const [detailsModal, setDetailsModal] = useState({
@@ -124,9 +123,7 @@ const PhaseScores = () => {
           return sum + (s?.scoreValue || 0) * ((crit?.weight || 0) / 100);
         }, 0);
         
-        const submittedBy =
-          allUsers?.find((u) => u?.userId === submission?.submittedBy)
-            ?.fullName || '--';
+        const submittedBy = submission?.submittedByName || submission?.submittedBy || '--';
 
         return {
           ...submission,
@@ -147,7 +144,7 @@ const PhaseScores = () => {
         };
       })
       ?.sort((a, b) => b?.totalScore - a?.totalScore);
-  }, [submissionsData, allTracks, allCriteria, phaseId, allScore, allUsers]);
+  }, [submissionsData, allTracks, allCriteria, phaseId, allScore]);
 
   // ===== DATA 2: Chấm phúc khảo - từ fetchAppealsByPhase =====
   const enrichedAppeals = useMemo(() => {
@@ -187,9 +184,7 @@ const PhaseScores = () => {
           return sum + (s?.scoreValue || 0) * ((crit?.weight || 0) / 100);
         }, 0);
 
-        const submittedBy =
-          allUsers?.find((u) => u?.userId === submission?.submittedBy)
-            ?.fullName || '--';
+        const submittedBy = submission?.submittedByName || submission?.submittedBy || '--';
 
         return {
           ...submission,
@@ -218,7 +213,6 @@ const PhaseScores = () => {
     allCriteria,
     phaseId,
     allScore,
-    allUsers,
   ]);
 
   const tableModel = useMemo(
