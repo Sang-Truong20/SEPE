@@ -10,6 +10,7 @@ import {
 import { Button, Card, Spin, Tag } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import utc from 'dayjs/plugin/utc';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueries } from '@tanstack/react-query';
@@ -21,6 +22,7 @@ import { useGetNotifications } from '../../hooks/student/notification';
 import { useGetMyTeams } from '../../hooks/student/team';
 
 dayjs.extend(relativeTime);
+dayjs.extend(utc);
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -143,7 +145,7 @@ const StudentDashboard = () => {
       .slice(0, 2)
       .map(notif => ({
         action: notif.title || notif.message || 'Thông báo mới',
-        time: notif.createdAt ? dayjs(notif.createdAt).fromNow() : 'Vừa xong',
+        time: notif.createdAt ? dayjs.utc(notif.createdAt).utcOffset(7).fromNow() : 'Vừa xong',
         type: notif.isRead ? 'neutral' : 'info',
       }));
     

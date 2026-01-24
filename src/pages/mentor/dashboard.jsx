@@ -10,6 +10,7 @@ import {
 import { Button, Card, Spin, Tag, message } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import utc from 'dayjs/plugin/utc';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PATH_NAME } from '../../constants';
@@ -20,6 +21,7 @@ import { useGetNotifications } from '../../hooks/student/notification';
 import { useUserData } from '../../hooks/useUserData';
 
 dayjs.extend(relativeTime);
+dayjs.extend(utc);
 
 const MentorDashboard = () => {
   const navigate = useNavigate();
@@ -214,7 +216,7 @@ const MentorDashboard = () => {
           type,
           team: notif.teamName || 'Tất cả teams',
           message: notif.title || notif.message || 'Thông báo mới',
-          time: notif.createdAt ? dayjs(notif.createdAt).fromNow() : 'Vừa xong',
+          time: notif.createdAt ? dayjs.utc(notif.createdAt).utcOffset(7).fromNow() : 'Vừa xong',
         };
       });
   }, [notificationsList]);

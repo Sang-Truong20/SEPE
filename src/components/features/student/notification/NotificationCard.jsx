@@ -2,11 +2,13 @@ import { CheckOutlined, ClockCircleOutlined, CloseOutlined } from '@ant-design/i
 import { Button, Card, Popconfirm } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import utc from 'dayjs/plugin/utc';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { PATH_NAME } from '../../../../constants';
 
 dayjs.extend(relativeTime);
+dayjs.extend(utc);
 
 
 
@@ -33,12 +35,14 @@ const getNotificationColor = (type) => {
 
 const formatTime = (timestamp) => {
   if (!timestamp) return '';
-  return dayjs(timestamp).fromNow();
+  // Convert UTC to UTC+7
+  return dayjs.utc(timestamp).utcOffset(7).fromNow();
 };
 
 const formatFullDateTime = (timestamp) => {
   if (!timestamp) return '';
-  return dayjs(timestamp).format('DD/MM/YYYY HH:mm');
+  // Convert UTC to UTC+7
+  return dayjs.utc(timestamp).utcOffset(7).format('DD/MM/YYYY HH:mm');
 };
 
 const NotificationCard = ({

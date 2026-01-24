@@ -2,6 +2,7 @@ import { CheckCircleOutlined, CheckOutlined, CloseOutlined, ClockCircleOutlined 
 import { Modal, Button, Popconfirm } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import utc from 'dayjs/plugin/utc';
 import {
   Bell,
   Building2,
@@ -25,6 +26,7 @@ import {
 } from '../../hooks/student/notification';
 
 dayjs.extend(relativeTime);
+dayjs.extend(utc);
 
 const mockNotifications = [
   {
@@ -115,7 +117,8 @@ const ChapterLayout = ({ children }) => {
 
   const formatFullDateTime = (timestamp) => {
     if (!timestamp) return '—';
-    return dayjs(timestamp).format('DD/MM/YYYY HH:mm');
+    // Convert UTC to UTC+7
+    return dayjs.utc(timestamp).utcOffset(7).format('DD/MM/YYYY HH:mm');
   };
 
   const handleNotificationClick = (notification) => {
@@ -301,11 +304,12 @@ const ChapterLayout = ({ children }) => {
                                       {notification.message || notification.content}
                                     </p>
                                     <p className="text-xs text-muted-foreground mt-2">
-                                      {dayjs(
-                                        notification.createdAt ||
+                                      {dayjs.utc(
+                                        notification.sentAt ||
+                                          notification.createdAt ||
                                           notification.createdDate ||
                                           notification.timestamp,
-                                      ).fromNow()}
+                                      ).utcOffset(7).format('DD/MM/YYYY HH:mm')}
                                     </p>
                                   </div>
                                 </div>
