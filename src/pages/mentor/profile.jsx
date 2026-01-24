@@ -1,19 +1,17 @@
 import {
-    BellOutlined,
     BookOutlined,
     ClockCircleOutlined,
     EditOutlined,
-    LockOutlined,
     LogoutOutlined,
     StarOutlined,
     TeamOutlined,
     UserOutlined
 } from '@ant-design/icons';
-import { Alert, Avatar, Button, Card, Form, Input, Modal, message, Select, Space, Statistic, Tabs, Tag, Upload } from 'antd';
- import { useState } from 'react';
- import { useCreateMentorVerification } from '../../hooks/mentor/verification';
- import { useGetChapters } from '../../hooks/student/chapter';
- import { useGetHackathons } from '../../hooks/student/hackathon';
+import { Alert, Avatar, Button, Card, Form, Input, Modal, Select, Space, Tabs, Upload, message } from 'antd';
+import { useState } from 'react';
+import { useCreateMentorVerification } from '../../hooks/mentor/verification';
+import { useGetChapters } from '../../hooks/student/chapter';
+import { useGetHackathons } from '../../hooks/student/hackathon';
 import { useLogout } from '../../hooks/useLogout';
 import { useUpdateUserInfo } from '../../hooks/useUpdateUserInfo';
 import { useUserData } from '../../hooks/useUserData';

@@ -1,21 +1,20 @@
 import {
-  EditOutlined,
-  LogoutOutlined,
-  UserOutlined
+    EditOutlined,
+    LogoutOutlined,
+    UserOutlined
 } from '@ant-design/icons';
 import {
-  Alert,
-  Avatar,
-  Button,
-  Card,
-  Form,
-  Input,
-  Modal,
-  Select,
-  Space,
-  Tabs,
-  Upload,
-  message
+    Alert,
+    Avatar,
+    Button,
+    Card,
+    Form,
+    Input,
+    Modal,
+    Select,
+    Space,
+    Tabs,
+    Upload
 } from 'antd';
 import { useEffect, useState } from 'react';
 import StudentVerification from '../../components/features/student/profile/StudentVerification';

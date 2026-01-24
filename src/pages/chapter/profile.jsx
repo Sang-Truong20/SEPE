@@ -1,9 +1,9 @@
 import {
-  EditOutlined,
-  LogoutOutlined,
-  UserOutlined,
+    EditOutlined,
+    LogoutOutlined,
+    UserOutlined,
 } from '@ant-design/icons';
-import { Avatar, Button, Card, Form, Input, Modal, message, Tabs } from 'antd';
+import { Avatar, Button, Card, Form, Input, Modal, Tabs } from 'antd';
 import { useState } from 'react';
 import { useLogout } from '../../hooks/useLogout';
 import { useUpdateUserInfo } from '../../hooks/useUpdateUserInfo';
