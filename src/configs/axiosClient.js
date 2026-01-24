@@ -4,7 +4,7 @@ import { performLogout } from '../hooks/useLogout';
 import { callRefreshToken } from '../services/auth';
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_BASE_URL || 'https://www.sealfall25.somee.com/api',
+  baseURL: 'https://seal252.site/api',
   headers: {
     'Content-Type': 'application/json',
   },
