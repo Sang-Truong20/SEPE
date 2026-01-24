@@ -1,9 +1,9 @@
 import {
-  EditOutlined,
-  LogoutOutlined,
-  UserOutlined,
+    EditOutlined,
+    LogoutOutlined,
+    UserOutlined,
 } from '@ant-design/icons';
-import { Avatar, Button, Card, Form, Input, Modal, message, Tabs } from 'antd';
+import { Avatar, Button, Card, Form, Input, Modal, Tabs } from 'antd';
 import { useState } from 'react';
 import { useLogout } from '../../hooks/useLogout';
 import { useUpdateUserInfo } from '../../hooks/useUpdateUserInfo';
@@ -130,13 +130,8 @@ const ChapterProfile = () => {
           form={updateNameForm}
           layout="vertical"
           onFinish={(values) => {
-            const userId = userInfo?.id || userInfo?.userId;
-            if (!userId) {
-              message.error('Không tìm thấy thông tin người dùng');
-              return;
-            }
             updateUserInfoMutation.mutate(
-              { id: userId, fullName: values.fullName },
+              { fullName: values.fullName },
               {
                 onSuccess: async () => {
                   setIsUpdateNameModalVisible(false);

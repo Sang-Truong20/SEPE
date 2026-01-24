@@ -1,21 +1,20 @@
 import {
-  EditOutlined,
-  LogoutOutlined,
-  UserOutlined
+    EditOutlined,
+    LogoutOutlined,
+    UserOutlined
 } from '@ant-design/icons';
 import {
-  Alert,
-  Avatar,
-  Button,
-  Card,
-  Form,
-  Input,
-  Modal,
-  Select,
-  Space,
-  Tabs,
-  Upload,
-  message
+    Alert,
+    Avatar,
+    Button,
+    Card,
+    Form,
+    Input,
+    Modal,
+    Select,
+    Space,
+    Tabs,
+    Upload
 } from 'antd';
 import { useEffect, useState } from 'react';
 import StudentVerification from '../../components/features/student/profile/StudentVerification';
@@ -391,13 +390,8 @@ const StudentProfile = () => {
           form={updateNameForm}
           layout="vertical"
           onFinish={(values) => {
-            const userId = userInfo?.id || userInfo?.userId;
-            if (!userId) {
-              message.error('Không tìm thấy thông tin người dùng');
-              return;
-            }
             updateUserInfoMutation.mutate(
-              { id: userId, fullName: values.fullName },
+              { fullName: values.fullName },
               {
                 onSuccess: async () => {
                   setIsUpdateNameModalVisible(false);
