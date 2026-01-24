@@ -1,11 +1,11 @@
 import {
-  CalendarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  FileTextOutlined,
-  TeamOutlined,
-  TrophyOutlined,
-  UserOutlined
+    CalendarOutlined,
+    CheckCircleOutlined,
+    CloseCircleOutlined,
+    FileTextOutlined,
+    TeamOutlined,
+    TrophyOutlined,
+    UserOutlined
 } from '@ant-design/icons';
 import { Button, Card, Spin, Tag, message } from 'antd';
 import dayjs from 'dayjs';

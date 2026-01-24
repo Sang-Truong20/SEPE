@@ -534,13 +534,14 @@ const StudentPhaseDetail = () => {
             phaseId={phaseId}
           />
 
-          {/* Scores Section */}
+          {/* Scores Section - Show for both Phase 1 and Phase 2 */}
           {hasJoinedHackathon && (
             <ScoresSection
               teamId={teamId}
               hasJoinedHackathon={hasJoinedHackathon}
               isLeader={isLeader}
               onOpenScoreAppealModal={handleOpenScoreAppealModal}
+              phaseId={phaseId}
             />
           )}
         </div>

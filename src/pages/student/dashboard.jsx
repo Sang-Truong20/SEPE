@@ -1,21 +1,21 @@
 import {
-  BarChartOutlined,
-  CalendarOutlined,
-  ClockCircleOutlined,
-  PlayCircleOutlined,
-  SettingOutlined,
-  TeamOutlined,
-  TrophyOutlined
+    BarChartOutlined,
+    CalendarOutlined,
+    ClockCircleOutlined,
+    PlayCircleOutlined,
+    SettingOutlined,
+    TeamOutlined,
+    TrophyOutlined
 } from '@ant-design/icons';
+import { useQueries } from '@tanstack/react-query';
 import { Button, Card, Spin, Tag } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import utc from 'dayjs/plugin/utc';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQueries } from '@tanstack/react-query';
-import { PATH_NAME } from '../../constants';
 import axiosClient from '../../configs/axiosClient';
+import { PATH_NAME } from '../../constants';
 import { useGetHackathons } from '../../hooks/student/hackathon';
 import { useGetMyHackathonRegistrations } from '../../hooks/student/hackathon-registration';
 import { useGetNotifications } from '../../hooks/student/notification';
